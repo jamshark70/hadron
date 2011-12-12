@@ -29,8 +29,14 @@ HrWrapSynth : HadronPlugin
 		});
 		
 		// no, fix this...
-		numControls = synthDesc.metadata.at(\specs).size;
-		ctlNameStrings = synthDesc.controlNames.collect(_.asString);
+		ctlNameStrings = Array(synthDesc.controlNames.size);
+		synthDesc.controls.do { |cn, i|
+			var name = cn.name.asSymbol;
+			if(name != '?' and: { synthDesc.symIsArrayArg(name).not }) {
+				ctlNameStrings.add(cn.name.asString);
+			};
+		};
+		numControls = ctlNameStrings.size; // synthDesc.metadata.at(\specs).size;
 		
 		numIns = ctlNameStrings.count({|item| item.asString.find("inBus", true, 0) == 0; });
 		numOuts = ctlNameStrings.count({|item| item.asString.find("outBus", true, 0) == 0; });
@@ -67,28 +73,36 @@ HrWrapSynth : HadronPlugin
 		//keeping relevant args
 		sdControls = ctlNameStrings.reject
 		({|item|
-			(item.find("inBus", true, 0) == 0) or: { item.find("outBus", true, 0) == 0 };
+			(item.find("inBus", true, 0) == 0) or: {
+				item.find("outBus", true, 0) == 0
+				or: {  // block array args from gui
+					synthDesc.symIsArrayArg(item.asSymbol)
+				}
+			}
 		});
 		
 		//drawing gui
 		sdControls.do
 		({|item, count|
+			var default = synthDesc.controls.detect({ |cn|
+				cn.name.asString == item
+			}).defaultValue;
 			
 			StaticText(window, Rect(10, 10 + (count * 30), 80, 20)).string_(item);
 			
-			storeArgs.put(item.asSymbol, specs.at(item.asSymbol).default);
+			storeArgs.put(item.asSymbol, specs.at(item.asSymbol).unmap(default));
 			
 			numBoxes.add
 			(
 				NumberBox(window, Rect(200, 10 + (count * 30), 80, 20))
-				.value_(specs.at(item.asSymbol).default)
+				.value_(/*specs.at(item.asSymbol).*/default)
 				.action_({|num| sliders[count].valueAction_(specs.at(item.asSymbol).unmap(num.value)); });
 			);
 			
 			sliders.add
 			(
 				HrSlider(window, Rect(90, 10 + (count * 30), 100, 20))
-				.value_(specs.at(item.asSymbol).unmap(specs.at(item.asSymbol).default))
+				.value_(specs.at(item.asSymbol).unmap(/*specs.at(item.asSymbol).*/default))
 				.action_
 				({|sld| 
 					
@@ -131,7 +145,7 @@ HrWrapSynth : HadronPlugin
 				},
 				1, 
 				{ 
-					tempArgs = (synthBusArgs.value ++ storeArgs.keys.collect({|item| [item, storeArgs.at(item)]; }).asArray).flatten(1);
+					tempArgs = (synthBusArgs.value ++ storeArgs.keys.collect({|item| [item, specs.at(item.asSymbol).map(storeArgs.at(item))]; }).asArray).flatten(1);
 					synthInstance = Synth(sName, tempArgs, target: group);
 				}
 			)
@@ -151,8 +165,6 @@ HrWrapSynth : HadronPlugin
 				]; 
 			}).flat ++  [ {|argg| startButton.valueAction_(argg); }; ];
 		
-		synthInstance = Synth(sName, synthBusArgs.value, target: group);	
-
 	}
 	
 	updateBusConnections
