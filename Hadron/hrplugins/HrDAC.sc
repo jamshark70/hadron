@@ -63,7 +63,7 @@ HrDAC : HadronPlugin
 		
 		saveSets =
 		[
-			{|argg| lastLevel = argg; synthInstance.set(\mul, argg); { levelSlider.value_(argg); }.defer; },
+			{|argg| lastLevel = argg; synthInstance.set(\level, argg); { levelSlider.value_(argg); }.defer; },
 			{|argg| levelSlider.boundMidiArgs_(argg); },
 			{|argg| limButton.valueAction_(argg); }
 		];
