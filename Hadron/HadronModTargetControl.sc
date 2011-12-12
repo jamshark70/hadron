@@ -1,6 +1,6 @@
 HadronModTargetControl
 {
-	var parentApp, currentSelPlugin, currentSelParam, myView,
+	var parentApp, <currentSelPlugin, <currentSelParam, myView,
 	targetAppMenu, targetParamMenu, loadHolder;
 	
 	*new
@@ -18,7 +18,7 @@ HadronModTargetControl
 		targetAppMenu = PopUpMenu(myView, Rect(0, 0, (argBounds.width/2)-5, 20))
 		.action_
 		({|menu|
-			
+			var oldplug = currentSelPlugin;
 			if(menu.value == 0,
 			{
 				currentSelPlugin = nil;
@@ -32,6 +32,7 @@ HadronModTargetControl
 				targetParamMenu.items = ["Nothing"] ++ currentSelPlugin.modSets.keys.asArray;
 				targetParamMenu.value = 0;
 			});
+			this.changed(\currentSelPlugin, currentSelPlugin, oldplug, currentSelParam);
 		});
 		
 		this.refreshAppMenu;
@@ -40,7 +41,7 @@ HadronModTargetControl
 		.items_(["Nothing."])
 		.action_
 		({|menu|
-			
+			var oldparam = currentSelParam;
 			if(menu.value == 0,
 			{
 				currentSelParam = nil;
@@ -48,6 +49,7 @@ HadronModTargetControl
 			{
 				currentSelParam = menu.item.asSymbol;
 			});
+			this.changed(\currentSelParam, currentSelParam, currentSelPlugin, oldparam);
 		});
 		
 	}
@@ -97,6 +99,25 @@ HadronModTargetControl
 		if((currentSelPlugin != nil) and: { currentSelParam != nil },
 		{
 			currentSelPlugin.modSets.at(currentSelParam.asSymbol).value(argVal);
+		});
+	}
+
+	map { |ctlBus|
+		var node;
+		if((currentSelPlugin != nil) and: { currentSelParam != nil },
+		{
+			if((node = currentSelPlugin.tryPerform(\synthInstance)).notNil) {
+				node.map(currentSelParam, ctlBus);
+			};
+		});
+	}
+	unmap { |oldplug(currentSelPlugin), oldparam(currentSelParam)|
+		var node;
+		if((oldplug != nil) and: { currentSelParam != nil },
+		{
+			if((node = oldplug.tryPerform(\synthInstance)).notNil) {
+				node.map(oldparam, -1);
+			};
 		});
 	}
 	
