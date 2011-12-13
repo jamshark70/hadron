@@ -76,7 +76,6 @@ HrCtlMod : HrSimpleModulator {
 	}
 
 	update { |obj, what, argument, oldplug, oldparam|
-		// [obj, what, argument].debug("HrCtlMod:update");
 		if(#[currentSelPlugin, currentSelParam].includes(what)) {
 			if(argument.notNil) {
 				modControl.unmap(oldplug, oldparam);
