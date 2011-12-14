@@ -23,7 +23,7 @@ HrStereoSplitter : HadronPlugin
 		synthInstances = List.new;
 		volSliders = List.new;
 		volNums = List.new;
-		currentSlValues = List.new;
+		currentSlValues = List.fill(outBusses.size div: 2, 0);
 
 		(outBusses.size/2).do
 		({|cnt|
