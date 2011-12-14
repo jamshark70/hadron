@@ -2,6 +2,7 @@ HrWrapSynth : HadronPlugin
 {
 	var <synthInstance, sliders, numBoxes, setFunctions, synthBusArgs, startButton, storeArgs, specs;
 	var synthDesc, ctlNameStrings;
+	var sName;
 	
 	*new
 	{|argParentApp, argIdent, argUniqueID, argExtraArgs, argCanvasXY|
@@ -48,7 +49,7 @@ HrWrapSynth : HadronPlugin
 	
 	init
 	{	|ctlstr, sdesc|
-		var sdControls, sName;
+		var sdControls;
 		ctlNameStrings = ctlstr;
 		synthDesc = sdesc;
 		sliders = List.new;
@@ -132,21 +133,19 @@ HrWrapSynth : HadronPlugin
 		.value_(1)
 		.action_
 		({|btn|
-		
-			var tempArgs;
 			btn.value.switch
 			(
 				0, {
 					if(synthDesc.hasGate) {
-						synthInstance.release
+						synthInstance.release;
 					} {
 						synthInstance.free;
 					};
+					synthInstance = nil;
 				},
 				1, 
 				{ 
-					tempArgs = (synthBusArgs.value ++ storeArgs.keys.collect({|item| [item, specs.at(item.asSymbol).map(storeArgs.at(item))]; }).asArray).flatten(1);
-					synthInstance = Synth(sName, tempArgs, target: group);
+					this.makeSynth;
 				}
 			)
 		});
@@ -164,9 +163,17 @@ HrWrapSynth : HadronPlugin
 					{|argg| sliders[cnt].automationData_(argg) }
 				]; 
 			}).flat ++  [ {|argg| startButton.valueAction_(argg); }; ];
-		
+		this.makeSynth;
 	}
-	
+
+	makeSynth {
+		var tempArgs;
+		if(synthInstance.isNil) {
+			tempArgs = (synthBusArgs.value ++ storeArgs.keys.collect({|item| [item, specs.at(item.asSymbol).map(storeArgs.at(item))]; }).asArray).flatten(1);
+			synthInstance = Synth(sName, tempArgs, target: group);
+		};
+	}
+
 	updateBusConnections
 	{
 		synthInstance.set(*synthBusArgs.value);
