@@ -3,19 +3,22 @@ HrCtlMod : HrSimpleModulator {
 	{
 		this.addHadronPlugin;
 	}
+	*height { ^215 }
 	// copy and paste programming...
 	init
 	{
 		window.background_(Color.gray(0.7));
 		prOutBus = Bus.control(Server.default, 1);
-		helpString = "Input is modulation source (audio). Applies the operation and modulates the target parameter.";
-		StaticText(window, Rect(10, 20, 150, 20)).string_("Operation on signal \"sig\":");
+		helpString = "Write a modulation function, maybe using an audio input.";
+		StaticText(window, Rect(10, 20, 150, 20)).string_("Modulation function");
 
 		postOpFunc = {|sig| (sig * 0.5) + 0.5; };
 
-		postOpText = TextField(window, Rect(160, 20, 280, 20)).string_("(sig * 0.5) + 0.5;")
+		// fix this
+		postOpText = TextField(window, Rect(10, 20, 430, 20))
+		.string_("{ |sig| SinOsc.kr(1, 0, 0.5, 0.5) }")
 		.action_({|txt|
-			postOpFunc = ("{|sig|"+ txt.value + "}").interpret;
+			postOpFunc = txt.value.interpret;
 			this.refreshSynth;
 		});
 
@@ -23,6 +26,9 @@ HrCtlMod : HrSimpleModulator {
 		modControl.addDependant(this);
 
 		startButton = Button(window, Rect(10, 80, 80, 20)).states_([["Start"],["Stop"]])
+		// not sure about this -- better to sync with actual mapped state
+		// that's harder than I can do right this minute
+		.value_(1)
 		.action_
 		({|btn|
 			// synthInstance.run(btn.value == 1)
@@ -48,24 +54,41 @@ HrCtlMod : HrSimpleModulator {
 	}
 
 	refreshSynth {
+		// it's a little bit dumb that I have to do this, but
+		// it's the only way to conditionally not execute something after try
+		var shouldPlay = true;
 		fork
 		{
-			SynthDef("hrSimpleMod"++uniqueID, { |prOutBus, inBus0|
-				var input = InFeedback.ar(inBus0);
-				input = postOpFunc.value(input);
-				Out.kr(prOutBus, A2K.kr(input));
-			}).add;
-			Server.default.sync;
-			if(synthInstance.notNil) {
-				synthInstance = Synth("hrSimpleMod"++uniqueID,
-					[\inBus0, inBusses[0], \prOutBus, prOutBus],
-					target: synthInstance, addAction: \addReplace
-				);
-			} {
-				synthInstance = Synth("hrSimpleMod"++uniqueID,
-					[\inBus0, inBusses[0], \prOutBus, prOutBus],
-					target: group
-				);
+			try {
+				SynthDef("hrSimpleMod"++uniqueID, { |prOutBus, inBus0|
+					var input = InFeedback.ar(inBus0);
+					input = postOpFunc.value(input);
+					if(input.size > 1 or: { input.rate != \control }) {
+						// throw prevents the synthdef from being replaced
+						Exception("HrCtlMod result must be one channel, control rate").throw;
+					};
+					Out.kr(prOutBus, A2K.kr(input));
+				}).add;
+			} { |err|
+				if(err.isKindOf(Exception)) {
+					shouldPlay = false;
+					err.reportError;
+					defer { parentApp.displayStatus(err.errorString, -1) };
+				};
+			};
+			if(shouldPlay) {
+				Server.default.sync;
+				if(synthInstance.notNil) {
+					synthInstance = Synth("hrSimpleMod"++uniqueID,
+						[\inBus0, inBusses[0], \prOutBus, prOutBus],
+						target: synthInstance, addAction: \addReplace
+					).debug("HrCtlMod: playing");
+				} {
+					synthInstance = Synth("hrSimpleMod"++uniqueID,
+						[\inBus0, inBusses[0], \prOutBus, prOutBus],
+						target: group
+					).debug("HrCtlMod: playing");
+				};
 			};
 		};
 	}
