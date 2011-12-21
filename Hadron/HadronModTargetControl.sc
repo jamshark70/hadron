@@ -103,13 +103,14 @@ HadronModTargetControl
 	}
 
 	map { |ctlBus|
-		var node;
-		if((currentSelPlugin != nil) and: { currentSelParam != nil },
+		var node, mapped;
+		if(mapped = (currentSelPlugin != nil) and: { currentSelParam != nil },
 		{
 			if((node = currentSelPlugin.tryPerform(\synthInstance)).notNil) {
 				node.map(currentSelParam, ctlBus);
 			};
 		});
+		^mapped
 	}
 	unmap { |oldplug(currentSelPlugin), oldparam(currentSelParam)|
 		var node;
