@@ -139,6 +139,15 @@ HadronCanvasItem
 						524576, //if alt pressed
 						{
 							this.amSelected;
+						},
+						262144,  // if ctrl pressed
+						{
+							if(parentPlugin.isHidden) {
+								parentPlugin.showWindow
+							} {
+								// why is this a private method? eh...
+								parentPlugin.prHideWindow
+							};
 						}
 					); 
 				}

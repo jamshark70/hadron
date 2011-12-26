@@ -120,13 +120,13 @@ HadronPlugin
 		outerWindow.bounds = Rect(0, 0, 0, 0);
 		isHidden = true;
 		parentApp.isDirty = true;
-		if(GUI.id == \swing, { outerWindow.visible_(false); });
+		if(GUI.id != \cocoa, { outerWindow.visible_(false); });
 	}
 	
 	showWindow
 	{
 		if(isHidden, { outerWindow.bounds = oldWinBounds; isHidden = false; });
-		if(GUI.id == \swing, { outerWindow.visible_(true); });
+		if(GUI.id != \cocoa, { outerWindow.visible_(true); });
 		parentApp.isDirty = true;
 		outerWindow.front;
 	}

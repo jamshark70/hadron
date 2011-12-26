@@ -189,7 +189,7 @@ HadronCanvas
 			if(GUI.id != \cocoa, { cWin.visible_(true); });
 			cWin.bounds = oldBounds;
 			parentApp.canvasButton.value_(1);
-			parentApp.displayStatus("Right click on canvas to add plugins. Shift+click on a plugin to make connections", 0);
+			parentApp.displayStatus("Right click on canvas to add plugins. Shift+click on a plugin to make connections. Ctrl-click = show/hide plugin window", 0);
 			cWin.refresh;
 			cWin.front;
 		});
