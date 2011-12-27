@@ -30,7 +30,8 @@ HadronCanvas
 		.userCanClose_(false)
 		.acceptsMouseOver_(true);
 		
-		cWin.view.keyDownAction_({|...args| this.handleKeys(*args); });
+		// why do we need this?
+		// cWin.view.keyDownAction_({|...args| this.handleKeys(*args); });
 		
 		
 		
@@ -326,12 +327,11 @@ HadronCanvas
 				selectedItems[0].signalKill;
 			});
 			this.drawCables;
-			tempWin.close; 
+			tempWin.close;
 			
 		});
 		Button(tempWin, Rect(100, 60, 80, 20)).states_([["Cancel"]]).action_({ tempWin.close; });
 		
 		tempWin.front;
-		
 	}
 }
