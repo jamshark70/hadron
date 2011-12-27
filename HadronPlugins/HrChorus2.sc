@@ -59,41 +59,42 @@ HrChorus2 : HadronPlugin {
 
 	makeViews {
 		window.decorator = FlowLayout(window.bounds.moveTo(0, 0));
-		numDelaySlider = EZSlider(window, 440@20, "Num delays",
+		numDelaySlider = HrEZSlider(window, 440@20, "Num delays",
 			#[1, 8, \lin, 1, 3],
 			action: nil,  // updates can be too fast; skipjack it (see init)
 			initVal: 3
 		);
-		predelaySlider = EZSlider(window, 440@20, "Predelay",
+		predelaySlider = HrEZSlider(window, 440@20, "Predelay",
 			#[0.001, 0.1, \exp, 0, 0.01],
 			{ |view| synthInstance.set(\predelay, view.value) },
 			0.01
+		);
+		speedSlider = HrEZSlider(window, 440@20, "Speed",
+			#[0.01, 8, \exp, 0, 0.05],
+			{ |view| view.debug("speedslider"); synthInstance.set(\speed, view.value) },
+			0.05
+		);
+		depthSlider = HrEZSlider(window, 440@20, "Depth",
+			#[0.001, 0.1, \exp, 0, 0.01],
+			{ |view| synthInstance.set(\depth, view.value) },
+			0.004
+		);
+		phdiffSlider = HrEZSlider(window, 440@20, "Phase diff",
+			#[0, 2pi, \lin, 0, 0],
+			{ |view| synthInstance.set(\phdiff, view.value) },
+			0
+		);
+		preampSlider = HrEZSlider(window, 440@20, "Preamp",
+			\amp,
+			{ |view| synthInstance.set(\preamp, view.value) },
+			0.4
 		);
 		// Of course I can't just do this w/o try... CocoaGUI doesn't support decimals_
 		// :-|
 		try {
 			predelaySlider.numberView.decimals = 3;
+			depthSlider.numberView.decimals = 3;
 		};
-		speedSlider = EZSlider(window, 440@20, "Speed",
-			#[0.01, 8, \exp, 0, 0.05],
-			{ |view| synthInstance.set(\speed, view.value) },
-			0.05
-		);
-		depthSlider = EZSlider(window, 440@20, "Depth",
-			#[0.001, 0.1, \exp, 0, 0.01],
-			{ |view| synthInstance.set(\depth, view.value) },
-			0.004
-		);
-		phdiffSlider = EZSlider(window, 440@20, "Phase diff",
-			#[0, 2pi, \lin, 0, 0],
-			{ |view| synthInstance.set(\phdiff, view.value) },
-			0
-		);
-		preampSlider = EZSlider(window, 440@20, "Preamp",
-			\amp,
-			{ |view| synthInstance.set(\preamp, view.value) },
-			0.4
-		);
 	}
 
 	synthArgs {
