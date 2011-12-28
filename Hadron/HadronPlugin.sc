@@ -1,16 +1,48 @@
 HadronPlugin
 {
-	var <inBusses, <outBusses, <group, <uniqueID, <parentApp,
+	var <inBusses, <mainOutBusses, <outBusses, <group, <uniqueID, <parentApp,
 	<outerWindow, window, <>oldWinBounds, <>isHidden, <name, <ident,
 	<>inConnections, <>outConnections, <dummyInBusses, <conWindow,
 	<>saveGets, <>saveSets, <extraArgs, <boundCanvasItem, <helpString,
 	<modSets, <modGets;
 
+	var badValueSynth, badValueResp;
+
 	classvar <>plugins; //holder for external plugins
+
+	*shouldCheckBad { ^true }
 
 	*initClass
 	{
 		this.plugins = List.new;
+	}
+
+	*doOnServerBoot {
+		(1..2).do { |numChan|
+			SynthDef("hrCheckBad" ++ numChan, { |uniqueID|
+				var indices = (0..numChan-1),
+				inbuses = Array.fill(numChan, { |i|
+					NamedControl.kr("inBus" ++ i, 0)
+				}),
+				pr_outbuses = Array.fill(numChan, { |i|
+					NamedControl.kr("pr_outBus" ++ i, 0)
+				}),
+				outbuses = Array.fill(numChan, { |i|
+					NamedControl.kr("outBus" ++ i, 0)
+				}),
+				sig = In.ar(inbuses, 1),
+				bad = CheckBadValues.ar(sig, id: indices),
+				silent = Silent.ar(1);
+				bad.do { |badChan, i|
+					SendReply.ar(badChan, '/hrBadValue', [badChan, i], replyID: uniqueID);
+				};
+				pr_outbuses.do { |bus, i|
+					var chan = Select.ar(bad[i], [sig[i], silent]);
+					ReplaceOut.ar(bus, chan);
+					Out.ar(outbuses[i], chan);
+				};
+			}).add;
+		}
 	}
 
 	*addHadronPlugin
@@ -27,6 +59,7 @@ HadronPlugin
 
 	doInit
 	{|argParentApp, argName, argIdent, argUniqueID, argExtraArgs, argBounds, argNumIns, argNumOuts, argCanvasXY|
+		var busArgFunc;
 
 		extraArgs = argExtraArgs;
 		modGets = Dictionary.new;
@@ -35,8 +68,11 @@ HadronPlugin
 		helpString = "No help available for this plugin.";
 		//every connecting plugin gets inputs from the plugin it connects.
 		inBusses = Array.fill(argNumIns, { Bus.audio(Server.default, 1); });
+		//plugin outputs go to a local-out first, for bad value checking, mixing, fx
+		outBusses = Array.fill(argNumOuts, { Bus.audio(Server.default, 1); });
 		//outputs are blackholed by default. will get an input when connected to stg.
-		outBusses = Array.fill(argNumOuts, { argParentApp.blackholeBus; });
+		//the bad-value synth above passes the output to the "real" target
+		mainOutBusses = Array.fill(argNumOuts, { argParentApp.blackholeBus; });
 
 		//these hold connection info. [0] is connected app, [1] is bus number in connected app.
 		inConnections = Array.fill(argNumIns, { [nil, nil]; });
@@ -49,6 +85,30 @@ HadronPlugin
 		//argCanvasXY.class.postln;
 		boundCanvasItem = HadronCanvasItem(parentApp.canvasObj, this, argCanvasXY.x, argCanvasXY.y);
 
+		busArgFunc = { |name, buses|
+			[
+				[name.asString, (0 .. buses.size-1)].flop.collect({ |row| row.join.asSymbol }),
+				buses
+			].flop;
+		};
+
+		if(this.class.shouldCheckBad) {
+			badValueSynth ?? {
+				badValueSynth = Synth("hrCheckBad" ++ argNumOuts,
+					flat([uniqueID: uniqueID]
+					++ busArgFunc.("inBus", outBusses)
+					++ busArgFunc.("outBus", mainOutBusses)
+					++ busArgFunc.("pr_outBus", outBusses)),
+					group, \addToTail
+				);
+			};
+			badValueResp ?? {
+				badValueResp = OSCpathResponder(Server.default.addr,
+					['/hrBadValue', badValueSynth.nodeID],
+					{ |time, resp, msg| this.makeSynth }
+				).add;
+			};
+		};
 
 		name = argName;
 		ident = argIdent; //ident is to identify an instance when there is more than one instance.
@@ -262,10 +322,10 @@ HadronPlugin
 			//remove my binding
 			outConnections[argMyBusNo] = [nil, nil];
 			//redirect my bus to blackhole.
-			outBusses[argMyBusNo] = parentApp.blackholeBus;
-			this.updateBusConnections;
+			mainOutBusses[argMyBusNo] = parentApp.blackholeBus;
+			this.prUpdateBusConnections;
 			parentApp.canvasObj.drawCables;
-			//no need to call .updateBusConnections on (old) outConnections[argMyBusNo][0]
+			//no need to call .prUpdateBusConnections on (old) outConnections[argMyBusNo][0]
 			//no further action needed, return.
 			^this;
 		});
@@ -276,7 +336,7 @@ HadronPlugin
 
 			if((item[0] === this) and: { item[1] === argMyBusNo },
 			{//inBusses in plugins are not altered in anyway so just delete the binding.
-			//.updateBusConnections on target will be called later but probably not necessary for there.
+			//.prUpdateBusConnections on target will be called later but probably not necessary for there.
 				argTargetPlugin.inConnections[count] = [nil, nil];
 			});
 		});
@@ -291,10 +351,10 @@ HadronPlugin
 
 			//redirect its busses to blackhole.
 			argTargetPlugin.inConnections[argTargetBusNo][0]
-				.outBusses[argTargetPlugin.inConnections[argTargetBusNo][1]] = parentApp.blackholeBus;
+				.mainOutBusses[argTargetPlugin.inConnections[argTargetBusNo][1]] = parentApp.blackholeBus;
 
 			//the farside plugin needs an update
-			tempPlugin.updateBusConnections;
+			tempPlugin.prUpdateBusConnections;
 		});
 
 		//if we are already connected to stg, notify the target, she does not need .updateConnections, just notifying.
@@ -307,15 +367,15 @@ HadronPlugin
 
 
 		//change my out port to match the relevant input.
-		outBusses[argMyBusNo] = argTargetPlugin.inBusses[argTargetBusNo];
+		mainOutBusses[argMyBusNo] = argTargetPlugin.inBusses[argTargetBusNo];
 		//change the binding appropriately.
 		outConnections[argMyBusNo] = [argTargetPlugin, argTargetBusNo];
 
 		//bind the target to me.
 		argTargetPlugin.inConnections[argTargetBusNo] = [this, argMyBusNo];
 
-		argTargetPlugin.updateBusConnections;
-		this.updateBusConnections;
+		argTargetPlugin.prUpdateBusConnections;
+		this.prUpdateBusConnections;
 		parentApp.canvasObj.drawCables;
 
 	}
@@ -328,7 +388,7 @@ HadronPlugin
 
 			if(item[0] != nil,
 			{
-				outBusses[count] = item[0].inBusses[item[1]];
+				mainOutBusses[count] = item[0].inBusses[item[1]];
 
 			});
 		}
@@ -341,6 +401,7 @@ HadronPlugin
 	{
 		parentApp.alivePlugs.do(_.notifyPlugKill(this));
 		parentApp.isDirty = true;
+		badValueResp.remove;
 		this.cleanUp;
 		group.free;
 
@@ -350,8 +411,8 @@ HadronPlugin
 			if(item != [nil, nil],
 			{
 				item[0].outConnections[item[1]] = [nil, nil];
-				item[0].outBusses[item[1]] = parentApp.blackholeBus;
-				item[0].updateBusConnections;
+				item[0].mainOutBusses[item[1]] = parentApp.blackholeBus;
+				item[0].prUpdateBusConnections;
 			});
 		});
 
@@ -361,7 +422,7 @@ HadronPlugin
 			if(item != [nil, nil],
 			{
 				item[0].inConnections[item[1]] = [nil, nil];
-				item[0].updateBusConnections;
+				item[0].prUpdateBusConnections;
 			});
 		});
 
@@ -378,9 +439,32 @@ HadronPlugin
 
 	}
 
+	prUpdateBusConnections {
+[this, uniqueID].debug(">> HadronPlugin:prUpdateBusConnections");
+		if(badValueSynth.notNil) {
+			badValueSynth.set(*(
+				[
+					["outBus", (0 .. mainOutBusses.size-1)]
+					.flop.collect({ |row| row.join.asSymbol }),
+					mainOutBusses
+				].flop.flat
+			));
+		};
+[this, uniqueID].debug(">> HadronPlugin:updateBusConnections");
+		this.updateBusConnections;
+[this, uniqueID].debug("<< HadronPlugin:updateBusConnections");
+[this, uniqueID].debug("<< HadronPlugin:prUpdateBusConnections");
+	}
+
 	updateBusConnections
 	{//called each time a connection changes relating to this instance
 		"Plugin needs to update necessary bus mappings in updateBusConnections() method.".postln;
+	}
+
+	makeSynth {
+		// called from the plugin's init method,
+		// AND if a bad value is detected, to kill the offender and replace it
+		"Plugin needs to create its synth(s) in the makeSynth() method.".postln;
 	}
 
 	cleanUp

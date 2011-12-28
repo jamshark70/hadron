@@ -84,8 +84,7 @@ HrADC : HadronPlugin
 			}).add;
 			
 			Server.default.sync;
-			synthInstance = Synth("hrADC"++uniqueID, [\outBus0, outBusses[0], \outBus1, outBusses[1]], group);
-			{ lButton.valueAction_(1); }.defer;
+			this.makeSynth;
 		};
 		
 		saveGets = 
@@ -114,7 +113,15 @@ HrADC : HadronPlugin
 		modSets.put(\level, {|argg| lastLevel = argg; synthInstance.set(\mul, argg); { levSlider.value_(argg); }.defer; });
 		
 	}
-	
+
+	makeSynth {
+		if(synthInstance.notNil) {
+			synthInstance.free;
+		};
+		synthInstance = Synth("hrADC"++uniqueID, [\outBus0, outBusses[0], \outBus1, outBusses[1]], group);
+		{ lButton.valueAction_(1); }.defer;
+	}
+
 	updateBusConnections
 	{
 		synthInstance.set(\outBus0, outBusses[0], \outBus1, outBusses[1]);

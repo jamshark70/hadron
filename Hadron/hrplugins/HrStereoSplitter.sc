@@ -3,6 +3,8 @@ HrStereoSplitter : HadronPlugin
 	var synthInstances, summerSynth, sourceSlider, parNumIns, volSliders, volNums,
 	transitBus, mixerGroup, currentSlValues;
 
+	*shouldCheckBad { ^false }
+
 	*new
 	{|argParentApp, argIdent, argUniqueID, argExtraArgs, argCanvasXY|
 
@@ -63,24 +65,7 @@ HrStereoSplitter : HadronPlugin
 			}).add;
 
 			Server.default.sync;
-
-			(outBusses.size/2).do
-			({|cnt|
-
-				synthInstances.add
-				(
-					Synth("hrSplitOut"++uniqueID,
-						[
-							\inBus0, inBusses[0],
-							\inBus1, inBusses[1],
-							\outBusL, outBusses[0 + (cnt*2)],
-							\outBusR, outBusses[1 + (cnt*2)],
-							\mul, 1
-						], target: group)
-				);
-
-			});
-
+			this.makeSynth;
 		};
 
 		saveGets =
@@ -108,6 +93,25 @@ HrStereoSplitter : HadronPlugin
 		});
 	}
 
+	makeSynth {
+		(outBusses.size/2).do
+		({|cnt|
+
+			synthInstances.add
+			(
+				Synth("hrSplitOut"++uniqueID,
+					[
+						\inBus0, inBusses[0],
+						\inBus1, inBusses[1],
+						\outBusL, mainOutBusses[0 + (cnt*2)],
+						\outBusR, mainOutBusses[1 + (cnt*2)],
+						\mul, 1
+					], target: group)
+			);
+
+		});
+	}
+
 	updateBusConnections
 	{
 		(outBusses.size/2).do
@@ -115,8 +119,8 @@ HrStereoSplitter : HadronPlugin
 
 			synthInstances[cnt].set
 			(
-				\outBusL, outBusses[0 + (cnt*2)],
-				\outBusR, outBusses[1 + (cnt*2)]
+				\outBusL, mainOutBusses[0 + (cnt*2)],
+				\outBusR, mainOutBusses[1 + (cnt*2)]
 			);
 
 		});

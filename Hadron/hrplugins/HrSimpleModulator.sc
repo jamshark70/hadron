@@ -58,8 +58,7 @@ HrSimpleModulator : HadronPlugin
 			}).add;
 			
 			Server.default.sync;
-			
-			synthInstance = Synth("hrSimpleMod"++uniqueID, [\inBus0, inBusses[0]], target: group);
+			this.makeSynth;
 		};
 		
 		saveGets =
@@ -78,7 +77,10 @@ HrSimpleModulator : HadronPlugin
 		
 		
 	}
-	
+
+	makeSynth {
+		synthInstance = Synth("hrSimpleMod"++uniqueID, [\inBus0, inBusses[0]], target: group);
+	}
 	
 	notifyPlugKill
 	{|argPlug|

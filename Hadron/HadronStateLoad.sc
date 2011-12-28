@@ -86,7 +86,7 @@ HadronStateLoad
 			if(loadStage == 5,
 			{
 				parentApp.alivePlugs.do({|plug| plug.wakeConnections; });
-				parentApp.alivePlugs.do({|plug| plug.updateBusConnections; });
+				parentApp.alivePlugs.do({|plug| plug.prUpdateBusConnections; });
 			});
 			
 			if(loadStage == 6,

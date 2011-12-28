@@ -20,14 +20,14 @@ HrCtlMod : HrSimpleModulator {
 		.string_("{ |sig| SinOsc.kr(1, 0, 0.5, 0.5) }");
 		// .action_({|txt|
 		// 	postOpFunc = txt.value.interpret;
-		// 	this.refreshSynth;
+		// 	this.makeSynth;
 		// });
 
 		evalButton = Button(window, Rect(10, 120, 80, 20))
 		.states_([["Evaluate"]])
 		.action_({
 			postOpFunc = postOpText.string.interpret;
-			this.refreshSynth;
+			this.makeSynth;
 		});
 
 		modControl = HadronModTargetControl(window, Rect(10, 150, 430, 20), parentApp);
@@ -44,7 +44,7 @@ HrCtlMod : HrSimpleModulator {
 			{ modControl.unmap };
 		});
 
-		this.refreshSynth;
+		this.makeSynth;
 
 		saveGets =
 			[
@@ -61,7 +61,7 @@ HrCtlMod : HrSimpleModulator {
 			];
 	}
 
-	refreshSynth {
+	makeSynth {
 		// it's a little bit dumb that I have to do this, but
 		// it's the only way to conditionally not execute something after try
 		var shouldPlay = true;

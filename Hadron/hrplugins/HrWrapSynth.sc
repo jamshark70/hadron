@@ -168,15 +168,17 @@ HrWrapSynth : HadronPlugin
 
 	makeSynth {
 		var tempArgs;
-		if(synthInstance.isNil) {
-			tempArgs = (synthBusArgs.value ++ storeArgs.keys.collect({|item| [item, specs.at(item.asSymbol).map(storeArgs.at(item))]; }).asArray).flatten(1);
-			synthInstance = Synth(sName, tempArgs, target: group);
+		if(synthInstance.notNil) {
+			if(synthDesc.hasGate) { synthInstance.release }
+			{ synthInstance.free };
 		};
+		tempArgs = (synthBusArgs.value ++ storeArgs.keys.collect({|item| [item, specs.at(item.asSymbol).map(storeArgs.at(item))]; }).asArray).flatten(1);
+		synthInstance = Synth(sName, tempArgs, target: group);
 	}
 
 	updateBusConnections
 	{
-		synthInstance.set(*synthBusArgs.value);
+		synthInstance.set(*synthBusArgs.value.debug("busargs"));
 	}
 	
 	cleanUp

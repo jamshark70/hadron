@@ -17,6 +17,15 @@ Hadron
 			HrDIYSynth,
 			HrWrapSynth		
 		]; //default plugins
+		StartUp.add {
+			if(ServerOptions.findRespondingMethodFor(\numPrivateAudioBusChannels_).notNil) {
+				Server.default.options.numPrivateAudioBusChannels = 992
+			} {
+				Server.default.options.numAudioBusChannels = 1024
+			};
+			"Hadron: Increased default server's audio bus count to 1024 total (992 private).".postln;
+			ServerBoot.add(HadronPlugin, \default);
+		};
 	}
 	
 	*new

@@ -3,6 +3,8 @@ HrPresetMorph : HadronPlugin
 	var <surfaceView, <presetList, curPresets, nPresetText, addButton, <mouseXY, <compositeBack,
 	canvasItems, refreshRoutine, isRefreshing, rotateCounter, rotFunc, <>menuList,
 	senseDistance, senseCurve;
+
+	*shouldCheckBad { ^false }
 	
 	*initClass
 	{
@@ -360,6 +362,8 @@ HrPresetMorph : HadronPlugin
 			preset.removeAt(tempID);
 		});
 	}
+
+	makeSynth {}
 	
 	cleanUp
 	{

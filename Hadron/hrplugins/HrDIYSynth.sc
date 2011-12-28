@@ -49,6 +49,18 @@ HrDIYSynth : HadronPlugin
 
 	}
 
+	// expose to the plugin superclass interface
+	// it expects makeSynth, not redefineSynth
+	makeSynth {
+		if(this.canCallOS) {
+			this.redefineSynth(codeView.string.interpret);
+		} {
+			fork {
+				this.redefineSynth(codeView.string.interpret);
+			}
+		};
+	}
+
 	redefineSynth
 	{|argWrapFunc|
 		var shouldPlay = true;
@@ -57,12 +69,13 @@ HrDIYSynth : HadronPlugin
 			sDef =
 			SynthDef("hrDIYSynth"++uniqueID,
 				{
-					arg inBus0, inBus1, outBus0, outBus1;
+					arg inBus0, inBus1, outBus0, outBus1, masterGate = 1;
 					var inputs = [InFeedback.ar(inBus0), InFeedback.ar(inBus1)];
 
 					var sound;
 
-					sound = SynthDef.wrap(argWrapFunc, [0], [inputs]);
+					sound = SynthDef.wrap(argWrapFunc, [0], [inputs])
+					* EnvGen.kr(Env.asr(0.02, 1, 0.02), masterGate, doneAction: 2);
 
 					if(sound.isSequenceableCollection.not) {
 						sound = sound.dup(2);
@@ -85,7 +98,7 @@ HrDIYSynth : HadronPlugin
 
 				Server.default.sync;
 
-				if(synthInstance.notNil, { synthInstance.free; });
+				if(synthInstance.notNil, { synthInstance.set(\masterGate, 0); });
 				synthInstance =
 				Synth(sDef.name,
 					[
