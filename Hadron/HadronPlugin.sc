@@ -114,15 +114,7 @@ HadronPlugin
 						channels.reverseDo { |flag, i|
 							if(flag == $1) { badchannels.add(i+1) };
 						};
-						Char.nl.post;
-						"BAD VALUE FOUND in %%, id %, channels %. Rebuilding synth."
-						.format(
-							this.class.name,
-							if(name.asSymbol == this.class.name) { "" } { " " ++ name },
-							msg[2], badchannels
-						)
-						.warn;
-						this.makeSynth;
+						this.handleBadValue(badchannels);
 					}
 				).add;
 			};
@@ -455,6 +447,7 @@ HadronPlugin
 		boundCanvasItem.removeFromCanvas;
 		outerWindow.close;
 
+		NotificationCenter.notify(this, \selfDestructed);
 	}
 
 	prUpdateBusConnections {
@@ -531,5 +524,51 @@ HadronPlugin
 
 			saveSets[count].value(item);
 		});
+	}
+
+	handleBadValue { |badchannels|
+		var msg = "BAD VALUE FOUND in %%, id %, channel% %.\nPlease correct the plugin's settings and click OK."
+		.format(
+			this.class.name,
+			if(name.asSymbol == this.class.name) { "" } { " " ++ name },
+			uniqueID, if(badchannels.size > 1) { "s" } { "" }, badchannels
+		),
+		tempwin;
+
+		this.releaseSynth;
+		Char.nl.post;
+		msg.warn;
+		msg = msg.split(Char.nl);
+
+		defer {
+			var sbounds = Window.screenBounds, registration;
+			registration = NotificationCenter.register(this, \selfDestructed, UniqueID.next, {
+				tempwin.close;
+			});
+			this.showWindow;
+			tempwin = Window("BAD VALUE FOUND",
+				Rect.aboutPoint(sbounds.center, 320, 50))
+				.userCanClose_(false);
+			StaticText(tempwin, Rect(2, 2, 636, 30))
+				.align_(\center)
+				.font_(Font.default.boldVariant.size_(14))
+				.stringColor_(Color.red(0.4))
+				.background_(Color.clear)
+				.string_(msg[0]);
+			StaticText(tempwin, Rect(2, 32, 636, 30))
+				.align_(\center)
+				.font_(Font.default.boldVariant.size_(14))
+				.stringColor_(Color.red(0.4))
+				.background_(Color.clear)
+				.string_(msg[1]);
+			Button(tempwin, Rect(280, 70, 80, 20))
+				.states_([["OK"]])
+				.action_({
+					registration.remove;
+					tempwin.close;
+					this.makeSynth;
+				});
+			tempwin.front;
+		};
 	}
 }
