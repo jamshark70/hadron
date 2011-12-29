@@ -4,8 +4,6 @@ HrPresetMorph : HadronPlugin
 	canvasItems, refreshRoutine, isRefreshing, rotateCounter, rotFunc, <>menuList,
 	senseDistance, senseCurve;
 
-	*shouldCheckBad { ^false }
-	
 	*initClass
 	{
 		this.addHadronPlugin;

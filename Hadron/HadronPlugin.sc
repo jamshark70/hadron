@@ -10,7 +10,7 @@ HadronPlugin
 
 	classvar <>plugins; //holder for external plugins
 
-	*shouldCheckBad { ^true }
+	shouldCheckBad { ^outBusses.size > 0 }
 
 	*initClass
 	{
@@ -95,7 +95,7 @@ HadronPlugin
 			].flop;
 		};
 
-		if(this.class.shouldCheckBad) {
+		if(this.shouldCheckBad) {
 			badValueSynth ?? {
 				badValueSynth = Synth("hrCheckBad" ++ argNumOuts,
 					flat([uniqueID: uniqueID]

@@ -2,8 +2,6 @@ HrDAC : HadronPlugin
 {
 	var synthInstance, levelSlider, limButton, lastLevel;
 
-	*shouldCheckBad { ^false }
-	
 	*new
 	{|argParentApp, argIdent, argUniqueID, argExtraArgs, argCanvasXY|
 		

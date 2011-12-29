@@ -3,7 +3,8 @@ HrStereoSplitter : HadronPlugin
 	var synthInstances, summerSynth, sourceSlider, parNumIns, volSliders, volNums,
 	transitBus, mixerGroup, currentSlValues;
 
-	*shouldCheckBad { ^false }
+	// special override: this has outputs, but we don't need them to be checked
+	shouldCheckBad { ^false }
 
 	*new
 	{|argParentApp, argIdent, argUniqueID, argExtraArgs, argCanvasXY|
