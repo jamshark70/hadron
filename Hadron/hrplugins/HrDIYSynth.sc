@@ -55,9 +55,10 @@ HrDIYSynth : HadronPlugin
 		if(this.canCallOS) {
 			this.redefineSynth(codeView.string.interpret);
 		} {
-			fork {
+			AppClock.sched(0, {
 				this.redefineSynth(codeView.string.interpret);
-			}
+				nil
+			})
 		};
 	}
 
