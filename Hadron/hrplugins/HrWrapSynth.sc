@@ -178,7 +178,7 @@ HrWrapSynth : HadronPlugin
 
 	updateBusConnections
 	{
-		synthInstance.set(*synthBusArgs.value.debug("busargs"));
+		synthInstance.set(*synthBusArgs.value);
 	}
 	
 	cleanUp
