@@ -93,7 +93,14 @@ HrStereoSplitter : HadronPlugin
 		});
 	}
 
+	releaseSynth {
+		if(synthInstances.size > 0) {
+			synthInstances.do(_.free);
+		};
+	}
+
 	makeSynth {
+		this.releaseSynth;
 		(outBusses.size/2).do
 		({|cnt|
 

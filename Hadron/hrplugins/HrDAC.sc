@@ -74,6 +74,12 @@ HrDAC : HadronPlugin
 		modSets.put(\level, {|argg| levelSlider.valueAction_(argg) });
 	}
 
+	releaseSynth {
+		if(synthInstance.notNil) {
+			synthInstance.free;
+		};
+	}
+
 	makeSynth {
 		if(synthInstance.notNil) { synthInstance.free };
 		synthInstance = Synth("hrDAC"++uniqueID, [\inBus1, inBusses[0], \inBus2, inBusses[1]], group);
@@ -86,6 +92,6 @@ HrDAC : HadronPlugin
 	
 	cleanUp
 	{
-		synthInstance.free;
+		this.releaseSynth;
 	}
 }

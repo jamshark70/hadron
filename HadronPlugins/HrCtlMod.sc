@@ -61,6 +61,8 @@ HrCtlMod : HrSimpleModulator {
 			];
 	}
 
+	releaseSynth { synthInstance.free }
+
 	makeSynth {
 		// it's a little bit dumb that I have to do this, but
 		// it's the only way to conditionally not execute something after try
@@ -102,7 +104,7 @@ HrCtlMod : HrSimpleModulator {
 	}
 	cleanUp
 	{
-		synthInstance.free;
+		this.releaseSynth;
 		modControl.removeDependant(this);
 	}
 

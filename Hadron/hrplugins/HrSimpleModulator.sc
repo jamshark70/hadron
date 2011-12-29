@@ -74,11 +74,12 @@ HrSimpleModulator : HadronPlugin
 				{|argg| modControl.putSaveValues(argg); },
 				{|argg| startButton.valueAction_(argg); }
 			];
-		
-		
 	}
 
+	releaseSynth { synthInstance.free }
+
 	makeSynth {
+		this.releaseSynth;
 		synthInstance = Synth("hrSimpleMod"++uniqueID, [\inBus0, inBusses[0]], target: group);
 	}
 	

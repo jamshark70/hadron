@@ -107,10 +107,13 @@ HrStereoMixer : HadronPlugin
 		});
 	}
 
-	makeSynth {
+	releaseSynth {
 		if(synthInstances.size > 0) {
 			synthInstances.do(_.free);
 		};
+	}
+
+	makeSynth {
 		(inBusses.size/2).do
 		({|cnt|
 			
@@ -140,8 +143,7 @@ HrStereoMixer : HadronPlugin
 
 	updateBusConnections
 	{
-		summerSynth.set(\outBus0, outBusses[0], \outBus1, outBusses[1]);
-		
+		// summerSynth.set(\outBus0, outBusses[0], \outBus1, outBusses[1]);
 	}
 	
 	cleanUp

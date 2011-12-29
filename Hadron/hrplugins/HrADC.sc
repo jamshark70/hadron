@@ -114,10 +114,14 @@ HrADC : HadronPlugin
 		
 	}
 
-	makeSynth {
+	releaseSynth {
 		if(synthInstance.notNil) {
 			synthInstance.free;
 		};
+	}
+
+	makeSynth {
+		this.releaseSynth;
 		synthInstance = Synth("hrADC"++uniqueID, [\outBus0, outBusses[0], \outBus1, outBusses[1]], group);
 		{ lButton.valueAction_(1); }.defer;
 	}
@@ -129,6 +133,6 @@ HrADC : HadronPlugin
 	
 	cleanUp
 	{
-		synthInstance.free;
+		this.releaseSynth;
 	}
 }

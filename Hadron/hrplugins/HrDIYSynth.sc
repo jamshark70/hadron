@@ -62,6 +62,10 @@ HrDIYSynth : HadronPlugin
 		};
 	}
 
+	releaseSynth {
+		if(synthInstance.notNil, { synthInstance.set(\masterGate, 0); });
+	}
+
 	redefineSynth
 	{|argWrapFunc|
 		var shouldPlay = true;
@@ -99,7 +103,7 @@ HrDIYSynth : HadronPlugin
 
 				Server.default.sync;
 
-				if(synthInstance.notNil, { synthInstance.set(\masterGate, 0); });
+				this.releaseSynth;
 				synthInstance =
 				Synth(sDef.name,
 					[
@@ -127,6 +131,6 @@ HrDIYSynth : HadronPlugin
 
 	cleanUp
 	{
-		synthInstance.free;
+		this.releaseSynth;
 	}
 }

@@ -116,18 +116,23 @@ HrChorus2 : HadronPlugin {
 		].flop.flat
 	}
 
+	releaseSynth {
+		if(synthInstance.notNil) {
+			synthInstance.release;
+		};
+	}
+
 	makeSynth {
-		var playFunc = {
-			if(synthInstance.notNil) {
-				synthInstance.release;
-			};
-			synthInstance = Synth("hrChorus2_" ++ uniqueID, this.synthArgs,
+		var sdname = this.class.name ++ "_" ++ uniqueID,
+		playFunc = {
+			this.releaseSynth;
+			synthInstance = Synth(sdname, this.synthArgs,
 				target: group);
 		};
 		if(numDelays != numDelaySlider.value) {
 			numDelays = numDelaySlider.value;
 			fork {
-				SynthDef("hrChorus2_" ++ uniqueID, { |inBus0, inBus1, outBus0, outBus1,
+				SynthDef(sdname, { |inBus0, inBus1, outBus0, outBus1,
 					predelay, speed, depth, ph_diff, preamp, gate = 1|
 					var in, sig, mods, fx;
 					in = In.ar([inBus0, inBus1], 1);
@@ -158,6 +163,7 @@ HrChorus2 : HadronPlugin {
 		synthInstance.set(*this.synthArgs);
 	}
 	cleanUp {
+		this.releaseSynth;
 		SkipJack.stop(("HrChorus2_" ++ uniqueID).asSymbol)
 	}
 }
@@ -219,17 +225,16 @@ HrFlanger : HrChorus2 {
 	}
 
 	makeSynth {
-		var playFunc = {
-			if(synthInstance.notNil) {
-				synthInstance.release;
-			};
-			synthInstance = Synth("hrChorus2_" ++ uniqueID, this.synthArgs,
+		var sdname = this.class.name ++ "_" ++ uniqueID,
+		playFunc = {
+			this.releaseSynth;
+			synthInstance = Synth(sdname, this.synthArgs,
 				target: group);
 		};
 		if(numDelays != numDelaySlider.value) {
 			numDelays = numDelaySlider.value;
 			fork {
-				SynthDef("hrChorus2_" ++ uniqueID, { |inBus0, inBus1, outBus0, outBus1,
+				SynthDef(sdname, { |inBus0, inBus1, outBus0, outBus1,
 					predelay, speed, depth, decay, ph_diff, preamp, gate = 1|
 					var in, sig, mods, fx;
 					in = In.ar([inBus0, inBus1], 1);

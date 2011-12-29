@@ -363,6 +363,7 @@ HrPresetMorph : HadronPlugin
 		});
 	}
 
+	releaseSynth {}
 	makeSynth {}
 	
 	cleanUp

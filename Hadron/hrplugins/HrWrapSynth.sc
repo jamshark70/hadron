@@ -166,12 +166,16 @@ HrWrapSynth : HadronPlugin
 		this.makeSynth;
 	}
 
-	makeSynth {
-		var tempArgs;
+	releaseSynth {
 		if(synthInstance.notNil) {
-			if(synthDesc.hasGate) { synthInstance.release }
+			if(synthDesc.tryPerform(\hasGate) ? false) { synthInstance.release }
 			{ synthInstance.free };
 		};
+	}
+
+	makeSynth {
+		var tempArgs;
+		this.releaseSynth;
 		tempArgs = (synthBusArgs.value ++ storeArgs.keys.collect({|item| [item, specs.at(item.asSymbol).map(storeArgs.at(item))]; }).asArray).flatten(1);
 		synthInstance = Synth(sName, tempArgs, target: group);
 	}
@@ -183,6 +187,6 @@ HrWrapSynth : HadronPlugin
 	
 	cleanUp
 	{
-		
+		this.releaseSynth;
 	}
 }
