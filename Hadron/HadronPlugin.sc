@@ -31,11 +31,14 @@ HadronPlugin
 					NamedControl.kr("outBus" ++ i, 0)
 				}),
 				sig = In.ar(inbuses, 1),
-				bad = CheckBadValues.ar(sig, id: indices),
-				silent = Silent.ar(1);
+				bad = CheckBadValues.ar(sig, id: indices, post: 0),
+				silent = Silent.ar(1),
+				channelFlags = 0;
 				bad.do { |badChan, i|
-					SendReply.ar(badChan, '/hrBadValue', [badChan, i], replyID: uniqueID);
+					// i is an int, not a ugen, so << is ok
+					channelFlags = channelFlags + ((badChan > 0) * (1 << i));
 				};
+				SendReply.ar(channelFlags, '/hrBadValue', channelFlags, replyID: uniqueID);
 				pr_outbuses.do { |bus, i|
 					var chan = Select.ar(bad[i], [sig[i], silent]);
 					ReplaceOut.ar(bus, chan);
@@ -105,7 +108,22 @@ HadronPlugin
 			badValueResp ?? {
 				badValueResp = OSCpathResponder(Server.default.addr,
 					['/hrBadValue', badValueSynth.nodeID],
-					{ |time, resp, msg| this.makeSynth }
+					{ |time, resp, msg|
+						var channels = msg[3].asInteger.asBinaryString(argNumOuts),
+						badchannels = Array(argNumOuts);
+						channels.reverseDo { |flag, i|
+							if(flag == $1) { badchannels.add(i+1) };
+						};
+						Char.nl.post;
+						"BAD VALUE FOUND in %%, id %, channels %. Rebuilding synth."
+						.format(
+							this.class.name,
+							if(name.asSymbol == this.class.name) { "" } { " " ++ name },
+							msg[2], badchannels
+						)
+						.warn;
+						this.makeSynth;
+					}
 				).add;
 			};
 		};
@@ -440,7 +458,6 @@ HadronPlugin
 	}
 
 	prUpdateBusConnections {
-[this, uniqueID].debug(">> HadronPlugin:prUpdateBusConnections");
 		if(badValueSynth.notNil) {
 			badValueSynth.set(*(
 				[
@@ -450,10 +467,7 @@ HadronPlugin
 				].flop.flat
 			));
 		};
-[this, uniqueID].debug(">> HadronPlugin:updateBusConnections");
 		this.updateBusConnections;
-[this, uniqueID].debug("<< HadronPlugin:updateBusConnections");
-[this, uniqueID].debug("<< HadronPlugin:prUpdateBusConnections");
 	}
 
 	updateBusConnections
