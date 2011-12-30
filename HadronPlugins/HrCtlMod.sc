@@ -61,7 +61,7 @@ HrCtlMod : HrSimpleModulator {
 			];
 	}
 
-	releaseSynth { synthInstance.free }
+	releaseSynth { synthInstance.free; synthInstance = nil; }
 
 	makeSynth {
 		// it's a little bit dumb that I have to do this, but

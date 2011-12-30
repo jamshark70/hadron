@@ -97,6 +97,7 @@ HrStereoSplitter : HadronPlugin
 	releaseSynth {
 		if(synthInstances.size > 0) {
 			synthInstances.do(_.free);
+			synthInstances.clear;  // now size == 0
 		};
 	}
 

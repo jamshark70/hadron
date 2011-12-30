@@ -135,18 +135,8 @@ HrWrapSynth : HadronPlugin
 		({|btn|
 			btn.value.switch
 			(
-				0, {
-					if(synthDesc.hasGate) {
-						synthInstance.release;
-					} {
-						synthInstance.free;
-					};
-					synthInstance = nil;
-				},
-				1, 
-				{ 
-					this.makeSynth;
-				}
+				0, { this.releaseSynth },
+				1, { this.makeSynth }
 			)
 		});
 		
@@ -170,6 +160,7 @@ HrWrapSynth : HadronPlugin
 		if(synthInstance.notNil) {
 			if(synthDesc.tryPerform(\hasGate) ? false) { synthInstance.release }
 			{ synthInstance.free };
+			synthInstance = nil;
 		};
 	}
 

@@ -63,7 +63,10 @@ HrDIYSynth : HadronPlugin
 	}
 
 	releaseSynth {
-		if(synthInstance.notNil, { synthInstance.set(\masterGate, 0); });
+		if(synthInstance.notNil, {
+			synthInstance.set(\masterGate, 0);
+			synthInstance = nil;
+		});
 	}
 
 	redefineSynth

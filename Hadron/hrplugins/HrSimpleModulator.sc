@@ -76,7 +76,7 @@ HrSimpleModulator : HadronPlugin
 			];
 	}
 
-	releaseSynth { synthInstance.free }
+	releaseSynth { synthInstance.free; synthInstance = nil; }
 
 	makeSynth {
 		this.releaseSynth;

@@ -75,6 +75,7 @@ HrDAC : HadronPlugin
 	releaseSynth {
 		if(synthInstance.notNil) {
 			synthInstance.free;
+			synthInstance = nil;
 		};
 	}
 

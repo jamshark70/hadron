@@ -119,6 +119,7 @@ HrChorus2 : HadronPlugin {
 	releaseSynth {
 		if(synthInstance.notNil) {
 			synthInstance.release;
+			synthInstance = nil;
 		};
 	}
 
