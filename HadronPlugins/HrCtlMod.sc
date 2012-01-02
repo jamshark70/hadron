@@ -70,15 +70,7 @@ HrCtlMod : HrSimpleModulator {
 		fork
 		{
 			try {
-				SynthDef("hrCtlMod"++uniqueID, { |prOutBus, inBus0|
-					var input = A2K.kr(InFeedback.ar(inBus0));
-					input = postOpFunc.value(input);
-					if(input.size > 1 or: { input.rate != \control }) {
-						// throw prevents the synthdef from being replaced
-						Exception("HrCtlMod result must be one channel, control rate").throw;
-					};
-					Out.kr(prOutBus, input);
-				}).add;
+				this.makeSynthDef;
 			} { |err|
 				if(err.isKindOf(Exception)) {
 					shouldPlay = false;
@@ -89,19 +81,32 @@ HrCtlMod : HrSimpleModulator {
 			if(shouldPlay) {
 				Server.default.sync;
 				if(synthInstance.notNil) {
-					synthInstance = Synth("hrCtlMod"++uniqueID,
-						[\inBus0, inBusses[0], \prOutBus, prOutBus],
+					synthInstance = Synth(this.class.name++uniqueID,
+						this.synthArgs,
 						target: synthInstance, addAction: \addReplace
 					);
 				} {
-					synthInstance = Synth("hrCtlMod"++uniqueID,
-						[\inBus0, inBusses[0], \prOutBus, prOutBus],
-						target: group
+					synthInstance = Synth(this.class.name++uniqueID,
+						this.synthArgs, target: group
 					);
 				};
 			};
 		};
 	}
+	synthArgs { ^[\inBus0, inBusses[0], \prOutBus, prOutBus] }
+
+	makeSynthDuf {
+		SynthDef("HrCtlMod"++uniqueID, { |prOutBus, inBus0|
+			var input = A2K.kr(InFeedback.ar(inBus0));
+			input = postOpFunc.value(input);
+			if(input.size > 1 or: { input.rate != \control }) {
+				// throw prevents the synthdef from being replaced
+				Exception("HrCtlMod result must be one channel, control rate").throw;
+			};
+			Out.kr(prOutBus, input);
+		}).add;
+	}
+
 	cleanUp
 	{
 		this.releaseSynth;
