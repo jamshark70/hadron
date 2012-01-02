@@ -30,9 +30,9 @@ Hadron
 	
 	*new
 	{
-		if(Main.version.asFloat < 3.31, { "Hadron requires SuperCollider version 3.3.1 or higher.".error; this.halt; });
+		if(Main.version.asFloat < 3.31, { Error("Hadron requires SuperCollider version 3.3.1 or higher.").throw });
 		if((GUI.id == \swing) and: { SwingOSC.version < 0.62 }, 
-			{ "Hadron requires SwingOSC version 0.62 or higher.".error; this.halt; });
+			{ Error("Hadron requires SwingOSC version 0.62 or higher.").throw });
 		^super.new.init;
 	}
 	
@@ -239,12 +239,14 @@ Hadron
 			-1,
 			{//error text
 				
-				win.front;				
-				{
+				win.front;
+				// qt doesn't run the forked thread b/c of halt()
+				// unless it's delayed just slightly
+				AppClock.sched(0.05, r {
 					statusView.background_(Color(1, 0.2, 0.2));
 					4.wait;
 					statusView.background_(Color.gray(0.8));
-				}.fork(AppClock);
+				});
 			},
 			0,
 			{//neutral
@@ -252,15 +254,11 @@ Hadron
 			},
 			1,
 			{//success text
-				{
-					
+				AppClock.sched(0.05, r {
 					statusView.background_(Color(0.2, 1, 0.2));
 					4.wait;
-					if(win.isClosed.not,
-					{
-						statusView.background_(Color.gray(0.8));
-					});
-				}.fork(AppClock);
+					statusView.background_(Color.gray(0.8));
+				});
 			}
 		);
 		

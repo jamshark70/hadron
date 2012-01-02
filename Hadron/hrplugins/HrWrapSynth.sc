@@ -9,42 +9,54 @@ HrWrapSynth : HadronPlugin
 			
 		var numIns, numOuts, bounds, name = "HrWrapSynth", numControls;
 		var synthDesc, ctlNameStrings;  // class method: instance vars are not accessible here
+		var err, continue = true;
 		
+		// try {
 		if(argExtraArgs.size == 0, 
-		{ 
-			argParentApp.displayStatus("This plugin requires an argument. See HrWrapSynth help.", -1);
-			this.halt; 
+		{
+			err = Error("This plugin requires an argument. See HrWrapSynth help.");
+			argParentApp.displayStatus(err.errorString, -1);
+			err.throw;
 		});
 		
 		synthDesc = SynthDescLib.global.synthDescs.at(argExtraArgs[0].asSymbol);
 		if(synthDesc == nil,
 		{
-			argParentApp.displayStatus("SynthDef"+argExtraArgs[0]+"not found in global SynthDescLib. See HrWrapSynth help.", -1);
-			this.halt; 
+			err = Error("SynthDef"+argExtraArgs[0]+"not found in global SynthDescLib. See HrWrapSynth help.");
+			argParentApp.displayStatus(err.errorString, -1);
+			err.throw;
 		});
 		
 		if(synthDesc.metadata == nil,
 		{
-			argParentApp.displayStatus("You need to supply metadata and specs for your synth. See HrWrapSynth help.", -1);
-			this.halt; 
+			err = Error("You need to supply metadata and specs for your synth. See HrWrapSynth help.");
+			argParentApp.displayStatus(err.errorString, -1);
+			err.throw;
 		});
-		
-		// no, fix this...
-		ctlNameStrings = Array(synthDesc.controlNames.size);
-		synthDesc.controls.do { |cn, i|
-			var name = cn.name.asSymbol;
-			if(name != '?' and: { synthDesc.symIsArrayArg(name).not }) {
-				ctlNameStrings.add(cn.name.asString);
+		// } { |err|
+		// 	if(err.isKindOf(Error)) {
+		// 		continue = false;
+		// 	};
+		// };
+
+		if(continue) {
+			// no, fix this...
+			ctlNameStrings = Array(synthDesc.controlNames.size);
+			synthDesc.controls.do { |cn, i|
+				var name = cn.name.asSymbol;
+				if(name != '?' and: { synthDesc.symIsArrayArg(name).not }) {
+					ctlNameStrings.add(cn.name.asString);
+				};
 			};
-		};
-		numControls = ctlNameStrings.size; // synthDesc.metadata.at(\specs).size;
-		
-		numIns = ctlNameStrings.count({|item| item.asString.find("inBus", true, 0) == 0; });
-		numOuts = ctlNameStrings.count({|item| item.asString.find("outBus", true, 0) == 0; });
-		
-		bounds = Rect(400, 400, 350, 50 + (numControls * 30));
-		
-		^super.new(argParentApp, name, argIdent, argUniqueID, argExtraArgs, bounds, numIns, numOuts, argCanvasXY).init(ctlNameStrings, synthDesc);
+			numControls = ctlNameStrings.size; // synthDesc.metadata.at(\specs).size;
+			
+			numIns = ctlNameStrings.count({|item| item.asString.find("inBus", true, 0) == 0; });
+			numOuts = ctlNameStrings.count({|item| item.asString.find("outBus", true, 0) == 0; });
+			
+			bounds = Rect(400, 400, 350, 50 + (numControls * 30));
+			
+			^super.new(argParentApp, name, argIdent, argUniqueID, argExtraArgs, bounds, numIns, numOuts, argCanvasXY).init(ctlNameStrings, synthDesc);
+		} { ^nil }
 	}
 	
 	init
