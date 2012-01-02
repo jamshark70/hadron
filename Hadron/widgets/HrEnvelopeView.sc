@@ -4,6 +4,7 @@ HrEnvelopeView added by H. James Harkins
 
 HrEnvelopeView : SCViewHolder {
 	var <env, <curves, <releaseNode, <loopNode,
+	<>action, <>insertAction, <>deleteAction,
 	<loopNodeColor,
 	<releaseNodeColor,
 	<fillColor,
@@ -66,6 +67,7 @@ HrEnvelopeView : SCViewHolder {
 		envView.action = { |view|
 			viewCoords = view.value;
 			userView.refresh;
+			this.doAction;
 		};
 
 		envView.mouseDownAction = { |view, x, y, modifiers|
@@ -126,7 +128,6 @@ HrEnvelopeView : SCViewHolder {
 					nil
 				};
 				if(index.notNil) {
-					"deleting thumb number %\n".postf(index);
 					this.deletePoint(index);
 				} {
 					index = block { |break|
@@ -135,7 +136,6 @@ HrEnvelopeView : SCViewHolder {
 						};
 						break.(viewValue[0].size);
 					};
-					"inserting point at %\n".postf(index);
 					this.insertPoint(index+1,
 						(x - halfThumbSize.x) / extent.x,
 						(realExtent.y - y - halfThumbSize.y) / extent.y,
@@ -168,9 +168,10 @@ HrEnvelopeView : SCViewHolder {
 	value {
 		^Env(viewCoords[1],
 			viewCoords[0].differentiate.drop(1),
-			curves, releaseNode, loopNode
+			curves.drop(-1), releaseNode, loopNode
 		)
 	}
+	doAction { action.value(this) }
 
 	curves_ { |newCurves|
 		// really this should be 'size - 1' but there's a bug in qt
@@ -223,6 +224,7 @@ HrEnvelopeView : SCViewHolder {
 		]).doAction;
 		curves = curves.insert(index, curve ?? { curves[index] });
 		envView.curves = curves;
+		insertAction.value(this);
 	}
 	deletePoint { |index|
 		this.fixSpecialNodes(-1, index);
@@ -231,6 +233,7 @@ HrEnvelopeView : SCViewHolder {
 		}).doAction;
 		curves.removeAt(index);
 		envView.curves = curves;
+		deleteAction.value(this);
 	}
 	refresh {
 		this.updateEnvView;
