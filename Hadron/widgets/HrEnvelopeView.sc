@@ -145,7 +145,7 @@ HrEnvelopeView : SCViewHolder {
 			};
 			this.refresh;
 			if((envView.index ? -1) > 0) {
-				envView.deselectIndex(envView.index);
+				envView.tryPerform(\deselectIndex, envView.index);
 			};
 		};
 
