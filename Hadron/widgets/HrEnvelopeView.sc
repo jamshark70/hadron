@@ -12,7 +12,7 @@ HrEnvelopeView : SCViewHolder {
 	<curveZoneColor,
 	<curveZoneWidth = 14,
 	<thumbSize = 8,
-	trackingCurveIndex,  // internal
+	trackingCurveIndex, trackingPointIndex,  // internal
 	envView, userView,
 	viewCoords;
 
@@ -65,7 +65,17 @@ HrEnvelopeView : SCViewHolder {
 			.background_(Color.clear);
 		envView.thumbSize = thumbSize;
 		envView.action = { |view|
+			var mouse, left, right;
 			viewCoords = view.value;
+			if(trackingPointIndex.notNil) {
+				mouse = viewCoords[0][trackingPointIndex];
+				left = viewCoords[0][trackingPointIndex - 1] ? 0;
+				right = viewCoords[0][trackingPointIndex + 1] ? 1;
+				if(mouse.inclusivelyBetween(left, right).not) {
+					viewCoords[0][trackingPointIndex] = clip(mouse, left, right);
+					this.refresh;
+				};
+			};
 			userView.refresh;
 			this.doAction;
 		};
@@ -90,15 +100,19 @@ HrEnvelopeView : SCViewHolder {
 					};
 					nil
 				};
+				if(trackingCurveIndex.isNil) {
+					trackingPointIndex = this.findIndexOfClickedPoint(Point(x, y));
+				};
 			};
 		};
 		envView.mouseMoveAction = { |view, x, y, modifiers|
-			var mouse, lefty, righty;
-			if(modifiers == 0 and: { trackingCurveIndex.notNil }) {
+			var mouse, left, right;
+			case
+			{ trackingCurveIndex.notNil } {
 				mouse = this.scaleViewPointToNormal(Point(x, y));
-				lefty = viewCoords[1][trackingCurveIndex];
-				righty = viewCoords[1][trackingCurveIndex + 1];
-				if(mouse.y.exclusivelyBetween(min(lefty, righty), max(lefty, righty))) {
+				left = viewCoords[1][trackingCurveIndex];
+				right = viewCoords[1][trackingCurveIndex + 1];
+				if(mouse.y.exclusivelyBetween(min(left, right), max(left, right))) {
 					curves[trackingCurveIndex] = this.curveForMidpointY(
 						trackingCurveIndex, mouse.y
 					);
@@ -112,21 +126,17 @@ HrEnvelopeView : SCViewHolder {
 			realExtent = view.bounds.extent,
 			extent = realExtent - thumbSize,
 			mouse = Point(x, y),
-			halfThumbSize = Point(4, 4),  // half, for aboutPoint
+			halfThumbSize = Point(thumbSize, thumbSize) * 0.5,  // half, for aboutPoint
 			thumbRect, index;
 			case
-			{ modifiers == 0 and: { trackingCurveIndex.notNil } } {
+			{ trackingCurveIndex.notNil } {
 				trackingCurveIndex = nil
 			}
+			{ trackingPointIndex.notNil } {
+				trackingPointIndex = nil
+			}
 			{ modifiers == 262144 } {
-				index = block { |break|
-					viewValue.flop.do { |pair, i|
-						thumbRect = Rect.aboutPoint(this.scaleNormalPointToView(Point(*pair)),
-							halfThumbSize.x, halfThumbSize.y);
-						if(thumbRect.containsPoint(mouse)) { break.(i) };
-					};
-					nil
-				};
+				index = this.findIndexOfClickedPoint(mouse);
 				if(index.notNil) {
 					this.deletePoint(index);
 				} {
@@ -305,5 +315,13 @@ HrEnvelopeView : SCViewHolder {
 		}, {
 			^log(((b.neg - sqrterm) / (2 * a)).squared).abs * sgn
 		});
+	}
+	findIndexOfClickedPoint { |pointInPixels|
+		var halfThumbSize = Point(thumbSize, thumbSize) * 0.5;
+		envView.value.flop.do { |pair, i|
+			if(Rect.aboutPoint(this.scaleNormalPointToView(Point(*pair)),
+				halfThumbSize.x, halfThumbSize.y).containsPoint(pointInPixels)) { ^i };
+		};
+		^nil
 	}
 }
