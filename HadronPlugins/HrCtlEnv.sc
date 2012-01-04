@@ -2,6 +2,7 @@ HrCtlEnv : HrCtlMod {
 	var <>spec,
 	loopNode, releaseNode,
 	specMin, specMax, specWarp, specStep,
+	badSpecRoutines,
 	timeScaleView, timeScale = 1;
 	*initClass {
 		this.addHadronPlugin;
@@ -11,10 +12,12 @@ HrCtlEnv : HrCtlMod {
 	// copy and paste programming...
 	init
 	{
-		var expWarpCheck = {
+		var expWarpIsBad = {
 			spec.minval.sign != spec.maxval.sign
 			or: { spec.minval.sign == 0 or: { spec.maxval.sign == 0 } }
 		};
+
+		badSpecRoutines = ();
 
 		window.background_(Color.gray(0.9));
 		prOutBus = Bus.control(Server.default, 1);
@@ -24,6 +27,8 @@ HrCtlEnv : HrCtlMod {
 		postOpText = HrEnvelopeView(window, Rect(10, 10, 430, 200))
 		.env_(Env.adsr)
 		.action_({ |view|
+			// release and loop nodes didn't change here
+			// so it's OK to send the new breakpoint data
 			if(synthInstance.notNil) {
 				synthInstance.set(\env, view.value.asArray.extend(48, 0))
 			};
@@ -34,7 +39,10 @@ HrCtlEnv : HrCtlMod {
 			loopNode.value = (view.loopNode ? -1) + 1;
 			releaseNode.value = (view.releaseNode ? -1) + 1;
 			if(synthInstance.notNil) {
-				synthInstance.set(\env, view.value.asArray.extend(48, 0))
+				// release and loop nodes are not modulatable in the same synth
+				// so we have to kill and restart the synth
+				// but don't need a new synthdef -- (false)
+				this.makeSynth(false);
 			};
 		});
 		postOpText.deleteAction = postOpText.insertAction;
@@ -67,6 +75,7 @@ HrCtlEnv : HrCtlMod {
 				postOpText.loopNode = view.value - 1;
 			};
 			postOpText.updateEnvView;
+			this.makeSynth(false);
 		});
 		StaticText(window, Rect(310, 220, 35, 20)).string_("rel");
 		releaseNode = PopUpMenu(window, Rect(345, 220, 65, 20))
@@ -79,9 +88,10 @@ HrCtlEnv : HrCtlMod {
 				postOpText.releaseNode = view.value - 1;
 			};
 			postOpText.updateEnvView;
+			this.makeSynth(false);
 		});
 
-		spec = ControlSpec.new;
+		spec = HrControlSpec.new;
 		StaticText(window, Rect(10, 275, 80, 20)).string_("map min");
 		StaticText(window, Rect(210, 275, 80, 20)).string_("map max");
 		StaticText(window, Rect(10, 300, 80, 20)).string_("map warp");
@@ -89,20 +99,48 @@ HrCtlEnv : HrCtlMod {
 
 		specMin = NumberBox(window, Rect(100, 275, 100, 20))
 		.value_(spec.minval)
+		.maxDecimals_(5)
 		.action_({ |view|
-			if(spec.warp.class != ExponentialWarp or: { expWarpCheck.value }) {
-				spec.minval = view.value; this.makeSynth
-			} {
+			if(spec.warp.class == ExponentialWarp and: expWarpIsBad) {
 				parentApp.displayStatus("Invalid warp: Exponential warp endpoints must be the same sign and nonzero", -1);
+				badSpecRoutines[\minval] ?? {
+					badSpecRoutines[\minval] = Routine({
+						var colors = Pseq([Color(1.0, 0.86, 0.86), Color.white], inf).asStream;
+						loop {
+							view.background = colors.next;
+							0.75.wait;
+						};
+					}).play(AppClock);
+				};
+			} {
+				spec.minval = view.value;
+				synthInstance.set(\minval, spec.minval);
+				badSpecRoutines[\minval].stop;
+				badSpecRoutines[\minval] = nil;
+				view.background = Color.white;
 			};
 		});
 		specMax = NumberBox(window, Rect(300, 275, 100, 20))
 		.value_(spec.maxval)
+		.maxDecimals_(5)
 		.action_({ |view|
-			if(spec.warp.class != ExponentialWarp or: { expWarpCheck.value }) {
-				spec.maxval = view.value; this.makeSynth
-			} {
+			if(spec.warp.class == ExponentialWarp and: expWarpIsBad) {
 				parentApp.displayStatus("Invalid warp: Exponential warp endpoints must be the same sign and nonzero", -1);
+				badSpecRoutines[\maxval] ?? {
+					badSpecRoutines[\maxval] = Routine({
+						var colors = Pseq([Color(1.0, 0.86, 0.86), Color.white], inf).asStream;
+						loop {
+							view.background = colors.next;
+							0.75.wait;
+						};
+					}).play(AppClock);
+				};
+			} {
+				spec.maxval = view.value;
+				synthInstance.set(\maxval, spec.maxval);
+				badSpecRoutines[\maxval].stop;
+				badSpecRoutines[\maxval] = nil;
+				view.background = Color.white;
 			};
 		});
 		specWarp = TextField(window, Rect(100, 300, 100, 20))
@@ -110,12 +148,26 @@ HrCtlEnv : HrCtlMod {
 		.action_({ |view|
 			var warp, continue = true;
 			try {
-				warp = view.string.interpret;
+				warp = view.string;
+				if(warp.every(_.isAlpha)) {
+					warp = warp.asSymbol;
+				} {
+					warp = warp.asFloat;
+					if(warp == 0 and: {
+						view.string.any { |char|
+							char.isDecDigit.not and: { char != $. }
+						}
+					}) {
+						// this, of course, may throw a different error
+						// which is why all of this is in a try{} block
+						warp = view.string.interpret
+					};
+				};
 				if(warp.respondsTo(\asWarp).not) {
-					Error("Warp must be number or symbol").throw;
+					Error("Warp must be number, symbol or a valid SC expression").throw;
 				};
 				warp = warp.asWarp(spec);  // throws error if a wrong symbol
-				if(warp.class == ExponentialWarp and: { expWarpCheck.value }) {
+				if(warp.class == ExponentialWarp and: expWarpIsBad) {
 					Error("Exponential warp endpoints must be the same sign and nonzero").throw
 				};
 			} { |err|
@@ -123,15 +175,28 @@ HrCtlEnv : HrCtlMod {
 					continue = false;
 					err.reportError;
 					defer { parentApp.displayStatus("Invalid warp: " ++ err.errorString, -1) };
-				}
+					badSpecRoutines[\warp] ?? {
+						badSpecRoutines[\warp] = Routine({
+							var colors = Pseq([Color(1.0, 0.86, 0.86), Color.white], inf).asStream;
+							loop {
+								view.background = colors.next;
+								0.75.wait;
+							};
+						}).play(AppClock);
+					};
+				};
 			};
 			if(continue) {
 				spec.warp = warp;
 				this.makeSynth;
+				badSpecRoutines[\warp].stop;
+				badSpecRoutines[\warp] = nil;
+				view.background = Color.white;
 			};
 		});
 		specStep = NumberBox(window, Rect(300, 300, 100, 20))
-		.action_({ |view| spec.step = view.value; this.makeSynth });
+		.maxDecimals_(5)
+		.action_({ |view| spec.step = view.value; synthInstance.set(\step, spec.step) });
 
 		timeScaleView = HrEZSlider(window, Rect(10, 325, 430, 20), "time scale", #[0.01, 20, \exp],
 			{ |view|
@@ -153,7 +218,15 @@ HrCtlEnv : HrCtlMod {
 		saveSets =
 			[
 				{|argg| spec = argg.interpret },
-				{|argg| postOpText.env_(argg.interpret).doAction },
+				{|argg|
+					var env = argg.interpret;
+					loopNode.items = ["None"] ++ Array.fill(env.curves.size, _.asString);
+					releaseNode.items = loopNode.items;
+					loopNode.value = (env.loopNode ? -1) + 1;
+					releaseNode.value = (env.releaseNode ? -1) + 1;
+					postOpText.env = env;
+					this.makeSynth(false);
+				},
 				{|argg|
 					timeScale = argg.interpret;
 					timeScaleView.value_(timeScale).doAction
@@ -165,21 +238,26 @@ HrCtlEnv : HrCtlMod {
 
 	synthArgs {
 		^[inBus0: inBusses[0], outBus0: outBusses[0], prOutBus: prOutBus,
-			timeScale: timeScale]
+			timeScale: timeScale, env: postOpText.value]
 	}
 
 	makeSynthDef {
-		SynthDef("HrCtlEnv" ++ uniqueID, { |t_trig, inBus0, outBus0, prOutBus, timeScale = 1|
-			var env = NamedControl.kr(\env, (0 ! 48).overWrite(Env.adsr.asArray)),
-			audioTrig = In.ar(inBus0, 1),
+		SynthDef("HrCtlEnv" ++ uniqueID, { |t_trig, inBus0, outBus0, prOutBus,
+			minval = 0, maxval = 1, step = 0, timeScale = 1|
+			var env = NamedControl.kr(\env, (0 ! 48).overWrite(Env(#[0, 0], #[1]).asArray)),
+			audioTrig = InFeedback.ar(inBus0, 1),
 			eg = EnvGen.kr(env,
-				t_trig,  // + RunningSum.ar(max(0, audioTrig),
-				//numsamp: Server.default.options.blockSize)
+				// A2K takes only the first sample, missing mid-block trigs
+				t_trig + RunningSum.ar(max(0, audioTrig),
+					numsamp: Server.default.options.blockSize),
 				timeScale: timeScale
-			);
-			// A2K takes only the first sample, missing mid-block trigs
-			Out.kr(prOutBus, spec.map(eg));
-			Out.ar(outBus0, /*audioTrig +*/ K2A.ar(t_trig));
+			),
+			localSpec = spec.copy
+			.minval_(minval)  // replace hardcoded endpoints with control inputs
+			.maxval_(maxval)
+			.step_(step);
+			Out.kr(prOutBus, localSpec.map(eg));
+			Out.ar(outBus0, audioTrig + K2A.ar(t_trig));
 		}).add;
 	}
 }
