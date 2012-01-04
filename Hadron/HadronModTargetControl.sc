@@ -88,9 +88,10 @@ HadronModTargetControl
 	
 	refreshAppMenu
 	{|argRejectPlug|
+		var oldval = max(0, targetAppMenu.value ? 0);
 		targetAppMenu.items_(["Nothing."] ++ parentApp.alivePlugs.reject({|item| item === argRejectPlug; })
-			.collect({|item| item.class.asString + item.ident }));
-			
+			.collect({|item| item.class.asString + item.ident }))
+			.value_(oldval);
 	}
 	
 	modulateWithValue
