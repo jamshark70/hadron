@@ -63,19 +63,21 @@ HrCtlMod : HrSimpleModulator {
 
 	releaseSynth { synthInstance.free; synthInstance = nil; }
 
-	makeSynth {
+	makeSynth { |newSynthDef(true)|
 		// it's a little bit dumb that I have to do this, but
 		// it's the only way to conditionally not execute something after try
 		var shouldPlay = true;
 		fork
 		{
-			try {
-				this.makeSynthDef;
-			} { |err|
-				if(err.isKindOf(Exception)) {
-					shouldPlay = false;
-					err.reportError;
-					defer { parentApp.displayStatus(err.errorString, -1) };
+			if(newSynthDef) {
+				try {
+					this.makeSynthDef;
+				} { |err|
+					if(err.isKindOf(Exception)) {
+						shouldPlay = false;
+						err.reportError;
+						defer { parentApp.displayStatus(err.errorString, -1) };
+					};
 				};
 			};
 			if(shouldPlay) {
@@ -95,7 +97,7 @@ HrCtlMod : HrSimpleModulator {
 	}
 	synthArgs { ^[\inBus0, inBusses[0], \prOutBus, prOutBus] }
 
-	makeSynthDuf {
+	makeSynthDef {
 		SynthDef("HrCtlMod"++uniqueID, { |prOutBus, inBus0|
 			var input = A2K.kr(InFeedback.ar(inBus0));
 			input = postOpFunc.value(input);
@@ -124,6 +126,6 @@ HrCtlMod : HrSimpleModulator {
 				modControl.unmap(oldplug, oldparam);
 				defer { startButton.value = 0 };
 			};
-		}
+		};
 	}
 }
