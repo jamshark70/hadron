@@ -83,6 +83,9 @@ HrEnvelopeView : SCViewHolder {
 		envView.mouseDownAction = { |view, x, y, modifiers|
 			var mouse;
 			mouse = Point(x, y);
+			// ignore bits except the main keyboard mods
+			// Cocoa seems to set some bits that are not relevant :-|
+			modifiers = modifiers & 0x001E0000;
 			if(modifiers == 0) {
 				trackingCurveIndex = block { |break|
 					(0 .. curves.size-2).do { |i|
@@ -107,6 +110,7 @@ HrEnvelopeView : SCViewHolder {
 		};
 		envView.mouseMoveAction = { |view, x, y, modifiers|
 			var mouse, left, right;
+			modifiers = modifiers & 0x001E0000;
 			case
 			{ trackingCurveIndex.notNil } {
 				mouse = this.scaleViewPointToNormal(Point(x, y));
@@ -128,6 +132,7 @@ HrEnvelopeView : SCViewHolder {
 			mouse = Point(x, y),
 			halfThumbSize = Point(thumbSize, thumbSize) * 0.5,  // half, for aboutPoint
 			thumbRect, index;
+			modifiers = modifiers & 0x001E0000;
 			case
 			{ trackingCurveIndex.notNil } {
 				trackingCurveIndex = nil
