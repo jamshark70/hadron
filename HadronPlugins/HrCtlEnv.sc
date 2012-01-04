@@ -13,8 +13,8 @@ HrCtlEnv : HrCtlMod {
 	init
 	{
 		var expWarpIsBad = {
-			spec.minval.sign != spec.maxval.sign
-			or: { spec.minval.sign == 0 or: { spec.maxval.sign == 0 } }
+			(specMin.value.sign != specMax.value.sign).debug("signs don't match")
+			or: { (specMin.value == 0).debug("minval is 0") or: { (specMax.value == 0).debug("maxval is 0") } }
 		};
 
 		badSpecRoutines = ();
@@ -101,7 +101,7 @@ HrCtlEnv : HrCtlMod {
 		.value_(spec.minval)
 		.maxDecimals_(5)
 		.action_({ |view|
-			if(spec.warp.class == ExponentialWarp and: expWarpIsBad) {
+			if(spec.warp.class.debug("warp class") == ExponentialWarp and: { expWarpIsBad.value.debug("expWarpIsBad") }) {
 				parentApp.displayStatus("Invalid warp: Exponential warp endpoints must be the same sign and nonzero", -1);
 				badSpecRoutines[\minval] ?? {
 					badSpecRoutines[\minval] = Routine({
@@ -115,7 +115,7 @@ HrCtlEnv : HrCtlMod {
 			} {
 				spec.minval = view.value;
 				synthInstance.set(\minval, spec.minval);
-				badSpecRoutines[\minval].stop;
+				this.prStopRoutines;
 				badSpecRoutines[\minval] = nil;
 				view.background = Color.white;
 			};
@@ -138,7 +138,7 @@ HrCtlEnv : HrCtlMod {
 			} {
 				spec.maxval = view.value;
 				synthInstance.set(\maxval, spec.maxval);
-				badSpecRoutines[\maxval].stop;
+				this.prStopRoutines;
 				badSpecRoutines[\maxval] = nil;
 				view.background = Color.white;
 			};
@@ -189,7 +189,7 @@ HrCtlEnv : HrCtlMod {
 			if(continue) {
 				spec.warp = warp;
 				this.makeSynth;
-				badSpecRoutines[\warp].stop;
+				this.prStopRoutines;
 				badSpecRoutines[\warp] = nil;
 				view.background = Color.white;
 			};
@@ -238,7 +238,9 @@ HrCtlEnv : HrCtlMod {
 
 	synthArgs {
 		^[inBus0: inBusses[0], outBus0: outBusses[0], prOutBus: prOutBus,
-			timeScale: timeScale, env: postOpText.value]
+			timeScale: timeScale, env: postOpText.value,
+			minval: spec.minval, maxval: spec.maxval, step: spec.step
+		]
 	}
 
 	makeSynthDef {
@@ -259,5 +261,20 @@ HrCtlEnv : HrCtlMod {
 			Out.kr(prOutBus, localSpec.map(eg));
 			Out.ar(outBus0, audioTrig + K2A.ar(t_trig));
 		}).add;
+	}
+
+	cleanUp {
+		this.prStopRoutines;
+		super.cleanUp;
+	}
+
+	// this should be called only when the spec is totally valid
+	// so it clears all flashy-flashy routines
+	// and resets the 3 relevant background colors
+	prStopRoutines {
+		badSpecRoutines.do(_.stop);
+		[specMin, specMax, specWarp].do { |view|
+			view.background = Color.white;
+		};
 	}
 }
