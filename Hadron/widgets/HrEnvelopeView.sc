@@ -144,8 +144,8 @@ HrEnvelopeView : SCViewHolder {
 				};
 			};
 			this.refresh;
-			if((envView.index ? -1) > 0) {
-				envView.tryPerform(\deselectIndex, envView.index);
+			if(GUI.id != \cocoa and: { (envView.index ? -1) > 0 }) {
+				envView.deselectIndex(envView.index);
 			};
 		};
 
