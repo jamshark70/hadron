@@ -13,8 +13,8 @@ HrCtlEnv : HrCtlMod {
 	init
 	{
 		var expWarpIsBad = {
-			(specMin.value.sign != specMax.value.sign).debug("signs don't match")
-			or: { (specMin.value == 0).debug("minval is 0") or: { (specMax.value == 0).debug("maxval is 0") } }
+			specMin.value.sign != specMax.value.sign
+			or: { specMin.value == 0 or: { specMax.value == 0 } }
 		};
 
 		badSpecRoutines = ();
@@ -101,7 +101,7 @@ HrCtlEnv : HrCtlMod {
 		.value_(spec.minval)
 		.maxDecimals_(5)
 		.action_({ |view|
-			if(spec.warp.class.debug("warp class") == ExponentialWarp and: { expWarpIsBad.value.debug("expWarpIsBad") }) {
+			if(spec.warp.class == ExponentialWarp and: expWarpIsBad) {
 				parentApp.displayStatus("Invalid warp: Exponential warp endpoints must be the same sign and nonzero", -1);
 				badSpecRoutines[\minval] ?? {
 					badSpecRoutines[\minval] = Routine({
