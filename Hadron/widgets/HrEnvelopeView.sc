@@ -193,7 +193,7 @@ HrEnvelopeView : SCViewHolder {
 		if(newCurves.isNumber) {
 			curves = newCurves.dup(viewCoords[0].size);
 		} {
-			curves = newCurves.extend(viewCoords[0].size);
+			curves = newCurves.extend(viewCoords[0].size, 0);
 		};
 		this.refresh;
 	}
