@@ -8,7 +8,7 @@ HrCtlEnv : HrCtlMod {
 		this.addHadronPlugin;
 	}
 	*height { ^350 }
-	*numOuts { ^1 }
+	*numOuts { ^2 }
 	// copy and paste programming...
 	init
 	{
