@@ -129,7 +129,7 @@ HrDIYSynth : HadronPlugin
 
 	updateBusConnections
 	{
-		synthInstance.set(\inBus1, inBusses[0], \inBus2, inBusses[1], \outBus0, outBusses[0], \outBus1, outBusses[1]);
+		synthInstance.set(\inBus0, inBusses[0], \inBus1, inBusses[1], \outBus0, outBusses[0], \outBus1, outBusses[1]);
 	}
 
 	cleanUp
