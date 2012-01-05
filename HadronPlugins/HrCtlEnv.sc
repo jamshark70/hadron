@@ -15,7 +15,7 @@ HrCtlEnv : HrCtlMod {
 		var expWarpIsBad = {
 			specMin.value.sign != specMax.value.sign
 			or: { specMin.value == 0 or: { specMax.value == 0 } }
-		};
+		}, adjustY = 0;
 
 		badSpecRoutines = ();
 
@@ -47,23 +47,27 @@ HrCtlEnv : HrCtlMod {
 		});
 		postOpText.deleteAction = postOpText.insertAction;
 
-		modControl = HadronModTargetControl(window, Rect(10, 250, 430, 20), parentApp);
-		modControl.addDependant(this);
-
-		evalButton = Button(window, Rect(10, 220, 80, 20)).states_([["Trigger"]])
+		evalButton = Button(window, Rect(10, 220 - adjustY, 80, 20)).states_([["Trigger"]])
 		.action_({
 			if(synthInstance.notNil) { synthInstance.set(\t_trig, 1) };
 		});
 
-		startButton = Button(window, Rect(100, 220, 80, 20)).states_([["Start"],["Stop"]])
-		.value_(modControl.currentSelPlugin.notNil and: {
-			modControl.currentSelParam.notNil
-		})
-		.action_({|btn|
-			// synthInstance.run(btn.value == 1)
-			if(btn.value == 1) { modControl.map(prOutBus) }
-			{ modControl.unmap };
-		});
+		if(this.modulatesOthers) {
+			modControl = HadronModTargetControl(window, Rect(10, 250, 430, 20), parentApp);
+			modControl.addDependant(this);
+
+			startButton = Button(window, Rect(100, 220, 80, 20))
+			.states_([["Start"],["Stop"]])
+			.value_(modControl.currentSelPlugin.notNil and: {
+				modControl.currentSelParam.notNil
+			})
+			.action_({|btn|
+				if(btn.value == 1) { modControl.map(prOutBus) }
+				{ modControl.unmap };
+			});
+		} {
+			adjustY = 25;
+		};
 
 		StaticText(window, Rect(190, 220, 35, 20)).string_("loop");
 		loopNode = PopUpMenu(window, Rect(235, 220, 65, 20))
@@ -92,12 +96,12 @@ HrCtlEnv : HrCtlMod {
 		});
 
 		spec = HrControlSpec.new;
-		StaticText(window, Rect(10, 275, 80, 20)).string_("map min");
-		StaticText(window, Rect(210, 275, 80, 20)).string_("map max");
-		StaticText(window, Rect(10, 300, 80, 20)).string_("map warp");
-		StaticText(window, Rect(210, 300, 80, 20)).string_("map step");
+		StaticText(window, Rect(10, 275 - adjustY, 80, 20)).string_("map min");
+		StaticText(window, Rect(210, 275 - adjustY, 80, 20)).string_("map max");
+		StaticText(window, Rect(10, 300 - adjustY, 80, 20)).string_("map warp");
+		StaticText(window, Rect(210, 300 - adjustY, 80, 20)).string_("map step");
 
-		specMin = NumberBox(window, Rect(100, 275, 100, 20))
+		specMin = NumberBox(window, Rect(100, 275 - adjustY, 100, 20))
 		.value_(spec.minval)
 		.maxDecimals_(5)
 		.action_({ |view|
@@ -120,7 +124,7 @@ HrCtlEnv : HrCtlMod {
 				view.background = Color.white;
 			};
 		});
-		specMax = NumberBox(window, Rect(300, 275, 100, 20))
+		specMax = NumberBox(window, Rect(300, 275 - adjustY, 100, 20))
 		.value_(spec.maxval)
 		.maxDecimals_(5)
 		.action_({ |view|
@@ -143,7 +147,7 @@ HrCtlEnv : HrCtlMod {
 				view.background = Color.white;
 			};
 		});
-		specWarp = TextField(window, Rect(100, 300, 100, 20))
+		specWarp = TextField(window, Rect(100, 300 - adjustY, 100, 20))
 		.string_("lin")
 		.action_({ |view|
 			var warp, continue = true;
@@ -194,11 +198,11 @@ HrCtlEnv : HrCtlMod {
 				view.background = Color.white;
 			};
 		});
-		specStep = NumberBox(window, Rect(300, 300, 100, 20))
+		specStep = NumberBox(window, Rect(300, 300 - adjustY, 100, 20))
 		.maxDecimals_(5)
 		.action_({ |view| spec.step = view.value; synthInstance.set(\step, spec.step) });
 
-		timeScaleView = HrEZSlider(window, Rect(10, 325, 430, 20), "time scale", #[0.01, 20, \exp],
+		timeScaleView = HrEZSlider(window, Rect(10, 325 - adjustY, 430, 20), "time scale", #[0.01, 20, \exp],
 			{ |view|
 				timeScale = view.value;
 				if(synthInstance.notNil) { synthInstance.set(\timeScale, timeScale) };
@@ -217,7 +221,13 @@ HrCtlEnv : HrCtlMod {
 
 		saveSets =
 			[
-				{|argg| spec = argg.interpret },
+				{|argg|
+					spec = argg.interpret;
+					specMin.value = spec.minval;
+					specMax.value = spec.maxval;
+					specWarp.string = spec.warp.asSpecifier.asString;
+					specStep.value = spec.step;
+				},
 				{|argg|
 					var env = argg.interpret;
 					loopNode.items = ["None"] ++ Array.fill(env.curves.size, _.asString);
@@ -288,7 +298,57 @@ HrCtlEnv : HrCtlMod {
 	prStopRoutines {
 		badSpecRoutines.do(_.stop);
 		[specMin, specMax, specWarp].do { |view|
-			view.background = Color.white;
+			if(view.notClosed) {
+				view.background = Color.white;
+			};
 		};
 	}
+}
+
+HrAudioEnv : HrCtlEnv {
+	*initClass {
+		this.addHadronPlugin;
+	}
+
+	// numOuts still 2: left = env, right = trig
+
+	*height { ^325 }
+	modulatesOthers { ^false }
+
+	init {
+		super.init;
+		saveGets.removeAt(4); saveGets.removeAt(3);  // hackity hack hack hack
+		saveSets.removeAt(4); saveSets.removeAt(3);
+	}
+
+	synthArgs {
+		^[inBus0: inBusses[0], outBus0: outBusses[0], outBus1: outBusses[1],
+			timeScale: timeScale, env: postOpText.value,
+			minval: spec.minval, maxval: spec.maxval, step: spec.step
+		]
+	}
+
+	makeSynthDef {
+		SynthDef("HrAudioEnv" ++ uniqueID, { |t_trig, inBus0, outBus0, outBus1,
+			minval = 0, maxval = 1, step = 0, timeScale = 1|
+			var env = NamedControl.kr(\env, (0 ! 48).overWrite(Env(#[0, 0], #[1]).asArray)),
+			audioTrig = InFeedback.ar(inBus0, 1),
+			eg = EnvGen.ar(env,
+				// A2K takes only the first sample, missing mid-block trigs
+				t_trig + RunningSum.ar(max(0, audioTrig),
+					numsamp: Server.default.options.blockSize),
+				timeScale: timeScale
+			),
+			localSpec = spec.copy
+			.minval_(minval)  // replace hardcoded endpoints with control inputs
+			.maxval_(maxval)
+			.step_(step);
+			Out.ar(outBus0, localSpec.map(eg));
+			Out.ar(outBus1, audioTrig + K2A.ar(t_trig));
+		}).add;
+	}
+
+	notifyPlugAdd {}  // override parent - I don't have a mod control
+	notifyPlugKill {}
+	wakeFromLoad {}
 }

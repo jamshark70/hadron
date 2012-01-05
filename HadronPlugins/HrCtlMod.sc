@@ -5,6 +5,7 @@ HrCtlMod : HrSimpleModulator {
 		this.addHadronPlugin;
 	}
 	*height { ^175 }
+	modulatesOthers { ^true }
 	// copy and paste programming...
 	init
 	{
