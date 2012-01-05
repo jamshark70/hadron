@@ -234,6 +234,20 @@ HrCtlEnv : HrCtlMod {
 				{|argg| modControl.putSaveValues(argg); },
 				{|argg| startButton.valueAction_(argg); }
 			];
+
+		modSets.putAll((
+			t_trig: { |val| synthInstance.set(\t_trig, val) },
+			timeScale: { |val|
+				timeScale = val;
+				defer { timeScaleView.value = val };
+				synthInstance.set(\timeScale, val);
+			}
+		));
+
+		modGets.putAll((
+			t_trig: { 0 },
+			timeScale: { timeScale }
+		));
 	}
 
 	synthArgs {
