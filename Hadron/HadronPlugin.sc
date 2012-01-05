@@ -128,7 +128,10 @@ HadronPlugin
 		saveGets = nil; //functions in this list will be evaulated and return value will be saved with patch
 		saveSets = nil; //saved values will be injected back into instance with these functions (argument will be the saved value)
 
-		oldWinBounds = Rect(argBounds.left, argBounds.top, argBounds.width, argBounds.height + 40);
+		oldWinBounds = Rect(argBounds.left, argBounds.top,
+			argBounds.width,
+			argBounds.height + 40 + (30 * binaryValue(argBounds.width < 330))
+		);
 		outerWindow = Window(argName + ident, oldWinBounds, resizable: false)
 		.userCanClose_(false)
 		.acceptsMouseOver_(true);
@@ -177,6 +180,32 @@ HadronPlugin
 		.states_([["In/Outs"]])
 		.action_({ this.prShowConnections; })
 		.visible_(if((inBusses.size == 0) and: { outBusses.size == 0; }, { false; }, { true; }));
+
+		if(argBounds.width >= 330) {
+			StaticText(outerWindow, Rect(
+				90, oldWinBounds.height - 30,
+				50, 20
+			)).string_("name");
+			TextField(outerWindow, Rect(
+				150, oldWinBounds.height - 30,
+				oldWinBounds.width - 330, 20
+			)).string_(ident)
+			.action_({ |view|
+				this.ident = view.value
+			});
+		} {
+			StaticText(outerWindow, Rect(
+				10, oldWinBounds.height - 60,
+				50, 20
+			)).string_("name");
+			TextField(outerWindow, Rect(
+				70, oldWinBounds.height - 60,
+				oldWinBounds.width - 80, 20
+			)).string_(ident)
+			.action_({ |view|
+				this.ident = view.value
+			});
+		};
 
 		window = CompositeView(outerWindow, Rect(0, 0, argBounds.width, argBounds.height));
 
@@ -570,5 +599,10 @@ HadronPlugin
 				});
 			tempwin.front;
 		};
+	}
+
+	ident_ { |string|
+		ident = string;
+		{ outerWindow.name = name + ident }.defer;
 	}
 }
