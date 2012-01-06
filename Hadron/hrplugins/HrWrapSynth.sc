@@ -94,22 +94,24 @@ HrWrapSynth : HadronPlugin
 			var default = synthDesc.controls.detect({ |cn|
 				cn.name.asString == item
 			}).defaultValue;
-			
+
+			item = item.asSymbol;
+
 			StaticText(window, Rect(10, 10 + (count * 30), 80, 20)).string_(item);
 			
-			storeArgs.put(item.asSymbol, specs.at(item.asSymbol).unmap(default));
+			storeArgs.put(item, specs.at(item).unmap(default));
 			
 			numBoxes.add
 			(
 				NumberBox(window, Rect(200, 10 + (count * 30), 80, 20))
 				.value_(default)
-				.action_({|num| sliders[count].valueAction_(specs.at(item.asSymbol).unmap(num.value)); });
+				.action_({|num| sliders[count].valueAction_(specs.at(item).unmap(num.value)); });
 			);
 			
 			sliders.add
 			(
 				HrSlider(window, Rect(90, 10 + (count * 30), 100, 20))
-				.value_(specs.at(item.asSymbol).unmap(default))
+				.value_(specs.at(item).unmap(default))
 				.action_
 				({|sld| 
 					
@@ -119,18 +121,24 @@ HrWrapSynth : HadronPlugin
 			
 			setFunctions.add
 			({|val|
-				
-				var mapped = specs.at(item.asSymbol).map(val.value);
-				storeArgs.put(item.asSymbol, val);
+				var mapped = specs.at(item).map(val.value);  // why .value here?
+				storeArgs.put(item, val);
 				synthInstance.set(item, mapped);
 				{ numBoxes[count].value_(mapped); }.defer;
 			});
 			
 			//add the modulatable entry for the control
-			modGets.put(item.asSymbol, { storeArgs.at(item.asSymbol); });
-			modSets.put(item.asSymbol, {|argg| setFunctions[count].value(argg); { sliders[count].value_(argg); }.defer; });
-			
-			
+			modGets.put(item, { storeArgs.at(item); });
+			modSets.put(item, {|argg| setFunctions[count].value(argg); { sliders[count].value_(argg); }.defer; });
+
+			// with HrCtlMod, argg is a real value, not normalized as with SimpleMod
+			modMapSets.put(item, { |argg|
+				storeArgs.put(item, argg);
+				{
+					sliders[count].value = specs[item].unmap(argg);
+					numBoxes[count].value = argg;
+				}.defer;
+			});
 		});
 		
 		startButton = 
