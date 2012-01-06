@@ -84,7 +84,7 @@ HadronPlugin
 
 		group = Group.new;
 		parentApp = argParentApp;
-		uniqueID = argUniqueID ? parentApp.prGiveUniqueId;
+		uniqueID = argUniqueID ? parentApp.prGiveUniqueId(this);
 		isHidden = false;
 		//argCanvasXY.class.postln;
 		boundCanvasItem = HadronCanvasItem(parentApp.canvasObj, this, argCanvasXY.x, argCanvasXY.y);

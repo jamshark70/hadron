@@ -153,13 +153,13 @@ Hadron
 	}
 	
 	prGiveUniqueId
-	{
-		var tempRand = 65536.rand;
+	{ |plug|
+		var tempRand = (0x7FFF.rand << 16) | ((plug ? this).hash & 0xFFFF);
 		var tempPool = alivePlugs.collect({|item| item.uniqueID; });
 		
 		while({ tempPool.detectIndex({|item| item == tempRand; }).notNil },
 		{
-			tempRand = 65536.rand;
+			tempRand = (0x7FFF.rand << 16) | ((plug ? this).hash & 0xFFFF);
 		});
 		
 		^tempRand;
@@ -179,6 +179,8 @@ Hadron
 		canvasObj.cWin.front;
 		^tempHolder;
 	}
+
+	pluginFromID { |id| ^idPlugDict[id] }
 	
 	prShowNewInstDialog
 	{|argOptionalBound|
