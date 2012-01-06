@@ -11,7 +11,6 @@ HrWrapSynth : HadronPlugin
 		var synthDesc, ctlNameStrings;  // class method: instance vars are not accessible here
 		var err, continue = true;
 		
-		// try {
 		if(argExtraArgs.size == 0, 
 		{
 			err = Error("This plugin requires an argument. See HrWrapSynth help.");
@@ -33,11 +32,6 @@ HrWrapSynth : HadronPlugin
 			argParentApp.displayStatus(err.errorString, -1);
 			err.throw;
 		});
-		// } { |err|
-		// 	if(err.isKindOf(Error)) {
-		// 		continue = false;
-		// 	};
-		// };
 
 		if(continue) {
 			// no, fix this...
@@ -108,14 +102,14 @@ HrWrapSynth : HadronPlugin
 			numBoxes.add
 			(
 				NumberBox(window, Rect(200, 10 + (count * 30), 80, 20))
-				.value_(/*specs.at(item.asSymbol).*/default)
+				.value_(default)
 				.action_({|num| sliders[count].valueAction_(specs.at(item.asSymbol).unmap(num.value)); });
 			);
 			
 			sliders.add
 			(
 				HrSlider(window, Rect(90, 10 + (count * 30), 100, 20))
-				.value_(specs.at(item.asSymbol).unmap(/*specs.at(item.asSymbol).*/default))
+				.value_(specs.at(item.asSymbol).unmap(default))
 				.action_
 				({|sld| 
 					
