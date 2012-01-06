@@ -70,6 +70,7 @@ HrDAC : HadronPlugin
 		
 		modGets.put(\level, { levelSlider.value; });
 		modSets.put(\level, {|argg| levelSlider.valueAction_(argg) });
+		modMapSets.put(\level, {|argg| levelSlider.value_(argg) });
 	}
 
 	releaseSynth {

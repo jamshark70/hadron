@@ -95,12 +95,18 @@ HadronModTargetControl
 	}
 	
 	modulateWithValue
-	{|argVal|
+	{|argNormalizedValue|
 	
 		if((currentSelPlugin != nil) and: { currentSelParam != nil },
 		{
-			currentSelPlugin.modSets.at(currentSelParam.asSymbol).value(argVal);
+			currentSelPlugin.modSets.at(currentSelParam.asSymbol).value(argNormalizedValue);
 		});
+	}
+
+	updateMappedGui { |argRealValue|
+		if((currentSelPlugin != nil) and: { currentSelParam != nil }) {
+			currentSelPlugin.modMapSets.at(currentSelParam.asSymbol).value(argRealValue);
+		};
 	}
 
 	map { |ctlBus|

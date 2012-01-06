@@ -1,5 +1,7 @@
 HrCtlMod : HrSimpleModulator {
-	var evalButton;
+	classvar <>pollRate = 4;
+	var evalButton, watcher, isMapped = false;
+
 	*initClass
 	{
 		this.addHadronPlugin;
@@ -41,8 +43,15 @@ HrCtlMod : HrSimpleModulator {
 		.action_
 		({|btn|
 			// synthInstance.run(btn.value == 1)
-			if(btn.value == 1) { modControl.map(prOutBus) }
-			{ modControl.unmap };
+			if(btn.value == 1) {
+				modControl.map(prOutBus);
+				isMapped = true;
+				synthInstance.set(\pollRate, pollRate * (watcher.notNil.binaryValue));
+			} {
+				modControl.unmap;
+				isMapped = false;
+				synthInstance.set(\pollRate, 0);
+			};
 		});
 
 		this.makeSynth;
@@ -60,6 +69,21 @@ HrCtlMod : HrSimpleModulator {
 				{|argg| modControl.putSaveValues(argg); },
 				{|argg| startButton.valueAction_(argg); }
 			];
+
+		if(this.shouldWatch) {
+			watcher = OSCresponderNode(Server.default.addr, '/modValue', { |time, resp, msg|
+				if(msg[2] == uniqueID) {
+					modControl.updateMappedGui(msg[3]);
+				}
+			}).add;
+		};
+	}
+
+	// default is to watch
+	shouldWatch {
+		^extraArgs.size < 1 or: {
+			extraArgs[0] != "0" and: { extraArgs[0] != "false" }
+		}
 	}
 
 	releaseSynth { synthInstance.free; synthInstance = nil; }
@@ -96,16 +120,19 @@ HrCtlMod : HrSimpleModulator {
 			};
 		};
 	}
-	synthArgs { ^[\inBus0, inBusses[0], \prOutBus, prOutBus] }
+	synthArgs { ^[\inBus0, inBusses[0], \prOutBus, prOutBus,
+		pollRate: pollRate * isMapped.binaryValue * (watcher.notNil.binaryValue)
+	] }
 
 	makeSynthDef {
-		SynthDef("HrCtlMod"++uniqueID, { |prOutBus, inBus0|
+		SynthDef("HrCtlMod"++uniqueID, { |prOutBus, inBus0, pollRate = 0|
 			var input = A2K.kr(InFeedback.ar(inBus0));
 			input = postOpFunc.value(input);
 			if(input.size > 1 or: { input.rate != \control }) {
 				// throw prevents the synthdef from being replaced
 				Exception("HrCtlMod result must be one channel, control rate").throw;
 			};
+			SendReply.kr(Impulse.kr(pollRate), '/modValue', input, uniqueID);
 			Out.kr(prOutBus, input);
 		}).add;
 	}
@@ -114,17 +141,22 @@ HrCtlMod : HrSimpleModulator {
 	{
 		this.releaseSynth;
 		modControl.removeDependant(this);
+		watcher.remove;
 	}
 
 	update { |obj, what, argument, oldplug, oldparam|
-		var didMap;
 		if(#[currentSelPlugin, currentSelParam].includes(what)) {
 			if(argument.notNil) {
 				modControl.unmap(oldplug, oldparam);
-				didMap = modControl.map(prOutBus);
-				defer { startButton.value = didMap.binaryValue };
+				isMapped = modControl.map(prOutBus);
+				synthInstance.set(\pollRate,
+					pollRate * isMapped.binaryValue * (watcher.notNil.binaryValue)
+				);
+				defer { startButton.value = isMapped.binaryValue };
 			} {
 				modControl.unmap(oldplug, oldparam);
+				synthInstance.set(\pollRate, 0);
+				isMapped = false;
 				defer { startButton.value = 0 };
 			};
 		};

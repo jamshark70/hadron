@@ -4,7 +4,7 @@ HadronPlugin
 	<outerWindow, window, <>oldWinBounds, <>isHidden, <name, <ident,
 	<>inConnections, <>outConnections, <dummyInBusses, <conWindow,
 	<>saveGets, <>saveSets, <extraArgs, <boundCanvasItem, <helpString,
-	<modSets, <modGets;
+	<modSets, <modGets, <modMapSets;
 
 	var badValueSynth, badValueResp;
 
@@ -67,6 +67,7 @@ HadronPlugin
 		extraArgs = argExtraArgs;
 		modGets = Dictionary.new;
 		modSets = Dictionary.new;
+		modMapSets = Dictionary.new;
 
 		helpString = "No help available for this plugin.";
 		//every connecting plugin gets inputs from the plugin it connects.

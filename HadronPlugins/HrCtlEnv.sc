@@ -62,8 +62,15 @@ HrCtlEnv : HrCtlMod {
 				modControl.currentSelParam.notNil
 			})
 			.action_({|btn|
-				if(btn.value == 1) { modControl.map(prOutBus) }
-				{ modControl.unmap };
+				if(btn.value == 1) {
+					modControl.map(prOutBus);
+					isMapped = true;
+					synthInstance.set(\pollRate, pollRate * (watcher.notNil.binaryValue));
+				} {
+					modControl.unmap;
+					isMapped = false;
+					synthInstance.set(\pollRate, 0);
+				};
 			});
 		} {
 			adjustY = 25;
@@ -254,22 +261,44 @@ HrCtlEnv : HrCtlMod {
 			}
 		));
 
+		modMapSets.putAll((
+			timeScale: { |val|
+				timeScale = val;
+				defer { timeScaleView.value = val };
+			}
+		));
+
 		modGets.putAll((
 			t_trig: { 0 },
 			timeScale: { timeScale }
 		));
+
+		if(this.shouldWatch) {
+			watcher = OSCresponderNode(Server.default.addr, '/modValue', { |time, resp, msg|
+				if(msg[2] == uniqueID) {
+					modControl.updateMappedGui(msg[3]);
+				}
+			}).add;
+		};
+	}
+	// default is NOT to watch
+	shouldWatch {
+		^extraArgs.size >= 1 and: {
+			extraArgs[0] == "1" or: { extraArgs[0] == "true" }
+		}
 	}
 
 	synthArgs {
 		^[inBus0: inBusses[0], outBus0: outBusses[0], prOutBus: prOutBus,
 			timeScale: timeScale, env: postOpText.value,
-			minval: spec.minval, maxval: spec.maxval, step: spec.step
+			minval: spec.minval, maxval: spec.maxval, step: spec.step,
+			pollRate: pollRate * isMapped.binaryValue * (watcher.notNil.binaryValue)
 		]
 	}
 
 	makeSynthDef {
 		SynthDef("HrCtlEnv" ++ uniqueID, { |t_trig, inBus0, outBus0, prOutBus,
-			minval = 0, maxval = 1, step = 0, timeScale = 1|
+			minval = 0, maxval = 1, step = 0, timeScale = 1, pollRate = 0|
 			var env = NamedControl.kr(\env, (0 ! 48).overWrite(Env(#[0, 0], #[1]).asArray)),
 			audioTrig = InFeedback.ar(inBus0, 1),
 			eg = EnvGen.kr(env,
@@ -282,7 +311,9 @@ HrCtlEnv : HrCtlMod {
 			.minval_(minval)  // replace hardcoded endpoints with control inputs
 			.maxval_(maxval)
 			.step_(step);
-			Out.kr(prOutBus, localSpec.map(eg));
+			eg = localSpec.map(eg);
+			SendReply.kr(Impulse.kr(pollRate), '/modValue', eg, uniqueID);
+			Out.kr(prOutBus, eg);
 			Out.ar(outBus0, audioTrig + K2A.ar(t_trig));
 		}).add;
 	}
@@ -320,6 +351,8 @@ HrAudioEnv : HrCtlEnv {
 		saveGets.removeAt(4); saveGets.removeAt(3);  // hackity hack hack hack
 		saveSets.removeAt(4); saveSets.removeAt(3);
 	}
+	// CAN'T watch
+	shouldWatch { ^false }
 
 	synthArgs {
 		^[inBus0: inBusses[0], outBus0: outBusses[0], outBus1: outBusses[1],

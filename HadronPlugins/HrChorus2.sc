@@ -38,12 +38,20 @@ HrChorus2 : HadronPlugin {
 
 		// numDelays is deliberately left out: shouldn't be automate-able
 		(
-			predelay: { |val| predelaySlider.valueAction_(val) },
-			speed: { |val| speedSlider.valueAction_(val) },
-			depth: { |val| depthSlider.valueAction_(val) },
-			phdiff: { |val| phdiffSlider.valueAction_(val) },
-			preamp: { |val| preampSlider.valueAction_(val) }
+			predelay: { |val| defer { predelaySlider.valueAction_(val) } },
+			speed: { |val| defer { speedSlider.valueAction_(val) } },
+			depth: { |val| defer { depthSlider.valueAction_(val) } },
+			phdiff: { |val| defer { phdiffSlider.valueAction_(val) } },
+			preamp: { |val| defer { preampSlider.valueAction_(val) } }
 		).associationsDo { |assn| modSets.add(assn) };
+
+		(
+			predelay: { |val| defer { predelaySlider.value_(val) } },
+			speed: { |val| defer { speedSlider.value_(val) } },
+			depth: { |val| defer { depthSlider.value_(val) } },
+			phdiff: { |val| defer { phdiffSlider.value_(val) } },
+			preamp: { |val| defer { preampSlider.value_(val) } }
+		).associationsDo { |assn| modMapSets.add(assn) };
 
 		(
 			predelay: { |val| predelaySlider.value },

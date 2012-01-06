@@ -104,6 +104,11 @@ HrStereoMixer : HadronPlugin
 				
 				{ volSliders[cnt].value_(argg) }.defer;
 			});
+			modMapSets.put(("level"++cnt).asSymbol, 
+			{|argg| 
+				currentSlValues[cnt] = argg;
+				{ volSliders[cnt].value_(argg) }.defer;
+			});
 		});
 	}
 

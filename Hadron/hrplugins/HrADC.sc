@@ -111,7 +111,7 @@ HrADC : HadronPlugin
 		
 		modGets.put(\level, { lastLevel; });
 		modSets.put(\level, {|argg| lastLevel = argg; synthInstance.set(\mul, argg); { levSlider.value_(argg); }.defer; });
-		
+		modMapSets.put(\level, {|argg| lastLevel = argg; { levSlider.value_(argg); }.defer; });
 	}
 
 	releaseSynth {
