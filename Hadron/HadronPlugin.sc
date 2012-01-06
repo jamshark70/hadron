@@ -131,7 +131,7 @@ HadronPlugin
 
 		oldWinBounds = Rect(argBounds.left, max(argBounds.top, 0),
 			argBounds.width,
-			argBounds.height + 40 + (30 * binaryValue(argBounds.width < 330))
+			argBounds.height + 40 + (30 * binaryValue(argBounds.width < 430))
 		);
 		// if true, title bar may be off the top of the screen, bad
 		// leave 100 pix padding
@@ -193,14 +193,14 @@ HadronPlugin
 		.action_({ this.prShowConnections; })
 		.visible_(if((inBusses.size == 0) and: { outBusses.size == 0; }, { false; }, { true; }));
 
-		if(argBounds.width >= 330) {
+		if(argBounds.width >= 430) {
 			StaticText(outerWindow, Rect(
 				90, oldWinBounds.height - 30,
 				50, 20
 			)).string_("name");
 			TextField(outerWindow, Rect(
 				150, oldWinBounds.height - 30,
-				oldWinBounds.width - 330, 20
+				oldWinBounds.width - 430, 20
 			)).string_(ident)
 			.action_({ |view|
 				this.ident = view.value
@@ -220,9 +220,9 @@ HadronPlugin
 		};
 
 		if(needsScroll) {
-			window = ScrollView(outerWindow, Rect(0, 0, argBounds.width, oldWinBounds.height - 40 - (30 * binaryValue(argBounds.width < 330))));
+			window = ScrollView(outerWindow, Rect(0, 0, argBounds.width, oldWinBounds.height - 40 - (30 * binaryValue(argBounds.width < 430))));
 		} {
-			window = CompositeView(outerWindow, Rect(0, 0, argBounds.width, argBounds.height));
+			window = CompositeView(outerWindow, Rect(0, 0, argBounds.width, argBounds.height - (30 * binaryValue(argBounds.width < 430))));
 		};
 
 		outerWindow.front;
