@@ -62,7 +62,7 @@ HadronPlugin
 
 	doInit
 	{|argParentApp, argName, argIdent, argUniqueID, argExtraArgs, argBounds, argNumIns, argNumOuts, argCanvasXY|
-		var busArgFunc;
+		var busArgFunc, needsScroll = false;
 
 		extraArgs = argExtraArgs;
 		modGets = Dictionary.new;
@@ -128,10 +128,21 @@ HadronPlugin
 		saveGets = nil; //functions in this list will be evaulated and return value will be saved with patch
 		saveSets = nil; //saved values will be injected back into instance with these functions (argument will be the saved value)
 
-		oldWinBounds = Rect(argBounds.left, argBounds.top,
+		oldWinBounds = Rect(argBounds.left, max(argBounds.top, 0),
 			argBounds.width,
 			argBounds.height + 40 + (30 * binaryValue(argBounds.width < 330))
 		);
+		// if true, title bar may be off the top of the screen, bad
+		// leave 100 pix padding
+		if(oldWinBounds.bottom > (Window.screenBounds.height - 100)) {
+			if(oldWinBounds.top >= (oldWinBounds.bottom - Window.screenBounds.height + 100)) {
+				oldWinBounds.top = (oldWinBounds.bottom - Window.screenBounds.height + 100);
+			} {
+				needsScroll = true;
+				oldWinBounds.top = 0;
+				oldWinBounds.height = Window.screenBounds.height - 100;
+			};
+		};
 		outerWindow = Window(argName + ident, oldWinBounds, resizable: false)
 		.userCanClose_(false)
 		.acceptsMouseOver_(true);
@@ -207,7 +218,11 @@ HadronPlugin
 			});
 		};
 
-		window = CompositeView(outerWindow, Rect(0, 0, argBounds.width, argBounds.height));
+		if(needsScroll) {
+			window = ScrollView(outerWindow, Rect(0, 0, argBounds.width, oldWinBounds.height - 40 - (30 * binaryValue(argBounds.width < 330))));
+		} {
+			window = CompositeView(outerWindow, Rect(0, 0, argBounds.width, argBounds.height));
+		};
 
 		outerWindow.front;
 
