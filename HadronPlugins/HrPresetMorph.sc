@@ -1,10 +1,10 @@
 HrPresetMorph : HadronPlugin
 {
 	var <surfaceView, <presetList, curPresets, nPresetText, addButton, <mouseXY, <compositeBack,
-	canvasItems, refreshRoutine, rotateCounter, rotFunc, <menuList,
+	canvasItems, refreshRoutine, rotateCounter, rotFunc, <>menuList, surfaceExtent,
 	senseDistance, senseCurve;
 	var availParams, activeParams, availParamView, activeParamView, availItems;
-	var mouseIsDown = false;
+	var mouseIsDown = false, isMapped = false;
 
 	*initClass
 	{
@@ -59,8 +59,11 @@ HrPresetMorph : HadronPlugin
 		refreshRoutine = Routine({ loop({ surfaceView.refresh; 0.04.wait; }); });
 
 		compositeBack = CompositeView(window, Rect(160, 0, window.bounds.width - 165, window.bounds.height - 100));
-		surfaceView =
-		UserView(compositeBack, Rect(0, 0, window.bounds.width - 165, window.bounds.height - 100))
+
+		surfaceExtent = Point(window.bounds.width - 165, window.bounds.height - 100);
+		mouseXY = surfaceExtent * 0.5;  // center
+
+		surfaceView = UserView(compositeBack, Rect(0, 0, surfaceExtent.x, surfaceExtent.y))
 		.focusColor_(Color.gray(alpha: 0))
 		.background_(Color.white)
 		.mouseOverAction_({|...args| mouseXY = (args[1]@args[2]); })
@@ -241,13 +244,37 @@ HrPresetMorph : HadronPlugin
 			}
 		];
 
-		//modGets.put(\surfaceX, { lastCalcedXY.x / surfaceView.bounds.width; });
-		//modGets.put(\surfaceY, { lastCalcedXY.y / surfaceView.bounds.height; });
-		
-		//modSets.put(\surfaceX, {|argg| argg = argg * surfaceView.bounds.width; { this.calcNewParams(argg@lastCalcedXY.y, true); }.defer; });
-		//modSets.put(\surfaceY, {|argg| argg = argg * surfaceView.bounds.height; { this.calcNewParams(lastCalcedXY.x@argg, true); }.defer; });
+		modGets.put(\surfaceX, { mouseXY.x / surfaceView.bounds.width; });
+		modGets.put(\surfaceY, { mouseXY.y / surfaceView.bounds.height; });
+		modGets.put(\surfaceXY, {
+			[
+				mouseXY.x / surfaceView.bounds.width,
+				mouseXY.y / surfaceView.bounds.height
+			]
+		});
 
+		modSets.put(\surfaceX, { |argg|
+			argg = argg * surfaceView.bounds.width;
+			{
+				this.calcNewParams(argg@mouseXY.y, true);
+				surfaceView.refresh;
+			}.defer;
+		});
+		modSets.put(\surfaceY, { |argg| argg = argg * surfaceView.bounds.height;
+			{
+				this.calcNewParams(mouseXY.x@argg, true);
+				surfaceView.refresh;
+			}.defer;
+		});
+		modSets.put(\surfaceXY, { |argg|
+			mouseXY = Point(*argg) * surfaceExtent;
+			{
+				this.calcNewParams(mouseXY, true);
+				surfaceView.refresh;
+			}.defer
+		});
 
+		modMapSets.putAll(modSets);
 	}
 
 	calcNewParams
@@ -411,7 +438,8 @@ HrPresetMorph : HadronPlugin
 		var tempParams;
 		availParams = List.new;
 		parentApp.alivePlugs.do { |plug|
-			if((tempParams = this.prParamsFromPlug(plug)).notNil) {
+			// you may not use a HrPresetMorph to drive itself
+			if(plug !== this and: { (tempParams = this.prParamsFromPlug(plug)).notNil }) {
 				availParams.add(tempParams);
 			};
 		};
@@ -505,7 +533,12 @@ HrPresetMorph : HadronPlugin
 	{
 	}
 
-	isRefreshing { ^mouseIsDown }
+	isRefreshing { ^mouseIsDown or: { isMapped } }
+
+	mapModCtl { |paramName, ctlBus|
+		isMapped = ctlBus != -1;
+		{ surfaceView.refresh }.defer;  // if unmapped, remove the spinning cursor
+	}
 }
 
 HrPresetMorphItemView
