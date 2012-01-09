@@ -4,7 +4,7 @@ HrEnvelopeView added by H. James Harkins
 
 HrEnvelopeView : SCViewHolder {
 	var <env, <curves, <releaseNode, <loopNode,
-	<>action, <>insertAction, <>deleteAction,
+	<>action, <>insertAction, <>deleteAction, <>curveAction,
 	<loopNodeColor,
 	<releaseNodeColor,
 	<fillColor,
@@ -121,6 +121,7 @@ HrEnvelopeView : SCViewHolder {
 						trackingCurveIndex, mouse.y
 					);
 					this.refresh;
+					curveAction.value(this, curves);
 				};
 			};
 		};

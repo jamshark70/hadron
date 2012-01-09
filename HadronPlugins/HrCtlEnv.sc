@@ -33,6 +33,11 @@ HrCtlEnv : HrCtlMod {
 				synthInstance.set(\env, view.value.asArray.extend(48, 0))
 			};
 		})
+		.curveAction_({ |view|
+			if(synthInstance.notNil) {
+				synthInstance.set(\env, view.value.asArray.extend(48, 0))
+			};
+		})
 		.insertAction_({ |view|
 			loopNode.items = ["None"] ++ Array.fill(view.curves.size - 1, _.asString);
 			releaseNode.items = loopNode.items;
