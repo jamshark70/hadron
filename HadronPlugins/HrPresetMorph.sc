@@ -1,9 +1,10 @@
 HrPresetMorph : HadronPlugin
 {
 	var <surfaceView, <presetList, curPresets, nPresetText, addButton, <mouseXY, <compositeBack,
-	canvasItems, refreshRoutine, isRefreshing, rotateCounter, rotFunc, <>menuList,
+	canvasItems, refreshRoutine, rotateCounter, rotFunc, <>menuList,
 	senseDistance, senseCurve;
 	var availParams, activeParams, availParamView, activeParamView, availItems;
+	var mouseIsDown = false;
 
 	*initClass
 	{
@@ -41,7 +42,7 @@ HrPresetMorph : HadronPlugin
 		outerWindow.acceptsMouseOver = true;
 		curPresets = Dictionary.new;
 		canvasItems = List.new;
-		isRefreshing = false;
+		mouseIsDown = false;
 
 		helpString = "Cmd (ctrl) + drag presets to surface. Right click to presets (on list and canvas) for options.";
 
@@ -63,29 +64,31 @@ HrPresetMorph : HadronPlugin
 		.focusColor_(Color.gray(alpha: 0))
 		.background_(Color.white)
 		.mouseOverAction_({|...args| mouseXY = (args[1]@args[2]); })
-		.mouseMoveAction_
-		({|...args|
-			if(isRefreshing == false,
+		.mouseDownAction_({ |view, x, y|
+			mouseXY = Point(x, y);
+			if(this.isRefreshing == false,  // this might change later
 			{
 				//"starting".postln;
 				refreshRoutine.reset;
 				refreshRoutine.play(AppClock);
-				isRefreshing = true;
 			});
+			mouseIsDown = true;
+		})
+		.mouseMoveAction_
+		({|...args|
 			mouseXY = (args[1]@args[2]);
 		})
 		.mouseUpAction_
 		({
-			if(isRefreshing,
+			if(this.isRefreshing,
 			{
 				//"stopping".postln;
 				refreshRoutine.stop;
-				isRefreshing = false;
+				mouseIsDown = false;
 				rotateCounter = -pi;
 				surfaceView.refresh;
 			});
 		})
-		//.mouseDownAction_({|...args|  })
 		.canReceiveDragHandler_({ true; })
 		.receiveDragHandler_
 		({|...args|
@@ -107,7 +110,7 @@ HrPresetMorph : HadronPlugin
 		({
 			var lineXs, lineYs;
 
-			if(isRefreshing,
+			if(this.isRefreshing,
 			{
 				# lineXs, lineYs = rotFunc.value;
 				Pen.color = Color.black;
@@ -240,7 +243,7 @@ HrPresetMorph : HadronPlugin
 
 		//modGets.put(\surfaceX, { lastCalcedXY.x / surfaceView.bounds.width; });
 		//modGets.put(\surfaceY, { lastCalcedXY.y / surfaceView.bounds.height; });
-
+		
 		//modSets.put(\surfaceX, {|argg| argg = argg * surfaceView.bounds.width; { this.calcNewParams(argg@lastCalcedXY.y, true); }.defer; });
 		//modSets.put(\surfaceY, {|argg| argg = argg * surfaceView.bounds.height; { this.calcNewParams(lastCalcedXY.x@argg, true); }.defer; });
 
@@ -252,7 +255,7 @@ HrPresetMorph : HadronPlugin
 
 		var multiplier = 0, tempSum = 0;
 
-		if((canvasItems.size > 0) and: { isRefreshing; }, {
+		if((canvasItems.size > 0) and: { this.isRefreshing }, {
 			canvasItems.do
 			({|canItem|
 
@@ -501,6 +504,8 @@ HrPresetMorph : HadronPlugin
 	updateBusConnections
 	{
 	}
+
+	isRefreshing { ^mouseIsDown }
 }
 
 HrPresetMorphItemView
