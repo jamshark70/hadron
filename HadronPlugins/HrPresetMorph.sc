@@ -1,7 +1,7 @@
 HrPresetMorph : HadronPlugin
 {
 	var <surfaceView, <presetList, curPresets, nPresetText, addButton, <mouseXY, <compositeBack,
-	canvasItems, refreshRoutine, rotateCounter, rotFunc, <>menuList,
+	canvasItems, refreshRoutine, rotateCounter, rotFunc, <menuList,
 	senseDistance, senseCurve;
 	var availParams, activeParams, availParamView, activeParamView, availItems;
 	var mouseIsDown = false;
