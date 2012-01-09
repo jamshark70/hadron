@@ -619,6 +619,18 @@ HadronPlugin
 
 	ident_ { |string|
 		ident = string;
-		{ outerWindow.name = name + ident }.defer;
+		{
+			outerWindow.name = name + ident;
+			parentApp.alivePlugs.do { |plug|
+				if(plug !== this) { plug.notifyIdentChanged(this, ident) };
+			};
+		}.defer;
+	}
+
+	// one plugin might use another plugin's 'ident' in a gui
+	// override this to receive notifications of that
+	// args are: the plugin whose ident changed, and the new name
+	// a plugin will not be notified of its own name changing
+	notifyIdentChanged { |plugin, newIdent|
 	}
 }
