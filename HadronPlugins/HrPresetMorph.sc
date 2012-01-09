@@ -126,7 +126,11 @@ HrPresetMorph : HadronPlugin
 		});
 
 		senseDistance = surfaceView.bounds.leftTop.dist(surfaceView.bounds.rightBottom).asInteger;
-		senseCurve = Env([0, 0.05, 0.1, 0.9, 1], [3, 0.5, 0.85, 0.15], [0, 0, 0, -4]).asSignal(senseDistance).asArray.reverse;
+		senseCurve = Env(
+			#[0, 0.05, 0.1, 0.9, 1],
+			#[3, 0.5, 0.85, 0.15].normalizeSum,
+			#[0, 0, 0, -4]
+		);
 
 		nPresetText = TextField(window, Rect(10, 10, 100, 20))
 		.action_({ addButton.valueAction_(1); });
@@ -287,8 +291,8 @@ HrPresetMorph : HadronPlugin
 			({|canItem|
 
 				var tempDist;
-				tempDist = canItem.view.bounds.origin.dist(argXY);
-				tempSum = tempSum + ((1 - (tempDist/senseDistance)) * senseCurve[tempDist]);
+				tempDist = 1 - (canItem.view.bounds.origin.dist(argXY) / senseDistance);
+				tempSum = tempSum + (tempDist * senseCurve[tempDist]);
 			});
 
 			multiplier = tempSum.reciprocal;
@@ -309,7 +313,7 @@ HrPresetMorph : HadronPlugin
 						({|inCItem|
 
 							var farSavedVal = curPresets.at(inCItem.name).at(plugID); //hold the plug first, and see if it exists
-							var tempDist = inCItem.view.bounds.origin.dist(argXY);
+							var tempDist = 1 - (inCItem.view.bounds.origin.dist(argXY) / senseDistance);
 
 							if(farSavedVal.notNil,
 								{
@@ -320,7 +324,7 @@ HrPresetMorph : HadronPlugin
 								});
 
 							nextVal = nextVal +
-							(farSavedVal * ((1 - (tempDist/senseDistance)) * senseCurve[tempDist]) * multiplier)
+							(farSavedVal * (tempDist * senseCurve[tempDist]) * multiplier)
 						});
 
 						if(parentApp.idPlugDict.at(plugID).modGets.at(plugParam).value != nextVal, {
