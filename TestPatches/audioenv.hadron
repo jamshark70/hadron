@@ -1,0 +1,17 @@
+?Hadron 1
+?StartPlugs
+HrAudioEnvunnamed12427nilPoint( 124, 85 )Rect(869, 327, 450, 365)Rect(904.32108211517, 77.211922883987, 450, 365)false
+HrDIYSynthunnamed24387nilPoint( 128, 165 )Rect(826, 29, 450, 440)Rect(841.79671096802, 295.91438484192, 450, 440)false
+HrDACunnamed53613nilPoint( 151, 295 )Rect(43, 589, 250, 130)Rect(41.867188453674, 877.77402257919, 250, 130)false
+?EndPlugs
+?StartConnections
+12427[ [ nil, nil ] ][ [ 24387, 0 ], [ 24387, 1 ] ]
+24387[ [ 12427, 0 ], [ 12427, 1 ] ][ [ 53613, 0 ], [ 53613, 1 ] ]
+53613[ [ 24387, 0 ], [ 24387, 1 ] ][  ]
+?EndConnections
+?StartPlugParams
+12427"HrControlSpec(0.0, 0.1, 'linear', 0.0, 0.0, \"\")""Env([ 0.0, 1.0, 0.5, 0.0 ], [ 0.0076335877862595, 0.22900763358779, 0.76335877862595 ], [ -4.0, -4.0, -4.0 ])""1"
+24387"{ arg input;  SinOsc.ar(TExpRand.ar(200, 800, input[1]), 0, input[0])}"
+536131nil0
+?EndPlugParams
+?EndSave

@@ -1,0 +1,11 @@
+?Hadron 1
+?StartPlugs
+HrDIYSynthunnamed51083nilPoint( 227, 110 )Rect(802, 238, 450, 440)Rect(683.59549617767, 278.80985450745, 450, 440)false
+?EndPlugs
+?StartConnections
+51083[ [ nil, nil ], [ nil, nil ] ][ [ nil, nil ], [ nil, nil ] ]
+?EndConnections
+?StartPlugParams
+51083"{ arg input;   var trig = TDelay.ar(Impulse.ar(2), 1.5);   BrownNoise.ar / (1 - trig)}"
+?EndPlugParams
+?EndSave

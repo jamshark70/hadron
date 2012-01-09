@@ -1,0 +1,26 @@
+?Hadron 1
+?StartPlugs
+HrDACunnamed17846nilPoint( 244, 429 )Rect(1113, 167, 250, 130)Rect(99.538707733154, 859.56693792343, 250, 130)false
+HrWrapSynthunnamed29662[ "analog" ]Point( 240, 94 )Rect(915, 402, 350, 300)Rect(400, 400, 350, 300)false
+HrStereoSplitterunnamed32902[ "2" ]Point( 241, 140 )Rect(861, 155, 250, 190)Rect(200, 200, 250, 190)false
+HrDIYSynthunnamed23527nilPoint( 158, 212 )Rect(851, 250, 450, 440)Rect(83.800718307495, 205.07327270508, 450, 440)false
+HrStereoMixerunnamed20378[ "2" ]Point( 244, 359 )Rect(1039, 78, 250, 190)Rect(200, 200, 250, 190)false
+HrDIYSynthunnamed38631nilPoint( 337, 218 )Rect(816, 139, 450, 440)Rect(50.873953342438, 353.60223197937, 450, 440)false
+?EndPlugs
+?StartConnections
+17846[ [ 20378, 0 ], [ 20378, 1 ] ][  ]
+29662[  ][ [ 32902, 0 ], [ 32902, 1 ] ]
+32902[ [ 29662, 0 ], [ 29662, 1 ] ][ [ 23527, 0 ], [ 23527, 1 ], [ 38631, 0 ], [ 38631, 1 ] ]
+23527[ [ 32902, 0 ], [ 32902, 1 ] ][ [ 20378, 0 ], [ 20378, 1 ] ]
+20378[ [ 23527, 0 ], [ 23527, 1 ], [ 38631, 0 ], [ 38631, 1 ] ][ [ 17846, 0 ], [ 17846, 1 ] ]
+38631[ [ 32902, 2 ], [ 32902, 3 ] ][ [ 20378, 2 ], [ 20378, 3 ] ]
+?EndConnections
+?StartPlugParams
+178460.116400nil0
+296620.447400nilList[  ]0.529200nilList[  ]0.666600nilList[  ]0.768600nilList[  ]0.316200nilList[  ]1
+329021.0000001.000000nilnilList[  ]List[  ]
+23527"{ arg input;  input = input + DelayL.ar(input, 0.1, SinOsc.ar(2, 0, 0.003, 0.01));  input * 0.5}"
+203781.0000001.000000nilnilList[  ]List[  ]
+38631"{ arg input;  PitchShift.ar(input, pitchRatio: 1.5, pitchDispersion: 1.8)}"
+?EndPlugParams
+?EndSave

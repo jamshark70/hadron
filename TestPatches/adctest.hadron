@@ -1,0 +1,14 @@
+?Hadron 1
+?StartPlugs
+HrDACunnamed17977nilPoint( 172, 410 )Rect(985, 114, 250, 130)Rect(994.77044820786, 388.68070459366, 250, 130)false
+HrADCunnamed9554nilPoint( 166, 267 )Rect(925, 282, 350, 90)Rect(152.78524780273, 173.30276894569, 350, 90)false
+?EndPlugs
+?StartConnections
+17977[ [ 9554, 0 ], [ 9554, 1 ] ][  ]
+9554[  ][ [ 17977, 0 ], [ 17977, 1 ] ]
+?EndConnections
+?StartPlugParams
+179771nil0
+9554100.058200trueinfnilList[  ]
+?EndPlugParams
+?EndSave

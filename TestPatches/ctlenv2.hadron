@@ -1,0 +1,17 @@
+?Hadron 1
+?StartPlugs
+HrCtlEnvunnamed48598nilPoint( 518, 91 )Rect(874, 303, 450, 390)Rect(296.26510286331, 90.861869812012, 450, 390)false
+HrDACunnamed60992nilPoint( 306, 402 )Rect(849, 589, 250, 130)Rect(848.31923532486, 1170.0402007103, 250, 130)false
+HrWrapSynthanalog47856[ "analog" ]Point( 292, 265 )Rect(666, 149, 350, 300)Rect(400, 400, 350, 300)false
+?EndPlugs
+?StartConnections
+48598[ [ nil, nil ] ][ [ nil, nil ] ]
+60992[ [ 47856, 0 ], [ 47856, 1 ] ][  ]
+47856[  ][ [ 60992, 0 ], [ 60992, 1 ] ]
+?EndConnections
+?StartPlugParams
+48598"HrControlSpec(0.0, 1.0, 'linear', 0.0, 0.0, \"\")""Env([ 0.0, 1.0, 0.0 ], [ 0.010003253817558, 0.98999674618244 ], [ -4.0, -4.0 ])""0.50735522573299"[ 3, 1 ]1
+609920.153400nil0
+478560.447400nilList[  ]0.529200nilList[  ]0.666600nilList[  ]0.768600nilList[  ]0.316200nilList[  ]1
+?EndPlugParams
+?EndSave

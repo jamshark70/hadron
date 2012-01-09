@@ -1,0 +1,14 @@
+?Hadron 1
+?StartPlugs
+HrDACunnamed25278nilPoint( 242, 398 )Rect(1083, 187, 250, 130)Rect(564.3609251976, 854.66637611389, 250, 130)false
+HrDIYSynthunnamed51580nilPoint( 247, 333 )Rect(854, 279, 450, 440)Rect(633.07500934601, 235.28639221191, 450, 440)false
+?EndPlugs
+?StartConnections
+25278[ [ 51580, 0 ], [ 51580, 1 ] ][  ]
+51580[ [ nil, nil ], [ nil, nil ] ][ [ 25278, 0 ], [ 25278, 1 ] ]
+?EndConnections
+?StartPlugParams
+252780.052900nil0
+51580"{ arg input; SinOsc.ar }"
+?EndPlugParams
+?EndSave

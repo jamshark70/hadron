@@ -1,0 +1,14 @@
+?Hadron 1
+?StartPlugs
+HrDACunnamed31891nilPoint( 220, 409 )Rect(813, 413, 250, 130)Rect(813, 413, 250, 130)false
+HrWrapSynthanalog54077[ "analog" ]Point( 155, 126 )Rect(1, 29, 126, 10)Rect(43, 304, 350, 240)true
+?EndPlugs
+?StartConnections
+31891[ [ 54077, 0 ], [ 54077, 1 ] ][  ]
+54077[  ][ [ 31891, 0 ], [ 31891, 1 ] ]
+?EndConnections
+?StartPlugParams
+318910.179900nil0
+540770.447400nilList[  ]0.529200nilList[  ]0.744400nilList[  ]0.955500nilList[  ]0.322200nilList[  ]1
+?EndPlugParams
+?EndSave

@@ -1,0 +1,17 @@
+?Hadron 1
+?StartPlugs
+HrDACunnamed35586nilPoint( 218, 417 )Rect(1115, 157, 250, 130)Rect(424.15462875366, 826.85484743118, 250, 130)false
+HrWrapSynthunnamed41529[ "analog" ]Point( 213, 210 )Rect(860, 419, 350, 300)Rect(400, 400, 350, 300)false
+HrChorus2unnamed23846nilPoint( 218, 298 )Rect(648, 177, 450, 190)Rect(609.04278087616, 274.97886943817, 450, 190)false
+?EndPlugs
+?StartConnections
+35586[ [ 23846, 0 ], [ 23846, 1 ] ][  ]
+41529[  ][ [ 23846, 0 ], [ 23846, 1 ] ]
+23846[ [ 41529, 0 ], [ 41529, 1 ] ][ [ 35586, 0 ], [ 35586, 1 ] ]
+?EndConnections
+?StartPlugParams
+355860.127000nil0
+415290.447400nilList[  ]0.500000nilList[  ]0.842700nilList[  ]0.768600nilList[  ]0.316200nilList[  ]1
+238463.0000000.0100000.1188540.0040003.5594250.400000
+?EndPlugParams
+?EndSave

@@ -1,0 +1,17 @@
+?Hadron 1
+?StartPlugs
+HrDACunnamed64834nilPoint( 191, 399 )Rect(1040, 45, 250, 130)Rect(116.61793756485, 956.05097913742, 250, 130)false
+HrWrapSynthunnamed63799[ "analog" ]Point( 199, 277 )Rect(56, 89, 350, 240)Rect(400, 400, 350, 240)false
+HrPresetMorphunnamed7645nilPoint( 51, 44 )Rect(567, 224, 610, 495)Rect(200, 200, 610, 495)false
+?EndPlugs
+?StartConnections
+64834[ [ 63799, 0 ], [ 63799, 1 ] ][  ]
+63799[  ][ [ 64834, 0 ], [ 64834, 1 ] ]
+7645[  ][  ]
+?EndConnections
+?StartPlugParams
+648340.254000nil0
+637990.354400nilList[  ]0.529100nilList[  ]0.796000nilList[  ]0.768600nilList[  ]0.316200nilList[  ]1
+7645[ 'one', 'two' ]Dictionary[ ('two' -> Dictionary[ (63799 -> Dictionary[ ('ffreq' -> 0.82019996643066), ('amp' -> 0.31619998812675), ('dtune' -> 0.5291999578476), ('freq' -> 0.33709999918938), ('rq' -> 0.76859998703003) ]), (64834 -> Dictionary[ ('level' -> 0.25400000810623) ]) ]), ('one' -> Dictionary[ (63799 -> Dictionary[ ('ffreq' -> 0.66659998893738), ('amp' -> 0.31619998812675), ('dtune' -> 0.5291999578476), ('freq' -> 0.44739997386932), ('rq' -> 0.76859998703003) ]), (64834 -> Dictionary[ ('level' -> 0.25400000810623) ]) ]) ][ [ 'one', Rect(4.0, 3.0, 25.0, 20.0), Color(0.887615275383, 0.56883051395416, 0.35705623626709) ], [ 'two', Rect(397.0, 410.0, 25.0, 20.0), Color(0.8073023557663, 0.6020886182785, 0.31883854866028) ] ]
+?EndPlugParams
+?EndSave

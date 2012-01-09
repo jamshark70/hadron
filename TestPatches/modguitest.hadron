@@ -1,0 +1,14 @@
+?Hadron 1
+?StartPlugs
+HrWrapSynthunnamed49819[ "analog" ]Point( 183, 203 )Rect(877, 419, 350, 300)Rect(400, 32, 350, 300)false
+HrCtlModunnamed7991nilPoint( 235, 95 )Rect(862, 153, 450, 215)Rect(421.6626162529, 445.62847840786, 450, 215)false
+?EndPlugs
+?StartConnections
+49819[  ][ [ nil, nil ], [ nil, nil ] ]
+7991[ [ nil, nil ] ][  ]
+?EndConnections
+?StartPlugParams
+498190.373300nilList[  ]0.529200nilList[  ]0.666600nilList[  ]0.768600nilList[  ]0.316200nilList[  ]1
+7991"{ |sig| SinOsc.kr(1).exprange(200, 800) }"[ 1, 3 ]1
+?EndPlugParams
+?EndSave

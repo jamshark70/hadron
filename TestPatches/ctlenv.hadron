@@ -1,0 +1,11 @@
+?Hadron 1
+?StartPlugs
+HrCtlEnvunnamed48598nilPoint( 100, 100 )Rect(874, 303, 450, 390)Rect(296.26510286331, 90.861869812012, 450, 390)false
+?EndPlugs
+?StartConnections
+48598[ [ nil, nil ] ][ [ nil, nil ] ]
+?EndConnections
+?StartPlugParams
+48598"HrControlSpec(0.0, 1.0, 'linear', 0.0, 0.0, \"\")""Env([ 0.0, 0.63020831346512, 0.0 ], [ 0.50763356173411, 0.49236643826589 ], [ -4.0, -4.0 ])""4.7656875816049"[ 0, 0 ]0
+?EndPlugParams
+?EndSave
