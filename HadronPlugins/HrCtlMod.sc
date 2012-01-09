@@ -1,6 +1,6 @@
 HrCtlMod : HrSimpleModulator {
 	classvar <>pollRate = 4;
-	var evalButton, watcher, isMapped = false, numChannels = 1;
+	var evalButton, watcher, isMapped = false, numChannels = 1, replyID;
 
 	*initClass
 	{
@@ -74,13 +74,13 @@ HrCtlMod : HrSimpleModulator {
 			// but the optimization is worth it
 			if(numChannels == 1) {
 				watcher = OSCresponderNode(Server.default.addr, '/modValue', { |time, resp, msg|
-					if(msg[2] == uniqueID) {
+					if(msg[2] == replyID) {
 						modControl.updateMappedGui(msg[3]/*.debug("hrctlmod 1-chan value")*/);
 					}
 				}).add;
 			} {
 				watcher = OSCresponderNode(Server.default.addr, '/modValue', { |time, resp, msg|
-					if(msg[2] == uniqueID) {
+					if(msg[2] == replyID) {
 						modControl.updateMappedGui(msg[3..]/*.debug("hrctlmod n-chan value")*/);
 					}
 				}).add;
@@ -134,6 +134,10 @@ HrCtlMod : HrSimpleModulator {
 	] }
 
 	makeSynthDef {
+		// this is kind of dumb
+		// but the 32-bit int uniqueID is too big for single-float precision
+		// so I need another ID
+		replyID = UniqueID.next;
 		SynthDef("HrCtlMod"++uniqueID, { |prOutBus, inBus0, pollRate = 0|
 			var input = A2K.kr(InFeedback.ar(inBus0));
 			input = postOpFunc.value(input);
@@ -146,7 +150,7 @@ HrCtlMod : HrSimpleModulator {
 			} {
 				input = input.asArray.wrapExtend(numChannels);
 			};
-			SendReply.kr(Impulse.kr(pollRate), '/modValue', input, uniqueID);
+			SendReply.kr(Impulse.kr(pollRate), '/modValue', input, replyID);
 			Out.kr(prOutBus, input);
 		}).add;
 	}
