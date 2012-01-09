@@ -1,6 +1,6 @@
 HrCtlMod : HrSimpleModulator {
 	classvar <>pollRate = 4;
-	var evalButton, watcher, isMapped = false;
+	var evalButton, watcher, isMapped = false, numChannels = 1;
 
 	*initClass
 	{
@@ -12,19 +12,18 @@ HrCtlMod : HrSimpleModulator {
 	init
 	{
 		window.background_(Color.gray(0.7));
-		prOutBus = Bus.control(Server.default, 1);
+		if(extraArgs.size >= 1) {
+			// because "a non-number string".asInteger is 0
+			numChannels = max(1, extraArgs[0].asInteger);
+		};  // otherwise use default from var declaration
+		prOutBus = Bus.control(Server.default, numChannels);
 		helpString = "Write a modulation function, maybe using an audio input.";
 		StaticText(window, Rect(10, 20, 150, 20)).string_("Modulation function");
 
 		postOpFunc = {|sig| (sig * 0.5) + 0.5; };
 
-		// fix this
 		postOpText = TextView(window, Rect(10, 20, 430, 95))
 		.string_("{ |sig| SinOsc.kr(1, 0, 0.5, 0.5) }");
-		// .action_({|txt|
-		// 	postOpFunc = txt.value.interpret;
-		// 	this.makeSynth;
-		// });
 
 		evalButton = Button(window, Rect(10, 120, 80, 20))
 		.states_([["Evaluate"]])
@@ -71,11 +70,21 @@ HrCtlMod : HrSimpleModulator {
 			];
 
 		if(this.shouldWatch) {
-			watcher = OSCresponderNode(Server.default.addr, '/modValue', { |time, resp, msg|
-				if(msg[2] == uniqueID) {
-					modControl.updateMappedGui(msg[3]);
-				}
-			}).add;
+			// ideally the copy and paste here is not so hot,
+			// but the optimization is worth it
+			if(numChannels == 1) {
+				watcher = OSCresponderNode(Server.default.addr, '/modValue', { |time, resp, msg|
+					if(msg[2] == uniqueID) {
+						modControl.updateMappedGui(msg[3]/*.debug("hrctlmod 1-chan value")*/);
+					}
+				}).add;
+			} {
+				watcher = OSCresponderNode(Server.default.addr, '/modValue', { |time, resp, msg|
+					if(msg[2] == uniqueID) {
+						modControl.updateMappedGui(msg[3..]/*.debug("hrctlmod n-chan value")*/);
+					}
+				}).add;
+			};
 		};
 	}
 
@@ -128,9 +137,14 @@ HrCtlMod : HrSimpleModulator {
 		SynthDef("HrCtlMod"++uniqueID, { |prOutBus, inBus0, pollRate = 0|
 			var input = A2K.kr(InFeedback.ar(inBus0));
 			input = postOpFunc.value(input);
-			if(input.size > 1 or: { input.rate != \control }) {
+			if(input.size > numChannels or: { input.rate != \control }) {
 				// throw prevents the synthdef from being replaced
-				Exception("HrCtlMod result must be one channel, control rate").throw;
+				Exception(
+					"HrCtlMod result must be % channel%, control rate"
+					.format(numChannels, if(numChannels > 1, "s", ""))
+				).throw;
+			} {
+				input = input.asArray.wrapExtend(numChannels);
 			};
 			SendReply.kr(Impulse.kr(pollRate), '/modValue', input, uniqueID);
 			Out.kr(prOutBus, input);
