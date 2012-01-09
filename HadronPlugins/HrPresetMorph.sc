@@ -284,56 +284,43 @@ HrPresetMorph : HadronPlugin
 	calcNewParams
 	{|argXY|
 
-		var multiplier = 0, tempSum = 0;
+		var divisors, tempSum = 0, newValues = Array.fill(activeParams.size, 0);
 
 		if((canvasItems.size > 0) and: { this.isRefreshing }, {
-			canvasItems.do
-			({|canItem|
-
+			divisors = canvasItems.collect { |canItem|
 				var tempDist;
 				tempDist = 1 - (canItem.view.bounds.origin.dist(argXY) / senseDistance);
-				tempSum = tempSum + (tempDist * senseCurve[tempDist]);
-			});
+				tempDist * senseCurve[tempDist]
+			};
 
-			multiplier = tempSum.reciprocal;
+			activeParams.do { |pair, i|
+				var plugID = pair[0].uniqueID;
+				var plugParam = pair[1];
+				var nextVal = 0;
+				tempSum = 0;
 
-			canvasItems.do
-			({|canItem|
+				canvasItems.do
+				({|inCItem, j|
 
-				activeParams.do { |pair|
-					var plugID = pair[0].uniqueID;
-					var plugParam = pair[1];
-					var nextVal = 0;
-					var mySavedVal = curPresets.at(canItem.name).at(plugID).at(plugParam);
+					var farSavedVal = curPresets.at(inCItem.name).at(plugID); //hold the plug first, and see if it exists
+					var tempDist = 1 - (inCItem.view.bounds.origin.dist(argXY) / senseDistance);
 
-					// at least avoid a crash if a plug was added after saving some presets
-					// this might not be right...
-					if(mySavedVal.notNil) {
-						canvasItems.do
-						({|inCItem|
-
-							var farSavedVal = curPresets.at(inCItem.name).at(plugID); //hold the plug first, and see if it exists
-							var tempDist = 1 - (inCItem.view.bounds.origin.dist(argXY) / senseDistance);
-
-							if(farSavedVal.notNil,
-								{
-									farSavedVal = farSavedVal.at(plugParam);
-								},
-								{
-									farSavedVal = mySavedVal; //drop to locally saved value
-								});
-
+					if(farSavedVal.notNil,
+						{
+							farSavedVal = farSavedVal.at(plugParam);
 							nextVal = nextVal +
-							(farSavedVal * (tempDist * senseCurve[tempDist]) * multiplier)
+							(farSavedVal * (tempDist * senseCurve[tempDist]));
+							tempSum = tempSum + divisors[j];
 						});
+				});
 
-						if(parentApp.idPlugDict.at(plugID).modGets.at(plugParam).value != nextVal, {
-							//send only if value changes...
-							parentApp.idPlugDict.at(plugID).modSets.at(plugParam).value(nextVal);
-						});
-					}
-				}
-			});
+				nextVal = nextVal / tempSum;
+
+				if(parentApp.idPlugDict.at(plugID).modGets.at(plugParam).value != nextVal, {
+					//send only if value changes...
+					parentApp.idPlugDict.at(plugID).modSets.at(plugParam).value(nextVal);
+				});
+			}
 		});
 	}
 
