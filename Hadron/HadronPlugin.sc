@@ -633,4 +633,13 @@ HadronPlugin
 	// a plugin will not be notified of its own name changing
 	notifyIdentChanged { |plugin, newIdent|
 	}
+
+	// a default implementation, inactive if there is no synthInstance
+	// you may override
+	mapModCtl { |paramName, ctlBus|
+		var node;
+		if((node = this.tryPerform(\synthInstance)).notNil) {
+			node.map(paramName, ctlBus);
+		};
+	}
 }

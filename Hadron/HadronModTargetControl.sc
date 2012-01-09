@@ -110,22 +110,17 @@ HadronModTargetControl
 	}
 
 	map { |ctlBus|
-		var node, mapped;
+		var mapped;
 		if(mapped = (currentSelPlugin != nil) and: { currentSelParam != nil },
 		{
-			if((node = currentSelPlugin.tryPerform(\synthInstance)).notNil) {
-				node.map(currentSelParam, ctlBus);
-			};
+			currentSelPlugin.mapModCtl(currentSelParam, ctlBus);
 		});
 		^mapped
 	}
 	unmap { |oldplug(currentSelPlugin), oldparam(currentSelParam)|
-		var node;
 		if((oldplug != nil) and: { oldparam != nil },
 		{
-			if((node = oldplug.tryPerform(\synthInstance)).notNil) {
-				node.map(oldparam, -1);
-			};
+			oldplug.mapModCtl(oldparam, -1);
 		});
 	}
 	
