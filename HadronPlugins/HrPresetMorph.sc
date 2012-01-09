@@ -90,7 +90,11 @@ HrPresetMorph : HadronPlugin
 		.receiveDragHandler_
 		({|...args|
 
-			if(GUI.id == \swing, { mouseXY = 10@10; });
+			if(GUI.id == \swing) {
+				mouseXY ?? { mouseXY = 10@10 }
+			} {
+				mouseXY = Point(args[1], args[2])
+			};
 			if(canvasItems.detect({|item| item.name == presetList.items[presetList.value] }).notNil,
 			{
 				parentApp.displayStatus("HrPresetMorph: Preset" + presetList.items[presetList.value].asString + "is already on surface.", -1);
