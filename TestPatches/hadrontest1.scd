@@ -40,6 +40,8 @@ s.addr = ~debugAddr;
 
 h = Hadron.new;
 
+HadronStateLoad(h).loadState("~/share/SC/hadron.git/TestPatches/presetmorph-mod.scd".standardizePath);
+
 HrCtlMod.pollRate = 14;
 
 s.sendMsg(\n_trace, 1009)
@@ -77,7 +79,7 @@ u = UserView(w, w.view.bounds.insetBy(2, 2))
 w.front;
 
 
-f = h.alivePlugs[2];
+f = h.alivePlugs[0];
 f.slotAt(\synthInstance).trace
 f.slotAt(\prOutBus)
 
@@ -138,3 +140,78 @@ thisProcess.removeOSCFunc(f);
 p.uniqueID
 
 h.alivePlugs[3].slotAt(\synthInstance).trace;
+
+
+// checking a math change in hrpresetmorph
+// it's ok in this test case... F-U-U-U-U-U-
+
+d = Point(10, 10).rho;
+c = Env([0, 0.05, 0.1, 0.9, 1], [3, 0.5, 0.85, 0.15], [0, 0, 0, -4]).asSignal(d).asArray.reverse;
+c.plot;
+
+e = Env(
+	#[0, 0.05, 0.1, 0.9, 1],
+	#[3, 0.5, 0.85, 0.15].normalizeSum,
+	#[0, 0, 0, -4]
+);
+
+e[(1.0, 0.99 .. 0.0)].plot;
+
+x = Array.fill(5, { Point(10.0.rand, 10.0.rand) });
+y = Point(10.0.rand, 10.0.rand);
+
+(
+var tempDist, tempSum = 0;
+x.do { |pt|
+	tempDist = pt.dist(y).debug("tempDist");
+	tempSum = (tempSum + ((1 - (tempDist/d)) * c[tempDist]).debug("adding")).debug("sum");
+};
+)
+
+tempDist: 3.4914291369139
+adding: 0.069595774230166
+sum: 0.069595774230166
+tempDist: 5.1311513395744
+adding: 0.029089921080472
+sum: 0.098685695310639
+tempDist: 3.5633873474681
+adding: 0.069125571865475
+sum: 0.16781126717611
+tempDist: 2.3861908698075
+adding: 0.29163807878631
+sum: 0.45944934596242
+tempDist: 4.4470777532062
+adding: 0.039877479452245
+sum: 0.49932682541467
+
+tempDist: 3.4914291369139
+normalized, flipped: 0.75311867812559
+adding: 0.066954814972337
+sum: 0.066954814972337
+tempDist: 5.1311513395744
+normalized, flipped: 0.63717280924925
+adding: 0.030449189163493
+sum: 0.097404004135831
+tempDist: 3.5633873474681
+normalized, flipped: 0.7480304642611
+adding: 0.064789692892929
+sum: 0.16219369702876
+tempDist: 2.3861908698075
+normalized, flipped: 0.83127082547537
+adding: 0.27145879513622
+sum: 0.43365249216498
+tempDist: 4.4470777532062
+normalized, flipped: 0.68554411642441
+adding: 0.040100801897753
+sum: 0.47375329406273
+
+
+(
+var tempDist, tempSum = 0;
+x.do { |pt|
+	tempDist = pt.dist(y).debug("tempDist");
+	tempDist = 1 - (tempDist / d);
+	tempDist.debug("normalized, flipped");
+	tempSum = (tempSum + (tempDist * e[tempDist]).debug("adding")).debug("sum");
+};
+)
