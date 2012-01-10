@@ -200,7 +200,7 @@ HadronPlugin
 			)).string_("name");
 			TextField(outerWindow, Rect(
 				150, oldWinBounds.height - 30,
-				oldWinBounds.width - 430, 20
+				oldWinBounds.width - 320, 20
 			)).string_(ident)
 			.action_({ |view|
 				this.ident = view.value
