@@ -95,7 +95,13 @@ HrCtlMod : HrSimpleModulator {
 
 		saveSets =
 			[
-				{ |argg| postOpText.string_(argg); evalButton.doAction },
+				{ |argg|
+					postOpText.string_(argg);
+					// previously called "evalButton.doAction"
+					// but in swing, can't rely on gui synchronous-icity
+					postOpFunc = argg.interpret;
+					this.makeSynth;
+				},
 				{ |argg| modControl.putSaveValues(argg); },
 				{ |argg| startButton.valueAction_(argg); },
 				{ |argg|
