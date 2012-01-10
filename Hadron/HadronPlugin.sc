@@ -222,9 +222,8 @@ HadronPlugin
 		if(needsScroll) {
 			window = ScrollView(outerWindow, Rect(0, 0, argBounds.width, oldWinBounds.height - 40 - (30 * binaryValue(argBounds.width < 430))));
 		} {
-			window = CompositeView(outerWindow, Rect(0, 0, argBounds.width, argBounds.height - (30 * binaryValue(argBounds.width < 430))));
+			window = CompositeView(outerWindow, Rect(0, 0, argBounds.width, oldWinBounds.height - 40 - (30 * binaryValue(argBounds.width < 430))));
 		};
-
 		outerWindow.front;
 
 	}
