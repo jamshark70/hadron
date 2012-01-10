@@ -502,6 +502,7 @@ HrPresetMorph : HadronPlugin
 			};
 		};
 		this.prUpdateParamGui;
+		this.unmapSomeParams(array);
 		this.makeSynth;
 	}
 
@@ -518,6 +519,7 @@ HrPresetMorph : HadronPlugin
 	}
 
 	cleanUp {
+		this.unmapSomeParams(activeParams);
 		this.releaseSynth;
 		lagBus.free;
 	}
@@ -542,6 +544,13 @@ HrPresetMorph : HadronPlugin
 		ctlBus = ctlBus.index;
 		activeParams.do { |pair, i|
 			pair[0].mapModCtl(pair[1], ctlBus + i);
+		}
+	}
+
+	// you want to do this only for params that are removed, not all of them
+	unmapSomeParams { |paramList|
+		paramList.do { |pair, i|
+			pair[0].mapModCtl(pair[1], -1);
 		}
 	}
 
@@ -571,7 +580,10 @@ HrPresetMorph : HadronPlugin
 					lagBus = Bus.control(Server.default, numChan);
 					Server.default.makeBundle(nil, {
 						// no uninitialized data
-						lagBus.setn(newValues);
+						// if activeParams is empty, so is newValues, don't send
+						if(newValues.size > 0) {
+							lagBus.setn(newValues);
+						};
 						lagSynth = Synth("PresetMorphLag" ++ uniqueID ++ numChan,
 							[out: lagBus, pollRate: pollRate, t_trig: 1]
 						);
@@ -582,7 +594,9 @@ HrPresetMorph : HadronPlugin
 					// normal behavior: set bus only
 					lagCallback = { |newValues|
 						Server.default.makeBundle(nil, {
-							lagBus.setn(newValues);
+							if(newValues.size > 0) {
+								lagBus.setn(newValues);
+							};
 							lagSynth.set(\t_trig, 1);
 						});
 					};
