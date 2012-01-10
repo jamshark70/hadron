@@ -114,28 +114,28 @@ HrWrapSynth : HadronPlugin
 				.value_(specs.at(item).unmap(default))
 				.action_
 				({|sld| 
-					
-					setFunctions[count].value(sld.value);
+					setFunctions[count].value(specs.at(item).map(sld.value));
 				});
 			);
 			
 			setFunctions.add
 			({|val|
-				var mapped = specs.at(item).map(val.value);  // why .value here?
-				storeArgs.put(item, val);
-				synthInstance.set(item, mapped);
-				{ numBoxes[count].value_(mapped); }.defer;
+				// var mapped = specs.at(item).map(val.value);  // why .value here?
+				// storeArgs is normalized (compatibility with old saved patches)
+				storeArgs.put(item, specs.at(item).unmap(val));
+				synthInstance.set(item, val);
+				{ numBoxes[count].value_(val); }.defer;
 			});
 			
-			//add the modulatable entry for the control
-			modGets.put(item, { storeArgs.at(item); });
-			modSets.put(item, {|argg| setFunctions[count].value(argg); { sliders[count].value_(argg); }.defer; });
+			// add the modulatable entry for the control
+			// should be REAL values, not normalized
+			modGets.put(item, { specs[item].map(storeArgs[item]); });
+			modSets.put(item, {|argg| setFunctions[count].value(argg); { sliders[count].value_(storeArgs[item]); }.defer; });
 
-			// with HrCtlMod, argg is a real value, not normalized as with SimpleMod
 			modMapSets.put(item, { |argg|
-				storeArgs.put(item, argg);
+				storeArgs.put(item, specs.at(item).unmap(argg));
 				{
-					sliders[count].value = specs[item].unmap(argg);
+					sliders[count].value = storeArgs[item];
 					numBoxes[count].value = argg;
 				}.defer;
 			});
