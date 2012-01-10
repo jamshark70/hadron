@@ -6,6 +6,7 @@ HrPresetMorph : HadronPlugin
 	var availParams, activeParams, availParamView, activeParamView, availItems;
 	var mouseIsDown = false, isMapped = false;
 	var numChan, lagSynth, lagBus, lagCallback, pollRate;
+	var guiThruButton, guiPassThru = true;
 
 	*initClass
 	{
@@ -140,7 +141,7 @@ HrPresetMorph : HadronPlugin
 		addButton = Button(window, Rect(115, 10, 40, 20)).states_([["Add"]])
 		.action_({ this.addPreset; });
 
-		presetList = ListView(window, Rect(10, 40, 145, window.bounds.height - 140))
+		presetList = ListView(window, Rect(10, 40, 145, window.bounds.height - 170))
 		//.mouseUpAction_({|view|  })
 		.mouseDownAction_
 		({|...args|
@@ -174,6 +175,16 @@ HrPresetMorph : HadronPlugin
 			{
 				this.removeSelectedPreset;
 			});
+		});
+
+		guiThruButton = Button(window, Rect(10, presetList.bounds.bottom + 5, 145, 20))
+		.states_([
+			["Target GUI updates off", Color.black, Color.gray(0.9)],
+			["Target GUI updates ON", Color.black, Color(0.7, 1.0, 0.7)]
+		])
+		.value_(guiPassThru.binaryValue)
+		.action_({ |view|
+			guiPassThru = view.value > 0;
 		});
 
 		availParams = List.new;
@@ -225,7 +236,8 @@ HrPresetMorph : HadronPlugin
 			{ curPresets; },
 			{ canvasItems.collect({|item| [item.name, item.view.bounds, item.color] }); },
 			{ activeParams.collect { |pair| [pair[0].uniqueID, pair[1]] } },
-			{ availParams.collect { |pair| [pair[0].uniqueID, pair[1]] } }
+			{ availParams.collect { |pair| [pair[0].uniqueID, pair[1]] } },
+			{ guiPassThru }
 		];
 
 		saveSets =
@@ -248,6 +260,10 @@ HrPresetMorph : HadronPlugin
 				};
 				this.prUpdateParamGui;
 				this.makeSynth;
+			},
+			{ |argg|
+				guiPassThru = (argg == "true");
+				guiThruButton.value = guiPassThru.binaryValue;
 			}
 		];
 
@@ -558,6 +574,16 @@ HrPresetMorph : HadronPlugin
 
 	makeSynth {
 		var oldbus, oldsynth;
+		// just to save a method selector in the big table
+		var passThruFunc = { |newValues|
+			if(guiPassThru) {
+				defer {
+					activeParams.do { |pair, i|
+						pair[0].modMapSets[pair[1]].value(newValues[i]);
+					};
+				};
+			}
+		};
 		if(numChan != max(1, activeParams.size)) {
 			numChan = max(1, activeParams.size);
 			fork {
@@ -589,6 +615,7 @@ HrPresetMorph : HadronPlugin
 						);
 						this.mapActiveParams(lagBus);
 						oldsynth.free;
+						passThruFunc.value(newValues);
 					});
 					oldbus.free;  // no osc msg here
 					// normal behavior: set bus only
@@ -598,6 +625,7 @@ HrPresetMorph : HadronPlugin
 								lagBus.setn(newValues);
 							};
 							lagSynth.set(\t_trig, 1);
+							passThruFunc.value(newValues);
 						});
 					};
 				};
