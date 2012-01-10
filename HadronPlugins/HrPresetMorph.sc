@@ -496,6 +496,9 @@ HrPresetMorph : HadronPlugin
 			this.prUpdateParamGui;
 		};
 	}
+	notifyIdentChanged {
+		this.rebuildParamList;  // somebody's name changed
+	}
 
 	addActiveParams { |array|
 		array.do { |pair|
