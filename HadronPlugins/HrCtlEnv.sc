@@ -7,7 +7,13 @@ HrCtlEnv : HrCtlMod {
 	*initClass {
 		this.addHadronPlugin;
 	}
-	*height { ^350 }
+	*height { |extraArgs| ^350 + (25 * this.shouldWatch(extraArgs).binaryValue) }
+	// default is NOT to watch
+	*shouldWatch { |argExtraArgs|
+		^argExtraArgs.size >= 1 and: {
+			argExtraArgs[0] == "1" or: { argExtraArgs[0] == "true" }
+		}
+	}
 	*numOuts { ^2 }
 	// copy and paste programming...
 	init
@@ -18,6 +24,15 @@ HrCtlEnv : HrCtlMod {
 		}, adjustY = 0;
 
 		badSpecRoutines = ();
+
+		if(extraArgs.size >= 2 and: {
+			extraArgs[1].size > 0 and: { extraArgs[1].asFloat > 0 }
+		}) {
+			pollRate = extraArgs[1].asFloat;
+		} {
+			pollRate = defaultPollRate;
+		};
+		numChannels = 1;  // always 1 for an enveloper
 
 		window.background_(Color.gray(0.9));
 		prOutBus = Bus.control(Server.default, 1);
@@ -58,7 +73,7 @@ HrCtlEnv : HrCtlMod {
 		});
 
 		if(this.modulatesOthers) {
-			modControl = HadronModTargetControl(window, Rect(10, 250, 430, 20), parentApp);
+			modControl = HadronModTargetControl(window, Rect(10, 250, 430, 20), parentApp, this);
 			modControl.addDependant(this);
 
 			startButton = Button(window, Rect(100, 220, 80, 20))
@@ -220,6 +235,19 @@ HrCtlEnv : HrCtlMod {
 				if(synthInstance.notNil) { synthInstance.set(\timeScale, timeScale) };
 			}, 1, initAction: true);
 
+		if(this.shouldWatch) {
+			pollRateView = HrEZSlider(
+				window, 
+				Rect(10, timeScaleView.bounds.top + 25, 430, 20),
+				"update rate", [1, 25], { |view|
+					pollRate = view.value;
+					if(synthInstance.notNil) {
+						synthInstance.set(\pollRate, pollRate * (watcher.notNil.binaryValue));
+					};
+				}, pollRate, labelWidth: 100, numberWidth: 45
+			);
+		};
+
 		this.makeSynth;
 
 		saveGets =
@@ -286,12 +314,6 @@ HrCtlEnv : HrCtlMod {
 			}).add;
 		};
 	}
-	// default is NOT to watch
-	shouldWatch {
-		^extraArgs.size >= 1 and: {
-			extraArgs[0] == "1" or: { extraArgs[0] == "true" }
-		}
-	}
 
 	synthArgs {
 		^[inBus0: inBusses[0], outBus0: outBusses[0], prOutBus: prOutBus,
@@ -357,7 +379,7 @@ HrAudioEnv : HrCtlEnv {
 		saveSets.removeAt(4); saveSets.removeAt(3);
 	}
 	// CAN'T watch
-	shouldWatch { ^false }
+	*shouldWatch { ^false }
 
 	synthArgs {
 		^[inBus0: inBusses[0], outBus0: outBusses[0], outBus1: outBusses[1],

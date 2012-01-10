@@ -8,7 +8,8 @@ HrSimpleModulator : HadronPlugin
 		
 		var numIns = 1;
 		var numOuts = this.numOuts;
-		var bounds = Rect((Window.screenBounds.width - 450).rand, (Window.screenBounds.height - this.height).rand, 450, this.height);
+		var height = this.height(argExtraArgs);
+		var bounds = Rect((Window.screenBounds.width - 450).rand, (Window.screenBounds.height - height).rand, 450, height);
 		var name = this.name;
 		^super.new(argParentApp, name, argIdent, argUniqueID, argExtraArgs, bounds, numIns, numOuts, argCanvasXY).init;
 	}
@@ -27,7 +28,7 @@ HrSimpleModulator : HadronPlugin
 		postOpText = TextField(window, Rect(160, 20, 280, 20)).string_("(sig * 0.5) + 0.5;")
 		.action_({|txt| postOpFunc = ("{|sig|"+ txt.value + "}").interpret; });
 		
-		modControl = HadronModTargetControl(window, Rect(10, 50, 430, 20), parentApp);
+		modControl = HadronModTargetControl(window, Rect(10, 50, 430, 20), parentApp, this);
 		
 		startButton = Button(window, Rect(10, 80, 80, 20)).states_([["Start"],["Stop"]])
 		.action_

@@ -1,18 +1,20 @@
 HadronModTargetControl
 {
-	var parentApp, <currentSelPlugin, <currentSelParam, myView,
+	var parentApp, parentPlug, <currentSelPlugin, <currentSelParam, myView,
 	targetAppMenu, targetParamMenu, loadHolder;
 	
 	*new
-	{|argParentView, argBounds, argParentApp|
+	{|argParentView, argBounds, argParentApp, argParentPlug|
 	
-		^super.new.init(argParentView, argBounds, argParentApp);
+		^super.new.init(argParentView, argBounds, argParentApp, argParentPlug);
 	}
 	
 	init
-	{|argParentView, argBounds, argParentApp|
+	{|argParentView, argBounds, argParentApp, argParentPlug|
 	
 		parentApp = argParentApp;
+		parentPlug = argParentPlug;
+
 		myView = CompositeView(argParentView, Rect(argBounds.left, argBounds.top, argBounds.width, 20));
 		
 		targetAppMenu = PopUpMenu(myView, Rect(0, 0, (argBounds.width/2)-5, 20))
@@ -113,14 +115,14 @@ HadronModTargetControl
 		var mapped;
 		if(mapped = (currentSelPlugin != nil) and: { currentSelParam != nil },
 		{
-			currentSelPlugin.mapModCtl(currentSelParam, ctlBus);
+			currentSelPlugin.mapModCtl(currentSelParam, ctlBus, parentPlug);
 		});
 		^mapped
 	}
 	unmap { |oldplug(currentSelPlugin), oldparam(currentSelParam)|
 		if((oldplug != nil) and: { oldparam != nil },
 		{
-			oldplug.mapModCtl(oldparam, -1);
+			oldplug.mapModCtl(oldparam, -1, parentPlug);
 		});
 	}
 	
