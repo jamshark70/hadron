@@ -56,9 +56,9 @@ HrCtlMod : HrSimpleModulator {
 		modControl.addDependant(this);
 
 		startButton = Button(window, Rect(100, 120, 80, 20)).states_([["Start"],["Stop"]])
-		.value_(modControl.currentSelPlugin.notNil and: {
+		.value_(binaryValue(modControl.currentSelPlugin.notNil and: {
 			modControl.currentSelParam.notNil
-		})
+		}))
 		.action_
 		({|btn|
 			if(btn.value == 1) {

@@ -78,9 +78,9 @@ HrCtlEnv : HrCtlMod {
 
 			startButton = Button(window, Rect(100, 220, 80, 20))
 			.states_([["Start"],["Stop"]])
-			.value_(modControl.currentSelPlugin.notNil and: {
+			.value_(binaryValue(modControl.currentSelPlugin.notNil and: {
 				modControl.currentSelParam.notNil
-			})
+			}))
 			.action_({|btn|
 				if(btn.value == 1) {
 					modControl.map(prOutBus);
