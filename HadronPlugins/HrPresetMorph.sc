@@ -553,9 +553,14 @@ HrPresetMorph : HadronPlugin
 			numChan = max(1, activeParams.size);
 			fork {
 				SynthDef("PresetMorphLag" ++ uniqueID ++ numChan, {
-					|out, pollRate = 1|
-					var input = In.kr(out, numChan);
-					input = Lag.kr(input, max(1, pollRate).reciprocal);
+					|out, pollRate = 1, t_trig|
+					var input = In.kr(out, numChan),
+					envArray = Env([0, 1], [pollRate.reciprocal], \lin).asArray;
+					input = input.asArray.collect { |chan|
+						envArray.put(0, chan).put(4, chan);
+						EnvGen.kr(envArray, t_trig);
+					};
+					// input = Lag.kr(input, max(1, pollRate).reciprocal);
 					ReplaceOut.kr(out, input);
 				}).add;
 				Server.default.sync;
@@ -568,7 +573,7 @@ HrPresetMorph : HadronPlugin
 						// no uninitialized data
 						lagBus.setn(newValues);
 						lagSynth = Synth("PresetMorphLag" ++ uniqueID ++ numChan,
-							[out: lagBus, pollRate: pollRate]
+							[out: lagBus, pollRate: pollRate, t_trig: 1]
 						);
 						this.mapActiveParams(lagBus);
 						oldsynth.free;
@@ -576,7 +581,10 @@ HrPresetMorph : HadronPlugin
 					oldbus.free;  // no osc msg here
 					// normal behavior: set bus only
 					lagCallback = { |newValues|
-						lagBus.setn(newValues);
+						Server.default.makeBundle(nil, {
+							lagBus.setn(newValues);
+							lagSynth.set(\t_trig, 1);
+						});
 					};
 				};
 			}
