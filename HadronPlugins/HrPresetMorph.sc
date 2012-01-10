@@ -5,6 +5,7 @@ HrPresetMorph : HadronPlugin
 	senseDistance, senseCurve;
 	var availParams, activeParams, availParamView, activeParamView, availItems;
 	var mouseIsDown = false, isMapped = false;
+	var numChan, lagSynth, lagBus, lagCallback, pollRate;
 
 	*initClass
 	{
@@ -56,7 +57,7 @@ HrPresetMorph : HadronPlugin
 			[([-25, 25] * rotateCounter.sin), ([-25, 25] * (rotateCounter + (pi/2)).sin)];
 		};
 
-		refreshRoutine = Routine({ loop({ surfaceView.refresh; 0.04.wait; }); });
+		refreshRoutine = Routine({ loop({ surfaceView.refresh; pollRate.reciprocal.wait; }); });
 
 		compositeBack = CompositeView(window, Rect(160, 0, window.bounds.width - 165, window.bounds.height - 100));
 
@@ -72,6 +73,7 @@ HrPresetMorph : HadronPlugin
 			if(this.isRefreshing == false,  // this might change later
 			{
 				//"starting".postln;
+				this.pollRate = 25;
 				refreshRoutine.reset;
 				refreshRoutine.play(AppClock);
 			});
@@ -245,6 +247,7 @@ HrPresetMorph : HadronPlugin
 					[parentApp.pluginFromID(pair[0]), pair[1]];
 				};
 				this.prUpdateParamGui;
+				this.makeSynth;
 			}
 		];
 
@@ -279,12 +282,14 @@ HrPresetMorph : HadronPlugin
 		});
 
 		modMapSets.putAll(modSets);
+
+		this.makeSynth;
 	}
 
 	calcNewParams
 	{|argXY|
 
-		var divisors, tempSum = 0, newValues = Array.fill(activeParams.size, 0);
+		var divisors, tempSum = 0, newValues = Array(activeParams.size);
 
 		if((canvasItems.size > 0) and: { this.isRefreshing }, {
 			divisors = canvasItems.collect { |canItem|
@@ -315,13 +320,10 @@ HrPresetMorph : HadronPlugin
 				});
 
 				nextVal = nextVal / tempSum;
-
-				if(parentApp.idPlugDict.at(plugID).modGets.at(plugParam).value != nextVal, {
-					//send only if value changes...
-					parentApp.idPlugDict.at(plugID).modSets.at(plugParam).value(nextVal);
-				});
-			}
+				newValues.add(nextVal);
+			};
 		});
+		lagCallback.value(newValues);
 	}
 
 	addPreset
@@ -489,6 +491,7 @@ HrPresetMorph : HadronPlugin
 			};
 		};
 		this.prUpdateParamGui;
+		this.makeSynth;
 	}
 
 	removeActiveParams { |array|
@@ -499,6 +502,7 @@ HrPresetMorph : HadronPlugin
 			};
 		};
 		this.prUpdateParamGui;
+		this.makeSynth;
 	}
 
 	notifyPlugKill
@@ -513,11 +517,9 @@ HrPresetMorph : HadronPlugin
 		});
 	}
 
-	releaseSynth {}
-	makeSynth {}
-
-	cleanUp
-	{
+	cleanUp {
+		this.releaseSynth;
+		lagBus.free;
 	}
 
 	updateBusConnections
@@ -526,9 +528,59 @@ HrPresetMorph : HadronPlugin
 
 	isRefreshing { ^mouseIsDown or: { isMapped } }
 
-	mapModCtl { |paramName, ctlBus|
+	mapModCtl { |paramName, ctlBus, modulatorPlug|
 		isMapped = ctlBus != -1;
+		if(isMapped) { this.pollRate = modulatorPlug.tryPerform(\pollRate) ? 12 };
 		{ surfaceView.refresh }.defer;  // if unmapped, remove the spinning cursor
+	}
+	pollRate_ { |newRate(12)|
+		pollRate = newRate;
+		if(lagSynth.notNil) { lagSynth.set(\pollRate, pollRate) };
+	}
+
+	mapActiveParams { |ctlBus|
+		ctlBus = ctlBus.index;
+		activeParams.do { |pair, i|
+			pair[0].mapModCtl(pair[1], ctlBus + i);
+		}
+	}
+
+	releaseSynth { lagSynth.free }
+
+	makeSynth {
+		var oldbus, oldsynth;
+		if(numChan != max(1, activeParams.size)) {
+			numChan = max(1, activeParams.size);
+			fork {
+				SynthDef("PresetMorphLag" ++ uniqueID ++ numChan, {
+					|out, pollRate = 1|
+					var input = In.kr(out, numChan);
+					input = Lag.kr(input, max(1, pollRate).reciprocal);
+					ReplaceOut.kr(out, input);
+				}).add;
+				Server.default.sync;
+				oldbus = lagBus;
+				oldsynth = lagSynth;
+				// this will happen next time new values are calculated
+				lagCallback = { |newValues|
+					lagBus = Bus.control(Server.default, numChan);
+					Server.default.makeBundle(nil, {
+						// no uninitialized data
+						lagBus.setn(newValues);
+						lagSynth = Synth("PresetMorphLag" ++ uniqueID ++ numChan,
+							[out: lagBus, pollRate: pollRate]
+						);
+						this.mapActiveParams(lagBus);
+						oldsynth.free;
+					});
+					oldbus.free;  // no osc msg here
+					// normal behavior: set bus only
+					lagCallback = { |newValues|
+						lagBus.setn(newValues);
+					};
+				};
+			}
+		};
 	}
 }
 
