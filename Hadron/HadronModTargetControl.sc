@@ -64,7 +64,9 @@ HadronModTargetControl
 	plugRemoved
 	{|argPlug|
 	
-		var plugIndex;
+		// qt may supercalifragilistically clear targetAppMenu.value
+		// before I get to finish up, so save the value now while I still can
+		var plugIndex, appMenuValue = targetAppMenu.value;
 		
 		if(currentSelPlugin === argPlug,
 		{
@@ -77,13 +79,13 @@ HadronModTargetControl
 		},
 		{
 			plugIndex = parentApp.alivePlugs.indexOf(argPlug) + 1; //+1 because menu has an extra "Nothing" entry.
-			if(targetAppMenu.value < plugIndex,
+			if(appMenuValue < plugIndex,
 			{
 				this.refreshAppMenu(argPlug);
 			},
 			{
 				this.refreshAppMenu(argPlug);
-				targetAppMenu.value = targetAppMenu.value - 1;
+				targetAppMenu.value = appMenuValue - 1;
 			});
 		});
 	}
