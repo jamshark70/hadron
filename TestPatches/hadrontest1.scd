@@ -215,3 +215,38 @@ x.do { |pt|
 	tempSum = (tempSum + (tempDist * e[tempDist]).debug("adding")).debug("sum");
 };
 )
+
+
+
+();
+// convert hrwrapsynth parm lists
+
+// nope, not necessary, i didn't change the parm list format
+x = "637990.447400nilList[  ]0.529200nilList[  ]0.666600nilList[  ]0.768600nilList[  ]0.316200nilList[  ]1".split(31.asAscii);
+y = SynthDescLib.at(\analog);
+z = y.controls[2..];
+
+do((1, 4 .. x.size-2)) { |i, j|
+	x[i] = y.metadata.specs[z[j].name.asSymbol].map(x[i].asFloat).asCompileString;
+};
+
+x.join(31.asAscii);
+
+
+// but I did change the dictionary style for hrpresetmorph...
+
+// [ [ '1', Rect(41.0, 28.0, 12.0, 20.0), Color(0.85053963661194, 0.82543201446533, 0.44811108112335) ], [ '2', Rect(405.0, 211.0, 12.0, 20.0), Color(0.88997089862823, 0.38712551593781, 0.76856331825256) ], [ '3', Rect(19.0, 413.0, 12.0, 20.0), Color(0.50058574676514, 0.57714071273804, 0.35300996303558) ] ][ [ 1874922887, 'ffreq' ], [ 1874922887, 'freq' ], [ 1874922887, 'rq' ] ][ [ 1874922887, 'amp' ], [ 1874922887, 'dtune' ], [ 1874922887, 'ffreq' ], [ 1874922887, 'freq' ], [ 1874922887, 'rq' ], [ 956940551, 'level' ] ];
+
+x = Dictionary[ ('1' -> Dictionary[ (956940551 -> Dictionary[ ('level' -> 0.18519999086857) ]), (1874922887 -> Dictionary[ ('amp' -> 0.31622776837292), ('dtune' -> 0.52920001467683), ('freq' -> 0.44747422694074), ('rq' -> 0.76862178186611), ('ffreq' -> 0.66666666666667) ]) ]), ('2' -> Dictionary[ (956940551 -> Dictionary[ ('level' -> 0.18519999086857) ]), (1874922887 -> Dictionary[ ('amp' -> 0.31622776837292), ('dtune' -> 0.41569998860359), ('freq' -> 0.30339998006821), ('rq' -> 0.93259996175766), ('ffreq' -> 0.53929996490479) ]) ]), ('3' -> Dictionary[ (956940551 -> Dictionary[ ('level' -> 0.18519999086857) ]), (1874922887 -> Dictionary[ ('amp' -> 0.31622776837292), ('dtune' -> 0.83149999380112), ('freq' -> 0.6628999710083), ('rq' -> 0.44939997792244), ('ffreq' -> 0.82019996643066) ]) ]) ];
+
+x.keysValuesDo { |key, preset|
+	preset.keysValuesDo { |uniqueID, parms|
+		if(uniqueID == 1874922887) {
+			parms.keysValuesDo { |key, value|
+				parms[key] = y.metadata.specs[key].map(value);
+			}
+		}
+	}
+};
+
+x.postcs; ""
