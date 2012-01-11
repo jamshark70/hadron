@@ -19,18 +19,9 @@ HadronPlugin
 
 	*doOnServerBoot {
 		(1..2).do { |numChan|
-			SynthDef("hrCheckBad" ++ numChan, { |uniqueID|
+			SynthDef("hrCheckBad" ++ numChan, { |uniqueID, inBus0, outBus0, pr_outBus0|
 				var indices = (0..numChan-1),
-				inbuses = Array.fill(numChan, { |i|
-					NamedControl.kr("inBus" ++ i, 0)
-				}),
-				pr_outbuses = Array.fill(numChan, { |i|
-					NamedControl.kr("pr_outBus" ++ i, 0)
-				}),
-				outbuses = Array.fill(numChan, { |i|
-					NamedControl.kr("outBus" ++ i, 0)
-				}),
-				sig = In.ar(inbuses, 1),
+				sig = In.ar(inBus0, numChan).asArray,
 				bad = CheckBadValues.ar(sig, id: indices, post: 0),
 				silent = Silent.ar(1),
 				channelFlags = 0;
@@ -39,11 +30,11 @@ HadronPlugin
 					channelFlags = channelFlags + ((badChan > 0) * (1 << i));
 				};
 				SendReply.ar(channelFlags, '/hrBadValue', channelFlags, replyID: uniqueID);
-				pr_outbuses.do { |bus, i|
-					var chan = Select.ar(bad[i], [sig[i], silent]);
-					ReplaceOut.ar(bus, chan);
-					Out.ar(outbuses[i], chan);
+				sig = sig.collect { |chan, i|
+					Select.ar(bad[i], [chan, silent])
 				};
+				ReplaceOut.ar(pr_outBus0, sig);
+				Out.ar(outBus0, sig);
 			}).add;
 		}
 	}
@@ -102,20 +93,16 @@ HadronPlugin
 		//argCanvasXY.class.postln;
 		boundCanvasItem = HadronCanvasItem(parentApp.canvasObj, this, argCanvasXY.x, argCanvasXY.y);
 
-		busArgFunc = { |name, buses|
-			[
-				[name.asString, (0 .. buses.size-1)].flop.collect({ |row| row.join.asSymbol }),
-				buses
-			].flop;
-		};
-
 		if(this.shouldCheckBad) {
 			badValueSynth ?? {
 				badValueSynth = Synth("hrCheckBad" ++ argNumOuts,
-					flat([uniqueID: uniqueID]
-					++ busArgFunc.("inBus", outBusses)
-					++ busArgFunc.("outBus", mainOutBusses)
-					++ busArgFunc.("pr_outBus", outBusses)),
+					[uniqueID: uniqueID]
+					++ (if(outBusses.size > 0) {
+						[inBus0: outBusses[0], pr_outBus0: outBusses[0]]
+					})
+					++ (if(mainOutBusses.size > 0) {
+						[outBus0: mainOutBusses[0]]
+					}),
 					group, \addToTail
 				);
 			};
