@@ -36,11 +36,12 @@ SynthDef(\analog, { |outBus0, outBus1, freq = 440, dtune = 1.003, ffreq = 2000, 
 ~saveAddr = NetAddr("127.0.0.1", 57110);
 
 s.addr = ~debugAddr;
-// s.addr = ~saveAddr;
+
+s.addr = ~saveAddr;
 
 h = Hadron.new;
 
-HadronStateLoad(h).loadState("~/share/SC/hadron.git/TestPatches/presetmorph-mod.scd".standardizePath);
+HadronStateLoad(h).loadState("~/share/SC/hadron.git/TestPatches/presetmorph-mod.hadron".standardizePath);
 
 HrCtlMod.pollRate = 14;
 
@@ -79,7 +80,7 @@ u = UserView(w, w.view.bounds.insetBy(2, 2))
 w.front;
 
 
-f = h.alivePlugs[0];
+f = h.alivePlugs[3];
 f.slotAt(\synthInstance).trace
 f.slotAt(\prOutBus)
 
