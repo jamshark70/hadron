@@ -3,7 +3,9 @@ HrPresetMorph : HadronPlugin
 	var <surfaceView, <presetList, curPresets, nPresetText, addButton, <mouseXY, <compositeBack,
 	canvasItems, refreshRoutine, rotateCounter, rotFunc, <>menuList, surfaceExtent,
 	senseDistance, senseCurve;
-	var availParams, activeParams, availParamView, activeParamView, availItems;
+	var availParams, activeParams, paramView;
+	// we have to be able to check params against the paramView's lists
+	var availParamStrings, activeParamStrings;
 	var mouseIsDown = false, isMapped = false;
 	var numChan, lagSynth, lagBus, lagCallback, pollRate;
 	var guiThruButton, guiPassThru = true;
@@ -189,44 +191,56 @@ HrPresetMorph : HadronPlugin
 
 		availParams = List.new;
 		activeParams = List.new;
-		availItems = List.new;
-		{
-			var halfwidth = window.bounds.width * 0.5,
-			height = 90,
-			btnHeight = 16, btnWidth = 22,
-			gap = 4,
-			top = (height - (btnHeight * 4) - (gap * 3)) * 0.5,
-			bounds;
+		// availItems = List.new;
 
-			availParamView = ListView(window, Rect(10, window.bounds.height - height - 5,
-				halfwidth - 25, 90));
-			activeParamView = ListView(window, Rect(
-				halfwidth + 15, window.bounds.height - height - 5,
-				halfwidth - 25, 90
-			));
-			Button(window, bounds = Rect(
-				halfwidth - 8, availParamView.bounds.top + top, btnHeight, btnHeight
-			))
-			.states_([[">>"]])
-			.action_({
-				this.addActiveParams(availParams);
-			});
-			Button(window, bounds = bounds.moveBy(0, btnHeight + gap))
-			.states_([[">"]])
-			.action_({
-				this.addActiveParams([availItems[availParamView.value ? -1]]);
-			});
-			Button(window, bounds = bounds.moveBy(0, btnHeight + gap))
-			.states_([["<"]])
-			.action_({
-				this.removeActiveParams([activeParams[activeParamView.value ? -1]]);
-			});
-			Button(window, bounds = bounds.moveBy(0, btnHeight + gap))
-			.states_([["<<"]])
-			.action_({
-				this.removeActiveParams(activeParams);
-			});
-		}.value;
+		paramView = HrListSelector(
+			window,
+			Rect(10, window.bounds.height - 95, window.bounds.width - 20, 90)
+		)
+		.action_({ |view|
+			var i, didChange = false;
+			// 4 cases from HrListSelector:
+			// all avail --> active (avail is now empty)
+			// 1 avail --> active
+			// 1 active --> avail
+			// all active --> avail (active is now empty)
+			// I guess this is a bit inconvenient...
+			case
+			{ view.availItems.size == 0 } {
+				activeParams = availParams;
+				didChange = true;
+			}
+			{ view.activeItems.size == 0 } {
+				this.unmapSomeParams(activeParams);
+				activeParams = List.new;
+				didChange = true;
+			}
+			// removed 1 from active
+			{ view.activeItems.size == (activeParams.size - 1) } {
+				i = activeParamStrings.detectIndex { |str, i|
+					str != view.activeItems[i]
+				};
+				this.unmapSomeParams([activeParams[i]]);
+				if(i.notNil) {
+					activeParams.removeAt(i);
+				};
+				didChange = true;
+			}
+			// added 1 to active
+			{ view.activeItems.size == (activeParams.size + 1) } {
+				// find thing in view that's not in my itemstrings
+				i = view.activeItems.detectIndex { |str, i|
+					str != activeParamStrings[i]
+				};
+				i = availParamStrings.indexOfEqual(view.activeItems[i]);
+				if(i.notNil) {
+					activeParams = activeParams.add(availParams[i]);
+				};
+				didChange = true;
+			};
+			if(didChange) { this.makeSynth };
+			this.prUpdateParamGui;
+		});
 
 		this.rebuildParamList;
 
@@ -443,6 +457,7 @@ HrPresetMorph : HadronPlugin
 		surfaceView.refresh;
 	}
 
+	// activeParams should be set before calling this
 	rebuildParamList {
 		var tempParams;
 		availParams = List.new;
@@ -463,27 +478,17 @@ HrPresetMorph : HadronPlugin
 	}
 	prUpdateParamGui {
 		var updateFunc = {
-			var current = availItems.asArray[availParamView.value ? -1];
-			availItems = Array(availParams.size);
-			availParams.do { |parmpair|
-				if(activeParams.includesEqual(parmpair).not) {
-					availItems.add(parmpair)
-				};
-			};
-			availParamView.items = availItems.collect { |parmpair|
+			availParamStrings = availParams.collect { |parmpair|
 				if(parmpair[0].ident != "unnamed",
 					{ parmpair[0].ident },
 					{ parmpair[0].name }
 				) ++ ":" ++ parmpair[1]
 			};
-			availParamView.value = availItems.indexOfEqual(current);
-
-			current = activeParams[activeParamView.value ? -1];
-			activeParamView.items = activeParams.collect { |parmpair|
+			activeParamStrings = activeParams.collect { |parmpair|
 				if(parmpair[0].ident != "unnamed", { parmpair[0].ident }, { parmpair[0].name })
 				++ ":" ++ parmpair[1]
 			};
-			activeParamView.value = activeParams.indexOfEqual(current);
+			paramView.setAllAndActiveItems(availParamStrings, activeParamStrings);
 		};
 		if(this.canCallOS) { updateFunc.value } {
 			defer(updateFunc)
@@ -498,31 +503,6 @@ HrPresetMorph : HadronPlugin
 	}
 	notifyIdentChanged {
 		this.rebuildParamList;  // somebody's name changed
-	}
-
-	addActiveParams { |array|
-		array.do { |pair|
-			if(activeParams.includesEqual(pair).not and: {
-				// just in case someone calls with a nonexistent parameter
-				availParams.includesEqual(pair)
-			}) {
-				activeParams = activeParams.add(pair)
-			};
-		};
-		this.prUpdateParamGui;
-		this.makeSynth;
-	}
-
-	removeActiveParams { |array|
-		var i;
-		array.do { |pair|
-			if((i = activeParams.indexOfEqual(pair)).notNil) {
-				activeParams.removeAt(i);
-			};
-		};
-		this.prUpdateParamGui;
-		this.unmapSomeParams(array);
-		this.makeSynth;
 	}
 
 	notifyPlugKill
