@@ -21,6 +21,8 @@ HadronModTargetControl
 		.action_
 		({|menu|
 			var oldplug = currentSelPlugin;
+			var numChannels = parentPlug.tryPerform(\numChannels) ? 1;
+			var tempItems;
 			if(menu.value == 0,
 			{
 				currentSelPlugin = nil;
@@ -31,7 +33,23 @@ HadronModTargetControl
 			{
 				currentSelPlugin = parentApp.alivePlugs[menu.value - 1];
 				currentSelParam = nil;
-				targetParamMenu.items = ["Nothing"] ++ currentSelPlugin.modSets.keys.asArray;
+				tempItems = currentSelPlugin.modSets.select({ |func, key|
+					try {
+						max(1, func.def.prototypeFrame.asArray[0].size) == numChannels
+					} { |err|
+						if(err.isKindOf(Exception)) {
+							"%:% has an invalid modSet for %: %\n"
+							.format(
+								currentSelPlugin,
+								currentSelPlugin.ident,
+								key, func
+							).warn;
+							err.reportError;
+						};
+						false  // reject this modSet if the func is not valid
+					}
+				}).keys.asArray;
+				targetParamMenu.items = ["Nothing"] ++ tempItems;
 				targetParamMenu.value = 0;
 			});
 			this.changed(\currentSelPlugin, currentSelPlugin, oldplug, currentSelParam);

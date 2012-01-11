@@ -289,7 +289,7 @@ HrPresetMorph : HadronPlugin
 				surfaceView.refresh;
 			}.defer;
 		});
-		modSets.put(\surfaceXY, { |argg|
+		modSets.put(\surfaceXY, { |argg = #[0, 0]|
 			mouseXY = Point(*argg) * surfaceExtent;
 			{
 				this.calcNewParams(mouseXY, true);

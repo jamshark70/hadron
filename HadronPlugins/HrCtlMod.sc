@@ -1,6 +1,6 @@
 HrCtlMod : HrSimpleModulator {
 	classvar <>defaultPollRate = 4;
-	var evalButton, watcher, isMapped = false, numChannels = 1, replyID;
+	var evalButton, watcher, isMapped = false, <numChannels = 1, replyID;
 	var <pollRate, pollRateView;
 
 	*initClass
