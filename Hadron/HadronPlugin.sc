@@ -62,7 +62,7 @@ HadronPlugin
 
 	doInit
 	{|argParentApp, argName, argIdent, argUniqueID, argExtraArgs, argBounds, argNumIns, argNumOuts, argCanvasXY|
-		var busArgFunc, needsScroll = false;
+		var busArgFunc, needsScroll = false, tempBusIndex;
 
 		extraArgs = argExtraArgs;
 		modGets = Dictionary.new;
@@ -70,10 +70,23 @@ HadronPlugin
 		modMapSets = Dictionary.new;
 
 		helpString = "No help available for this plugin.";
+
 		//every connecting plugin gets inputs from the plugin it connects.
-		inBusses = Array.fill(argNumIns, { Bus.audio(Server.default, 1); });
+		// previously the channels might not have been sequential bus indices
+		// but there's no reason to scatter them around like that...
+		// now SynthDefs can be written more simply with Out.ar(\outBus0, [....])
+		// instead of multiple Out units
+		tempBusIndex = Server.default.audioBusAllocator.alloc(argNumIns);
+		inBusses = Array.fill(argNumIns, { |i|
+			Bus(\audio, tempBusIndex + i, 1, Server.default);
+		});
+
 		//plugin outputs go to a local-out first, for bad value checking, mixing, fx
-		outBusses = Array.fill(argNumOuts, { Bus.audio(Server.default, 1); });
+		tempBusIndex = Server.default.audioBusAllocator.alloc(argNumOuts);
+		outBusses = Array.fill(argNumOuts, { |i|
+			Bus(\audio, tempBusIndex + i, 1, Server.default);
+		});
+
 		//outputs are blackholed by default. will get an input when connected to stg.
 		//the bad-value synth above passes the output to the "real" target
 		mainOutBusses = Array.fill(argNumOuts, { argParentApp.blackholeBus; });
