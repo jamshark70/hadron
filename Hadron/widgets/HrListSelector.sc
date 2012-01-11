@@ -74,7 +74,7 @@ HrListSelector : SCViewHolder {
 		availItems = allItems.reject { |item|
 			activeItems.includesEqual(item)
 		};
-		this.refresh.doAction;
+		this.refresh;
 	}
 
 	// after this:
@@ -84,9 +84,9 @@ HrListSelector : SCViewHolder {
 	// activeItems is unchanged
 	// availItems is the new array
 	availItems_ { |items|
-		availItems = items;
+		availItems = items.copy;
 		allItems = availItems.union(activeItems);
-		this.refresh.doAction;
+		this.refresh
 	}
 
 	// after this:
@@ -94,9 +94,18 @@ HrListSelector : SCViewHolder {
 	// activeItems is the new array
 	// availItems is unchanged
 	activeItems_ { |items|
-		activeItems = items;
+		activeItems = items.copy;
 		allItems = availItems.union(activeItems);
-		this.refresh.doAction;
+		this.refresh
+	}
+
+	// this is a way to replace the whole state with just one gui update
+	// more efficient than the other
+	setAllAndActiveItems { |all, active|
+		allItems = all;
+		activeItems = active.copy;
+		availItems = all.reject { |item| active.includesEqual(item) };
+		this.refresh;
 	}
 
 	refresh {
