@@ -480,7 +480,8 @@ HadronPlugin
 			});
 		});
 
-		inBusses.do({|item| item.free; });
+		inBusses.do(_.free);
+		outBusses.do(_.free);
 
 		if(conWindow.isClosed.not, { conWindow.close; });
 
