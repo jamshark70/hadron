@@ -290,6 +290,7 @@ Hadron
 		canvasObj.cWin.close;
 		if(instWin.notNil, { if(instWin.isClosed == false, { instWin.close; }); });
 		alivePlugs.size.do({ alivePlugs[0].selfDestruct; });
+		blackholeBus.free;
 		win.close;
 	}
 }
