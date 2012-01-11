@@ -614,7 +614,8 @@ HrPresetMorph : HadronPlugin
 							lagBus.setn(newValues);
 						};
 						lagSynth = Synth("PresetMorphLag" ++ uniqueID ++ numChan,
-							[out: lagBus, pollRate: pollRate, t_trig: 1]
+							[out: lagBus, pollRate: pollRate, t_trig: 1],
+							group
 						);
 						this.mapActiveParams(lagBus);
 						oldsynth.free;
