@@ -216,4 +216,6 @@ HrCtlMod : HrSimpleModulator {
 			};
 		};
 	}
+
+	targetControlSize { ^numChannels }
 }

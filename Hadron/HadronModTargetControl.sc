@@ -21,7 +21,7 @@ HadronModTargetControl
 		.action_
 		({|menu|
 			var oldplug = currentSelPlugin;
-			var numChannels = parentPlug.tryPerform(\numChannels) ? 1;
+			var numChannels = parentPlug.tryPerform(\targetControlSize) ? 1;
 			var tempItems;
 			if(menu.value == 0,
 			{
@@ -163,4 +163,8 @@ HadronModTargetControl
 		targetParamMenu.valueAction_(loadHolder[1]);
 	}
 
+	remove {
+		myView.remove;
+		this.changed(\didRemove);
+	}
 }
