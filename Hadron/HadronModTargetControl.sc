@@ -159,8 +159,10 @@ HadronModTargetControl
 	
 	doWakeFromLoad
 	{
-		targetAppMenu.valueAction_(loadHolder[0]);
-		targetParamMenu.valueAction_(loadHolder[1]);
+		if(loadHolder.notNil) {
+			targetAppMenu.valueAction_(loadHolder[0]);
+			targetParamMenu.valueAction_(loadHolder[1]);
+		}
 	}
 
 	remove {
