@@ -1,5 +1,6 @@
 HrMultiCtlMod : HrCtlMod {
 	var modCtlsScroll;
+	var loadSemaphore;
 
 	*initClass
 	{
@@ -15,6 +16,8 @@ HrMultiCtlMod : HrCtlMod {
 
 	init
 	{
+		var loadSemaphore;
+
 		window.background_(Color.gray(0.7));
 		if(extraArgs.size >= 1 and: {
 			extraArgs[1].size > 0 and: { extraArgs[1].asFloat > 0 }
@@ -38,7 +41,7 @@ HrMultiCtlMod : HrCtlMod {
 		evalButton = Button(window, Rect(10, 120, 80, 20))
 		.states_([["Evaluate"]])
 		.action_({
-			postOpFunc = postOpText.string.interpret;
+			postOpFunc = this.fixFuncString(postOpText.string).interpret;
 			this.makeSynth;
 		});
 
@@ -47,7 +50,7 @@ HrMultiCtlMod : HrCtlMod {
 		.action_
 		({|btn|
 			if(btn.value == 1) {
-				isMapped = modControl.collect { |ctl| ctl.map(prOutBus) };
+				isMapped = modControl.collect { |ctl, i| ctl.map(prOutBus.index + i) };
 				synthInstance.set(\pollRate, pollRate * (watcher.notNil.binaryValue));
 			} {
 				modControl.do(_.unmap);
@@ -84,22 +87,43 @@ HrMultiCtlMod : HrCtlMod {
 		saveSets =
 			[
 				{ |argg|
+					loadSemaphore = Semaphore(1);
 					postOpText.string_(argg);
 					// previously called "evalButton.doAction"
 					// but in swing, can't rely on gui synchronous-icity
 					postOpFunc = argg.interpret;
-					this.makeSynth;
+					fork {
+						loadSemaphore.wait; // block others
+						this.makeSynth;
+						loadSemaphore.signal; // unblock others
+					};
 				},
-
-				// hm, here's a big problem
-
-				{ |argg| modControl.putSaveValues(argg); },
-				{ |argg| startButton.valueAction_(argg); },
 				{ |argg|
-					if(argg.notNil) {
-						pollRate = argg;
-						pollRateView.tryPerform(\valueAction_, argg);
-					}
+					{
+						loadSemaphore.wait;
+						modControl.do { |ctl, i|
+							ctl.putSaveValues(argg[i]).doWakeFromLoad
+						};
+						loadSemaphore.signal;
+					}.fork(AppClock);
+				},
+				{ |argg|
+					{
+						loadSemaphore.wait;
+						startButton.valueAction_(argg);
+						loadSemaphore.signal;
+					}.fork(AppClock);
+				},
+				{ |argg|
+					{
+						loadSemaphore.wait;
+						if(argg.notNil) {
+							pollRate = argg;
+							pollRateView.tryPerform(\valueAction_, argg);
+						};
+						loadSemaphore.signal;
+						loadSemaphore = nil;
+					}.fork(AppClock);
 				}
 			];
 
@@ -131,12 +155,12 @@ HrMultiCtlMod : HrCtlMod {
 		replyID = UniqueID.next;
 		SynthDef("HrMultiCtlMod"++uniqueID, { |prOutBus, inBus0, pollRate = 0|
 			var input = A2K.kr(InFeedback.ar(inBus0));
-			input = postOpFunc.value(input).asArray.debug("sig");
+			input = postOpFunc.value(input).asArray;
 			if(input.any { |unit| unit.rate != \control }) {
 				// throw prevents the synthdef from being replaced
 				Exception("HrMultiCtlMod: all channels must be control rate").throw;
 			};
-			numch = input.size.debug("numch");
+			numch = input.size;
 			SendReply.kr(Impulse.kr(pollRate), '/modValue', input, replyID);
 			Out.kr(prOutBus, input);
 		}).add;
@@ -149,8 +173,10 @@ HrMultiCtlMod : HrCtlMod {
 		var oldBus, endWatcher;
 		if(newChannels != numChannels) {
 			oldBus = prOutBus;
-			prOutBus = Bus.control(Server.default, numChannels);
-			modControl.do { |ctl, i| ctl.map(prOutBus.index + i) };
+			prOutBus = Bus.control(Server.default, newChannels);
+			min(newChannels, modControl.size).do { |i|
+				modControl[i].map(prOutBus.index + i)
+			};
 			if(newChannels < numChannels) {
 				modControl[newChannels..].do(_.unmap);
 			};
@@ -167,7 +193,7 @@ HrMultiCtlMod : HrCtlMod {
 	}
 
 	rebuildTargets { |newChannels|
-		var offset, temp;
+		var offset, temp, guifunc;
 		if(newChannels < numChannels) {
 			temp = modControl.copy;
 			modControl = modControl.keep(newChannels);
@@ -180,7 +206,12 @@ HrMultiCtlMod : HrCtlMod {
 		} {
 			if(newChannels > numChannels) {
 				offset = numChannels;
-				defer {
+				guifunc = {
+					// wait for synth to be ready
+					// AND, more important, make other threads wait for me
+					if(loadSemaphore.notNil) {
+						loadSemaphore.wait;
+					};
 					(newChannels - offset).do { |i|
 						temp = HadronModTargetControl(
 							modCtlsScroll,
@@ -190,25 +221,38 @@ HrMultiCtlMod : HrCtlMod {
 						modControl = modControl.add(temp);
 						temp.addDependant(this);
 					};
+					if(loadSemaphore.notNil) {
+						loadSemaphore.signal
+					};
+				};
+				if(thisThread.isKindOf(Routine) and: { thisThread.clock === AppClock }) {
+					guifunc.value
+				} {
+					guifunc.fork(AppClock);
 				};
 			};
 		};
 	}
 
 	update { |obj, what, argument, oldplug, oldparam|
-		var i, anymapped;
+		var i, anymapped, err;
 		if(#[currentSelPlugin, currentSelParam].includes(what)) {
 			i = modControl.indexOf(obj);
+			if(i.isNil) {
+				err = Error("STRANGE ERROR: HrMultiCtlMod got update from a target control that it doesn't own");
+				parentApp.displayStatus(err.errorString, -1);
+				err.throw;
+			};
 			if(argument.notNil) {
-				modControl.unmap(oldplug, oldparam);
-				isMapped[i] = modControl.map(prOutBus.index + i);
+				modControl[i].unmap(oldplug, oldparam);
+				isMapped[i] = modControl[i].map(prOutBus.index + i);
 				anymapped = isMapped.any({ |bool| bool }).binaryValue;
 				synthInstance.set(\pollRate,
 					pollRate * anymapped * (watcher.notNil.binaryValue)
 				);
 				defer { startButton.value = anymapped };
 			} {
-				modControl.unmap(oldplug, oldparam);
+				modControl[i].unmap(oldplug, oldparam);
 				synthInstance.set(\pollRate, 0);
 				isMapped[i] = false;
 				defer { startButton.value = 0 };
