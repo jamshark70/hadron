@@ -112,4 +112,18 @@ HrSimpleModulator : HadronPlugin
 		synthInstance.free;
 		pollRoutine.stop;
 	}
+
+	fixFuncString { |str|
+		var i = str.detectIndex { |ch| ch.isSpace.not },
+		j = str.size;
+		while {
+			j = j - 1;
+			j > 0 and: { str[j].isSpace }
+		};
+		^"%%%".format(
+			if(str[i] != ${) { "{ " } { "" },
+			str[i..j],
+			if(str[j] != $}) { " }" } { "" }
+		)
+	}
 }

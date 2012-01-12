@@ -48,7 +48,7 @@ HrCtlMod : HrSimpleModulator {
 		evalButton = Button(window, Rect(10, 120, 80, 20))
 		.states_([["Evaluate"]])
 		.action_({
-			postOpFunc = postOpText.string.interpret;
+			postOpFunc = this.fixFuncString(postOpText.string).interpret;
 			this.makeSynth;
 		});
 
@@ -136,9 +136,9 @@ HrCtlMod : HrSimpleModulator {
 	makeSynth { |newSynthDef(true)|
 		// it's a little bit dumb that I have to do this, but
 		// it's the only way to conditionally not execute something after try
-		var shouldPlay = true;
-		fork
-		{
+		var shouldPlay = true,
+		// and this: don't recall if forkIfNeeded exists in 3.4
+		doIt = {
 			if(newSynthDef) {
 				try {
 					this.makeSynthDef;
@@ -164,6 +164,11 @@ HrCtlMod : HrSimpleModulator {
 				};
 			};
 		};
+		if(thisThread.isKindOf(Routine)) {
+			doIt.value
+		} {
+			doIt.fork
+		}
 	}
 	synthArgs { ^[\inBus0, inBusses[0], \prOutBus, prOutBus,
 		pollRate: pollRate * isMapped.binaryValue * (watcher.notNil.binaryValue)
