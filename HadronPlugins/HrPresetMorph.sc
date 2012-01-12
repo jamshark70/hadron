@@ -291,15 +291,16 @@ HrPresetMorph : HadronPlugin
 		});
 
 		modSets.put(\surfaceX, { |argg|
-			argg = argg * surfaceView.bounds.width;
+			mouseXY.x = argg * surfaceView.bounds.width;
 			{
-				this.calcNewParams(argg@mouseXY.y, true);
+				this.calcNewParams(mouseXY, true);
 				surfaceView.refresh;
 			}.defer;
 		});
-		modSets.put(\surfaceY, { |argg| argg = argg * surfaceView.bounds.height;
+		modSets.put(\surfaceY, { |argg|
+			mouseXY.y = argg * surfaceView.bounds.height;
 			{
-				this.calcNewParams(mouseXY.x@argg, true);
+				this.calcNewParams(mouseXY, true);
 				surfaceView.refresh;
 			}.defer;
 		});
