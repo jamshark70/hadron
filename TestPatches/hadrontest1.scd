@@ -15,6 +15,9 @@ SwingOSC.default.quit;
 
 GUI.qt;
 
+Error.debug = true;
+Error.debug = false;
+
 
 s.boot;
 
@@ -251,3 +254,6 @@ x.keysValuesDo { |key, preset|
 };
 
 x.postcs; ""
+
+
+h.alivePlugs[2].insp
