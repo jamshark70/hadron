@@ -29,15 +29,14 @@ Hadron
 	}
 	
 	*new
-	{
+	{	|maxOutputs(2)|
 		if(Main.version.asFloat < 3.31, { Error("Hadron requires SuperCollider version 3.3.1 or higher.").throw });
 		if((GUI.id == \swing) and: { SwingOSC.version < 0.62 }, 
 			{ Error("Hadron requires SwingOSC version 0.62 or higher.").throw });
-		^super.new.init;
+		^super.new.init(maxOutputs);
 	}
 	
-	init
-	{
+	init { |maxOutputs|
 		
 		Server.default.waitForBoot
 		{
@@ -48,7 +47,7 @@ Hadron
 			
 			canvasObj = HadronCanvas.new(this);
 			
-			blackholeBus = Bus.audio(Server.default, 1);
+			blackholeBus = Bus.audio(Server.default, maxOutputs);
 			win = Window("Hadron", Rect(300, 40, 675, 70), resizable: false).userCanClose_(false);
 			
 			Button(win, Rect(10, 15, 85, 20))
