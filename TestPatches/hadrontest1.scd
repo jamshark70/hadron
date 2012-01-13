@@ -257,3 +257,26 @@ x.postcs; ""
 
 
 h.alivePlugs[2].insp
+
+
+
+// connections wrong on load?
+
+h = Hadron.new;
+
+{
+	HadronStateLoad(h)
+	.loadState("~/share/SC/hadron.git/TestPatches/analog1.hadron".standardizePath);
+
+	0.8.wait;
+
+	h.alivePlugs.do { |plug|
+		plug.slotAt(\synthInstance).tryPerform(\trace)
+	};
+}.fork(AppClock);
+
+h.alivePlugs[1].slotAt(\badValueSynth).trace;
+
+h.alivePlugs[0].inBusses
+
+s.audioBusAllocator.debug
