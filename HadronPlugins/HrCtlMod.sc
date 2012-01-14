@@ -9,6 +9,13 @@ HrCtlMod : HrSimpleModulator {
 	}
 	*height { |extraArgs| ^175 + (25 * this.shouldWatch(extraArgs).binaryValue) }
 
+	*numOuts { |extraArgs|
+		^if(extraArgs.size >= 1) {
+			// because "a non-number string".asInteger is 0
+			max(1, extraArgs[0].asInteger);
+		} { 1 }
+	}
+
 	// default is to watch
 	// it is really sucky to have to make this a class method
 	// but I need to use it to determine window bounds,
@@ -170,7 +177,8 @@ HrCtlMod : HrSimpleModulator {
 			doIt.fork
 		}
 	}
-	synthArgs { ^[\inBus0, inBusses[0], \prOutBus, prOutBus,
+	synthArgs { ^[inBus0: inBusses[0], prOutBus: prOutBus,
+		outBus0: outBusses[0],
 		pollRate: pollRate * isMapped.binaryValue * (watcher.notNil.binaryValue)
 	] }
 
@@ -179,7 +187,7 @@ HrCtlMod : HrSimpleModulator {
 		// but the 32-bit int uniqueID is too big for single-float precision
 		// so I need another ID
 		replyID = UniqueID.next;
-		SynthDef("HrCtlMod"++uniqueID, { |prOutBus, inBus0, pollRate = 0|
+		SynthDef("HrCtlMod"++uniqueID, { |prOutBus, inBus0, outBus0, pollRate = 0|
 			var input = A2K.kr(InFeedback.ar(inBus0));
 			input = postOpFunc.value(input);
 			if(input.size > numChannels or: { input.rate != \control }) {
@@ -193,6 +201,7 @@ HrCtlMod : HrSimpleModulator {
 			};
 			SendReply.kr(Impulse.kr(pollRate), '/modValue', input, replyID);
 			Out.kr(prOutBus, input);
+			Out.ar(outBus0, K2A.ar(input));
 		}).add;
 	}
 
