@@ -14,7 +14,10 @@ HrCtlEnv : HrCtlMod {
 			argExtraArgs[0] == "1" or: { argExtraArgs[0] == "true" }
 		}
 	}
+
+	// left = env, right = trig (true for HrAudioEnv also)
 	*numOuts { ^2 }
+
 	// copy and paste programming...
 	init
 	{
@@ -341,7 +344,7 @@ HrCtlEnv : HrCtlMod {
 			eg = localSpec.map(eg);
 			SendReply.kr(Impulse.kr(pollRate), '/modValue', eg, uniqueID);
 			Out.kr(prOutBus, eg);
-			Out.ar(outBus0, audioTrig + K2A.ar(t_trig));
+			Out.ar(outBus0, [K2A.ar(eg), audioTrig + K2A.ar(t_trig)]);
 		}).add;
 	}
 
@@ -367,8 +370,6 @@ HrAudioEnv : HrCtlEnv {
 	*initClass {
 		this.addHadronPlugin;
 	}
-
-	// numOuts still 2: left = env, right = trig
 
 	*height { ^325 }
 	modulatesOthers { ^false }
