@@ -67,8 +67,10 @@ HadronStateSave
 		({|item|
 		
 			var tempIn, tempOut;
-			tempIn = item.inConnections.deepCopy;
-			tempOut = item.outConnections.deepCopy;
+			// tempIn = item.inConnections.deepCopy;
+			// tempOut = item.outConnections.deepCopy;
+			tempIn = item.inConnections.collect(_.copy);
+			tempOut = item.outConnections.collect(_.copy);
 			
 			tempIn.do
 			({|inItem, count|
