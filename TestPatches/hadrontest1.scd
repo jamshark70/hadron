@@ -83,8 +83,9 @@ u = UserView(w, w.view.bounds.insetBy(2, 2))
 w.front;
 
 
-f = h.alivePlugs[3];
+f = h.alivePlugs[0];
 f.slotAt(\synthInstance).trace
+f.slotAt(\badValueSynth).trace
 f.slotAt(\prOutBus)
 
 KrBusWatcher.register(f.slotAt(\prOutBus));
