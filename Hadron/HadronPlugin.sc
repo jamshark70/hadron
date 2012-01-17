@@ -432,9 +432,13 @@ HadronPlugin
 
 	wakeConnections
 	{//interpret inConnections and outConnections after a set is loaded from file. not to be overridden.
-
+		var oldSize;
 		if(mainOutBusses.size < outConnections.size) {
+			oldSize = mainOutBusses.size;
 			mainOutBusses = mainOutBusses.extend(outConnections.size);
+			(oldSize .. outConnections.size-1).do { |i|
+				mainOutBusses[i] = [nil, nil];
+			};
 		};
 		outConnections.do
 		{|item, count|
