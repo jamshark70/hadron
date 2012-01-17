@@ -16,8 +16,6 @@ HrMultiCtlMod : HrCtlMod {
 
 	init
 	{
-		var loadSemaphore;
-
 		window.background_(Color.gray(0.7));
 		if(extraArgs.size >= 1 and: {
 			extraArgs[1].size > 0 and: { extraArgs[1].asFloat > 0 }
