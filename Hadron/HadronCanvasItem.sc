@@ -234,11 +234,12 @@ HadronCanvasItem
 	// original implementation didn't allow a plug to change # of inbusses or outbusses
 	// but I need that... so rebuild the rect arrays
 	// (we can't dispose of the arrays b/c HadronCanvas uses them to draw connections)
-	setBlobs {
-		inPortBlobs = Array.fill(parentPlugin.inBusses.size, { |count|
+	setBlobs { |numInBlobs(parentPlugin.inBusses.size),
+		numOutBlobs(parentPlugin.outBusses.size)|
+		inPortBlobs = Array.fill(numInBlobs, { |count|
 			Rect(5 + (count*10), 0, 5, 3);
 		});		
-		outPortBlobs = Array.fill(parentPlugin.outBusses.size, { |count|
+		outPortBlobs = Array.fill(numOutBlobs, { |count|
 			Rect(5 + (count*10), 17, 5, 3);
 		});
 		{ objView.refresh }.defer;
