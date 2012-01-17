@@ -10,6 +10,7 @@ HrMultiCtlMod : HrCtlMod {
 
 	init
 	{
+		loadSemaphore = Semaphore(1);
 		window.background_(Color.gray(0.7));
 		if(extraArgs.size >= 1) {
 			numChannels = max(1, extraArgs[0].asInteger);
@@ -82,7 +83,6 @@ HrMultiCtlMod : HrCtlMod {
 		saveSets =
 			[
 				{ |argg|
-					loadSemaphore = Semaphore(1);
 					postOpText.string_(argg);
 					// previously called "evalButton.doAction"
 					// but in swing, can't rely on gui synchronous-icity
@@ -117,7 +117,6 @@ HrMultiCtlMod : HrCtlMod {
 							pollRateView.tryPerform(\valueAction_, argg);
 						};
 						loadSemaphore.signal;
-						loadSemaphore = nil;
 					}.fork(AppClock);
 				}
 			];
@@ -139,8 +138,10 @@ HrMultiCtlMod : HrCtlMod {
 		prOutBus.free;
 	}
 
-	synthArgs { ^[\inBus0, inBusses[0], \prOutBus, prOutBus,
-		pollRate: pollRate * isMapped.any({ |bool| bool }).binaryValue * (watcher.notNil.binaryValue)
+	synthArgs { ^[
+		inBus0: inBusses[0], prOutBus: prOutBus, outBus0: outBusses[0],
+		pollRate: pollRate * isMapped.any({ |bool| bool }).binaryValue
+			* (watcher.notNil.binaryValue)
 	] }
 
 	// change here: we're not checking numchannels
@@ -148,7 +149,7 @@ HrMultiCtlMod : HrCtlMod {
 	makeSynthDef {
 		var numch;
 		replyID = UniqueID.next;
-		SynthDef("HrMultiCtlMod"++uniqueID, { |prOutBus, inBus0, pollRate = 0|
+		SynthDef("HrMultiCtlMod"++uniqueID, { |prOutBus, inBus0, outBus0, pollRate = 0|
 			var input = A2K.kr(InFeedback.ar(inBus0));
 			input = postOpFunc.value(input).asArray;
 			if(input.any { |unit| unit.rate != \control }) {
@@ -158,6 +159,7 @@ HrMultiCtlMod : HrCtlMod {
 			numch = input.size;
 			SendReply.kr(Impulse.kr(pollRate), '/modValue', input, replyID);
 			Out.kr(prOutBus, input);
+			Out.ar(outBus0, K2A.ar(input));
 		}).add;
 		this.rebuildBus(numch).rebuildTargets(numch);
 		numChannels = numch;
@@ -165,24 +167,49 @@ HrMultiCtlMod : HrCtlMod {
 	}
 
 	rebuildBus { |newChannels|
-		var oldBus, endWatcher;
+		var oldKrBus, oldArBus, endWatcher, tempBusIndex;
 		if(newChannels != numChannels) {
-			oldBus = prOutBus;
+			oldKrBus = prOutBus;
+			oldArBus = outBusses[0];
 			prOutBus = Bus.control(Server.default, newChannels);
-			min(newChannels, modControl.size).do { |i|
-				modControl[i].map(prOutBus.index + i)
-			};
+			tempBusIndex = Server.default.audioBusAllocator.alloc(newChannels);
+			// nb: if newChannels < numChannels, some of these will be invalid
+			// but we're keeping them only for setOutBus calls
+			// the extras will be discarded later: outBusses.keep(newChannels)
+			outBusses = Array.fill(max(numChannels, newChannels), { |i|
+				Bus(\audio, tempBusIndex + i, 1, Server.default);
+			});
 			if(newChannels < numChannels) {
-				modControl[newChannels..].do(_.unmap);
+				modControl[newChannels..].do { |ctl, i|
+					ctl.unmap;
+					this.setOutBus(nil, nil, newChannels + i);
+				};
+				// outConnections = outConnections.keep(newChannels);
+			} {
+				// expand outConnections array, if needed
+				outConnections = outConnections.extend(newChannels);
+				(numChannels .. newChannels-1).do { |i|
+					outConnections[i] = nil ! 2;
+				};
+				mainOutBusses = mainOutBusses.extend(newChannels, parentApp.blackholeBus);
 			};
+			badValueSynth = this.makeBadValueSynth;  // replace for new # of channels
+			boundCanvasItem.setBlobs(numOutBlobs: newChannels);
+			min(newChannels, modControl.size).do { |i|
+				modControl[i].map(prOutBus.index + i);
+				this.setOutBus(outConnections[i][0], outConnections[i][1], i);
+			};
+			outBusses = outBusses.keep(newChannels);
 			if(synthInstance.notNil) {
 				synthInstance.register;
 				endWatcher = SimpleController(synthInstance).put(\n_end, {
 					endWatcher.remove;
-					oldBus.free;
+					oldKrBus.free;
+					oldArBus.free;
 				});
 			} {
-				oldBus.free
+				oldKrBus.free;
+				oldArBus.free;
 			}
 		};
 	}
@@ -267,5 +294,28 @@ HrMultiCtlMod : HrCtlMod {
 	
 	wakeFromLoad {
 		modControl.do(_.doWakeFromLoad);
+	}
+
+	// "not to be overwritten" says HadronPlugin
+	// but I need to delay this until we know how many channels
+	// are needed
+	wakeConnections {
+		var saveOutConnections = outConnections.collect(_.copy);
+		// this should wait until after HadronStateLoad
+		// finishes its synchronous stuff, including injectSaveValues
+		// by then, all the other threads should be queued up in the semaphore
+		// so this should be the last thing to go
+		// this is really just too clever for words...
+		// which means it'll probably break sometime. oh well.
+		// like, if HadronStateLoad ever becomes threaded
+		fork {
+			fork {
+				loadSemaphore.wait;
+				outConnections = saveOutConnections;
+				super.wakeConnections;
+				this.prUpdateBusConnections;
+				defer { parentApp.canvasObj.drawCables };
+			}
+		}
 	}
 }
