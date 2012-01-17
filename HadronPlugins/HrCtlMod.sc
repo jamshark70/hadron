@@ -208,7 +208,7 @@ HrCtlMod : HrSimpleModulator {
 	cleanUp
 	{
 		this.releaseSynth;
-		modControl.removeDependant(this);
+		modControl.removeDependant(this).remove;
 		watcher.remove;
 		prOutBus.free;
 	}
