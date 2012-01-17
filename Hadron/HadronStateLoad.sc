@@ -87,6 +87,9 @@ HadronStateLoad
 			{
 				parentApp.alivePlugs.do({|plug| plug.wakeConnections; });
 				parentApp.alivePlugs.do({|plug| plug.prUpdateBusConnections; });
+				// the other "if" loadStages have to process multiple lines
+				// but this one must go once and only once
+				loadStage = nil;
 			});
 			
 			if(loadStage == 6,
