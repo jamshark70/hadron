@@ -1,7 +1,6 @@
 HadronModTargetControl
 {
-	var parentApp, parentPlug, <currentSelPlugin, <currentSelParam, myView,
-	targetAppMenu, targetParamMenu, loadHolder;
+	var parentApp, <parentPlug, <currentSelPlugin, <currentSelParam, <paramNames, loadHolder;
 	
 	*new
 	{|argParentView, argBounds, argParentApp, argParentPlug|
@@ -11,109 +10,79 @@ HadronModTargetControl
 	
 	init
 	{|argParentView, argBounds, argParentApp, argParentPlug|
-	
 		parentApp = argParentApp;
 		parentPlug = argParentPlug;
 
-		myView = CompositeView(argParentView, Rect(argBounds.left, argBounds.top, argBounds.width, 20));
-		
-		targetAppMenu = PopUpMenu(myView, Rect(0, 0, (argBounds.width/2)-5, 20))
-		.action_
-		({|menu|
-			var oldplug = currentSelPlugin;
-			var numChannels = parentPlug.tryPerform(\targetControlSize) ? 1;
-			var tempItems;
-			if(menu.value == 0,
-			{
-				currentSelPlugin = nil;
-				currentSelParam = nil;
-				targetParamMenu.items = ["Nothing."];
-				targetParamMenu.value = 0;
-			},
-			{
-				currentSelPlugin = parentApp.alivePlugs[menu.value - 1];
-				currentSelParam = nil;
-				tempItems = currentSelPlugin.modSets.select({ |func, key|
-					try {
-						max(1, func.def.prototypeFrame.asArray[0].size) == numChannels
-					} { |err|
-						if(err.isKindOf(Exception)) {
-							"%:% has an invalid modSet for %: %\n"
-							.format(
-								currentSelPlugin,
-								currentSelPlugin.ident,
-								key, func
-							).warn;
-							err.reportError;
-						};
-						false  // reject this modSet if the func is not valid
-					}
-				}).keys.asArray;
-				targetParamMenu.items = ["Nothing"] ++ tempItems;
-				targetParamMenu.value = 0;
-			});
+		defer { HadronModTargetControlView(argParentView, argBounds).model_(this) };
+	}
+
+	currentSelPlugin_ { |plug|
+		var oldplug = currentSelPlugin;
+		currentSelPlugin = plug;
+		this.getParams.changed(\plugin, plug);  // this is for the gui
+		if(currentSelPlugin !== oldplug) {
+			// and this is for the owner plug
 			this.changed(\currentSelPlugin, currentSelPlugin, oldplug, currentSelParam);
-		});
-		
-		this.refreshAppMenu;
-		
-		targetParamMenu = PopUpMenu(myView, Rect((argBounds.width/2)+5, 0, (argBounds.width/2)-5, 20))
-		.items_(["Nothing."])
-		.action_
-		({|menu|
-			var oldparam = currentSelParam;
-			if(menu.value == 0,
-			{
-				currentSelParam = nil;
-			},
-			{
-				currentSelParam = menu.item.asSymbol;
-			});
-			this.changed(\currentSelParam, currentSelParam, currentSelPlugin, oldparam);
-		});
-		
+		};
+	}
+
+	currentSelParam_ { |param|
+		var oldparam;
+		if(param.isNil or: { paramNames.includesEqual(param) }) {
+			oldparam = currentSelParam;
+			currentSelParam = param;
+			this.changed(\param, param);
+			if(currentSelParam !== oldparam) {
+				this.changed(\currentSelParam, currentSelParam, currentSelPlugin, oldparam);
+			}
+		}
 	}
 	
+	plugList { ^parentApp.alivePlugs }
+
+	getParams {
+		var numChannels = parentPlug.tryPerform(\targetControlSize) ? 1;
+		paramNames = (currentSelPlugin.tryPerform(\modSets) ?? { () }).select({ |func, key|
+			try {
+				max(1, func.def.prototypeFrame.asArray[0].size) == numChannels
+			} { |err|
+				if(err.isKindOf(Exception)) {
+					"%:% has an invalid modSet for %: %\n"
+					.format(
+						currentSelPlugin,
+						currentSelPlugin.ident,
+						key, func
+					).warn;
+					err.reportError;
+				};
+				false  // reject this modSet if the func is not valid
+			}
+		}).keys.asArray;
+		this.changed(\paramNames, paramNames);
+	}
+
 	plugAdded
 	{
 		this.refreshAppMenu;
 	}
 	
-	plugRemoved
-	{|argPlug|
-	
-		// qt may supercalifragilistically clear targetAppMenu.value
-		// before I get to finish up, so save the value now while I still can
-		var plugIndex, appMenuValue = targetAppMenu.value;
-		
+	plugRemoved { |argPlug|
+		// // qt may supercalifragilistically clear targetAppMenu.value
+		// // before I get to finish up, so save the value now while I still can
+		// var plugIndex;
+		this.refreshAppMenu(argPlug);
 		if(currentSelPlugin === argPlug,
 		{
-			this.refreshAppMenu(argPlug);
-			currentSelPlugin = nil;
-			currentSelParam = nil;
-			targetParamMenu.items = ["Nothing."];
-			targetParamMenu.value = 0;
-			targetAppMenu.value = 0;
+			this.currentSelPlugin = nil;
+			this.currentSelParam = nil;
 		},
 		{
-			plugIndex = parentApp.alivePlugs.indexOf(argPlug) + 1; //+1 because menu has an extra "Nothing" entry.
-			if(appMenuValue < plugIndex,
-			{
-				this.refreshAppMenu(argPlug);
-			},
-			{
-				this.refreshAppMenu(argPlug);
-				targetAppMenu.value = appMenuValue - 1;
-			});
+			this.changed(\plugin, currentSelPlugin)
 		});
 	}
 	
-	refreshAppMenu
-	{|argRejectPlug|
-		var oldval = max(0, targetAppMenu.value ? 0);
-		targetAppMenu.items_(["Nothing."] ++ parentApp.alivePlugs.reject({|item| item === argRejectPlug; })
-			.collect({|item| item.class.asString + item.ident }))
-			.value_(oldval);
+	refreshAppMenu { |argRejectPlug|
+		this.changed(\refreshAppMenu, argRejectPlug);
 	}
 	
 	modulateWithValue
@@ -148,7 +117,10 @@ HadronModTargetControl
 	
 	getSaveValues
 	{
-		 ^[targetAppMenu.value, targetParamMenu.value];
+		 ^[
+			 1 + (parentApp.alivePlugs.indexOf(currentSelPlugin) ? -1),
+			 1 + (paramNames.indexOf(currentSelParam) ? -1);
+		 ];
 	}
 	
 	putSaveValues
@@ -160,13 +132,100 @@ HadronModTargetControl
 	doWakeFromLoad
 	{
 		if(loadHolder.notNil) {
-			targetAppMenu.valueAction_(loadHolder[0]);
-			targetParamMenu.valueAction_(loadHolder[1]);
+			this.currentSelPlugin = parentApp.alivePlugs[loadHolder[0] - 1];
+			this.currentSelParam = paramNames[loadHolder[1] - 1];
 		}
 	}
 
 	remove {
-		myView.remove;
 		this.changed(\didRemove);
+	}
+}
+
+HadronModTargetControlView : SCViewHolder {
+	var <model;
+	var targetAppMenu, targetParamMenu;
+
+	*new { |parent, bounds|
+		^super.new.init(parent, bounds)
+	}
+
+	model_ { |newModel|
+		model.removeDependant(this);
+		model = newModel;
+		model.addDependant(this);
+		defer { this.refreshAppMenu };
+	}
+
+	viewDidClose {
+		model.removeDependant(this);
+		super.viewDidClose;
+	}
+
+	init { |parent, bounds|
+		this.view = CompositeView(parent, bounds.copy.height_(20));
+
+		targetAppMenu = PopUpMenu(view, Rect(0, 0, (bounds.width/2)-5, 20))
+		.action_
+		({|menu|
+			if(menu.value == 0,
+			{
+				model.currentSelPlugin = nil;
+			},
+			{
+				model.currentSelPlugin = this.plugList[menu.value - 1];
+			});
+		});
+		
+		this.refreshAppMenu;
+		
+		targetParamMenu = PopUpMenu(view, Rect((bounds.width/2)+5, 0, (bounds.width/2)-5, 20))
+		.items_(["Nothing."])
+		.action_
+		({|menu|
+			if(menu.value == 0,
+			{
+				model.currentSelParam = nil;
+			},
+			{
+				model.currentSelParam = menu.item.asSymbol;
+			});
+		});
+	}
+
+	refreshAppMenu { |argRejectPlug|
+		var oldval = max(0, targetAppMenu.value ? 0);
+		targetAppMenu.items_(["Nothing."] ++ this.plugList.reject({|item| item === argRejectPlug; })
+			.collect({|item| item.class.asString + item.ident }))
+			.value_(oldval);
+	}
+
+	update { |obj, what, argument|
+		defer {
+			switch(what)
+			{ \plugin } {
+				targetAppMenu.value = 1 + (this.plugList.indexOf(argument) ? -1)
+			}
+			{ \param } {
+				targetParamMenu.value = 1 + (model.paramNames.indexOf(argument) ? -1);
+			}
+			{ \refreshAppMenu } {
+				this.refreshAppMenu(argument)
+			}
+			{ \paramNames } {
+				targetParamMenu.items = ["Nothing"] ++ argument;
+			}
+			{ \didRemove } {
+				this.remove;
+			}
+		};
+	}
+
+	plugList {
+		^if(model.notNil) {
+			model.plugList
+		} {
+			Array.new
+		};
 	}
 }
