@@ -20,8 +20,11 @@ HadronPlugin
 	*doOnServerBoot {
 		// HrMultiCtlMod may have >2 audio outs
 		(1..8).do { |numChan|
-			SynthDef("hrCheckBad" ++ numChan, { |uniqueID, inBus0, outBus0, pr_outBus0|
+			SynthDef("hrCheckBad" ++ numChan, { |uniqueID, inBus0, pr_outBus0|
 				var indices = (0..numChan-1),
+				outBusses = ['outBus', indices].flop.collect { |row|
+					NamedControl.kr(row.join.asSymbol, 0)
+				},
 				sig = In.ar(inBus0, numChan).asArray,
 				bad = CheckBadValues.ar(sig, id: indices, post: 0),
 				silent = Silent.ar(1),
@@ -35,7 +38,7 @@ HadronPlugin
 					Select.ar(bad[i], [chan, silent])
 				};
 				ReplaceOut.ar(pr_outBus0, sig);
-				Out.ar(outBus0, sig);
+				outBusses.do { |bus, i| Out.ar(bus, sig[i]) };
 			}).add;
 		}
 	}
@@ -651,7 +654,9 @@ HadronPlugin
 				[inBus0: outBusses[0], pr_outBus0: outBusses[0]]
 			})
 			++ (if(mainOutBusses.size > 0) {
-				[outBus0: mainOutBusses[0]]
+				Array.fill(outBusses.size, { |i|
+					[("outBus" ++ i).asSymbol, mainOutBusses[0] ?? { parentApp.blackholeBus }]
+				}).flat
 			}),
 			target, addAction
 		);
