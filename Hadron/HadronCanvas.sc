@@ -199,35 +199,41 @@ HadronCanvas
 	drawCables
 	{
 		var sBound, tBound; //sourceview, targetview
+		var cablePointsBuilder;
 		cablePointsBucket = List.new;
 
-		parentApp.alivePlugs.do
-		({|item|
-		
-			sBound = item.boundCanvasItem;
-			item.outConnections.do
-			({|conItem, count|
-			
-				if(conItem != [nil, nil],
-				{
-					
-					tBound = conItem[0].boundCanvasItem;
-					cablePointsBucket.add
-					(
-						[
-							((sBound.objView.bounds.left + sBound.outPortBlobs[count].left+3))@
-							(sBound.objView.bounds.top+20),
-							((tBound.objView.bounds.left + tBound.inPortBlobs[conItem[1]].left+3))@
-							(tBound.objView.bounds.top)
-						]
-					);							
-				});	
-			})
-		});
+		cablePointsBuilder = {
+			parentApp.alivePlugs.do
+			({|item|
+				
+				sBound = item.boundCanvasItem;
+				item.outConnections.do
+				({|conItem, count|
+					if(conItem != [nil, nil] and: { sBound.outPortBlobs[count].notNil },
+						{
+							
+							tBound = conItem[0].boundCanvasItem;
+							cablePointsBucket.add
+							(
+								[
+									((sBound.objView.bounds.left + sBound.outPortBlobs[count].left+3))@
+									(sBound.objView.bounds.top+20),
+									((tBound.objView.bounds.left + tBound.inPortBlobs[conItem[1]].left+3))@
+									(tBound.objView.bounds.top)
+								]
+							);							
+						});	
+				})
+			});
+		};
 		if(this.canCallOS) {
-			cView.refresh
+			cablePointsBuilder.value;
+			cView.refresh;
 		} {
-			defer { cView.refresh };
+			defer {
+				cablePointsBuilder.value;
+				cView.refresh
+			};
 		};
 	}
 	
