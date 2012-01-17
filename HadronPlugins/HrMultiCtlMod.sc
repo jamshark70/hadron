@@ -87,11 +87,11 @@ HrMultiCtlMod : HrCtlMod {
 					// previously called "evalButton.doAction"
 					// but in swing, can't rely on gui synchronous-icity
 					postOpFunc = argg.interpret;
-					fork {
+					{
 						loadSemaphore.wait; // block others
 						this.makeSynth;
 						loadSemaphore.signal; // unblock others
-					};
+					}.fork(AppClock);
 				},
 				{ |argg|
 					{
@@ -133,7 +133,7 @@ HrMultiCtlMod : HrCtlMod {
 	cleanUp
 	{
 		this.releaseSynth;
-		modControl.do(_.removeDependant(this));
+		modControl.do({ |ctl| ctl.removeDependant(this).remove });
 		watcher.remove;
 		prOutBus.free;
 	}
@@ -188,8 +188,10 @@ HrMultiCtlMod : HrCtlMod {
 			} {
 				// expand outConnections array, if needed
 				outConnections = outConnections.extend(newChannels);
-				(numChannels .. newChannels-1).do { |i|
-					outConnections[i] = nil ! 2;
+				(0 .. newChannels-1).do { |i|
+					if(outConnections[i].isNil) {
+						outConnections[i] = nil ! 2;
+					};
 				};
 				mainOutBusses = mainOutBusses.extend(newChannels, parentApp.blackholeBus);
 			};
@@ -228,29 +230,14 @@ HrMultiCtlMod : HrCtlMod {
 		} {
 			if(newChannels > numChannels) {
 				offset = numChannels;
-				guifunc = {
-					// wait for synth to be ready
-					// AND, more important, make other threads wait for me
-					if(loadSemaphore.notNil) {
-						loadSemaphore.wait;
-					};
-					(newChannels - offset).do { |i|
-						temp = HadronModTargetControl(
-							modCtlsScroll,
-							Rect(5, 5 + (25 * (i+offset)), 400, 20),
-							parentApp, this
-						);
-						modControl = modControl.add(temp);
-						temp.addDependant(this);
-					};
-					if(loadSemaphore.notNil) {
-						loadSemaphore.signal
-					};
-				};
-				if(thisThread.isKindOf(Routine) and: { thisThread.clock === AppClock }) {
-					guifunc.value
-				} {
-					guifunc.fork(AppClock);
+				(newChannels - offset).do { |i|
+					temp = HadronModTargetControl(
+						modCtlsScroll,
+						Rect(5, 5 + (25 * (i+offset)), 400, 20),
+						parentApp, this
+					);
+					modControl = modControl.add(temp);
+					temp.addDependant(this);
 				};
 			};
 		};
@@ -315,6 +302,7 @@ HrMultiCtlMod : HrCtlMod {
 				super.wakeConnections;
 				this.prUpdateBusConnections;
 				defer { parentApp.canvasObj.drawCables };
+				loadSemaphore.signal;
 			}
 		}
 	}
