@@ -8,19 +8,16 @@ HrMultiCtlMod : HrCtlMod {
 	}
 	*height { ^335 }
 
-	*shouldWatch { |argExtraArgs|
-		^argExtraArgs.size < 1 or: {
-			argExtraArgs[0] != "0" and: { argExtraArgs[0] != "false" }
-		}
-	}
-
 	init
 	{
 		window.background_(Color.gray(0.7));
-		if(extraArgs.size >= 1 and: {
-			extraArgs[1].size > 0 and: { extraArgs[1].asFloat > 0 }
-		}) {
-			pollRate = extraArgs[1].asFloat;
+		if(extraArgs.size >= 1) {
+			numChannels = max(1, extraArgs[0].asInteger);
+			if(extraArgs[2].size > 0 and: { extraArgs[2].asFloat > 0 }) {
+				pollRate = extraArgs[2].asFloat;
+			} {
+				pollRate = defaultPollRate;
+			};
 		} {
 			pollRate = defaultPollRate;
 		};
