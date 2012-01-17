@@ -200,7 +200,7 @@ HadronCanvas
 	{
 		var sBound, tBound; //sourceview, targetview
 		cablePointsBucket = List.new;
-		
+
 		parentApp.alivePlugs.do
 		({|item|
 		
@@ -224,7 +224,11 @@ HadronCanvas
 				});	
 			})
 		});
-		cView.refresh;
+		if(this.canCallOS) {
+			cView.refresh
+		} {
+			defer { cView.refresh };
+		};
 	}
 	
 	handleKeys

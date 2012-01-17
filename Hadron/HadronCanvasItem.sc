@@ -15,27 +15,12 @@ HadronCanvasItem
 		var numMaxPorts;
 		parentCanvas = argParentCanvas;
 		parentPlugin = argParentPlugin;
-		inPortBlobs = List.new;
-		outPortBlobs = List.new;
-		//mouseXY = argX@argY;
 		oldMouseXY = argX@argY;
 		isSelected = false;
 		isOnMouseMove = false;
 		justSelected = false;
 		
 		numMaxPorts = max(argParentPlugin.inBusses.size, argParentPlugin.outBusses.size);
-		
-		argParentPlugin.inBusses.do
-		({|bus, count|
-		
-			inPortBlobs.add(Rect(5 + (count*10), 0, 5, 3));
-		});
-		
-		argParentPlugin.outBusses.do
-		({|bus, count|
-		
-			outPortBlobs.add(Rect(5 + (count*10), 17, 5, 3));
-		});
 		
 		objView = 
 		UserView
@@ -179,6 +164,7 @@ HadronCanvasItem
 			parentPlugin.parentApp.isDirty = true;
 			parentCanvas.handleKeys(view, char, modifiers, unicode, keycode);
 		});
+		this.setBlobs;
 	}
 	
 	moveBlob
@@ -243,5 +229,18 @@ HadronCanvasItem
 	signalKill
 	{
 		parentPlugin.selfDestruct;
+	}
+
+	// original implementation didn't allow a plug to change # of inbusses or outbusses
+	// but I need that... so rebuild the rect arrays
+	// (we can't dispose of the arrays b/c HadronCanvas uses them to draw connections)
+	setBlobs {
+		inPortBlobs = Array.fill(parentPlugin.inBusses.size, { |count|
+			Rect(5 + (count*10), 0, 5, 3);
+		});		
+		outPortBlobs = Array.fill(parentPlugin.outBusses.size, { |count|
+			Rect(5 + (count*10), 17, 5, 3);
+		});
+		{ objView.refresh }.defer;
 	}
 }

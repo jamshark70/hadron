@@ -18,7 +18,8 @@ HadronPlugin
 	}
 
 	*doOnServerBoot {
-		(1..2).do { |numChan|
+		// HrMultiCtlMod may have >2 audio outs
+		(1..8).do { |numChan|
 			SynthDef("hrCheckBad" ++ numChan, { |uniqueID, inBus0, outBus0, pr_outBus0|
 				var indices = (0..numChan-1),
 				sig = In.ar(inBus0, numChan).asArray,
@@ -94,18 +95,7 @@ HadronPlugin
 		boundCanvasItem = HadronCanvasItem(parentApp.canvasObj, this, argCanvasXY.x, argCanvasXY.y);
 
 		if(this.shouldCheckBad) {
-			badValueSynth ?? {
-				badValueSynth = Synth("hrCheckBad" ++ argNumOuts,
-					[uniqueID: uniqueID]
-					++ (if(outBusses.size > 0) {
-						[inBus0: outBusses[0], pr_outBus0: outBusses[0]]
-					})
-					++ (if(mainOutBusses.size > 0) {
-						[outBus0: mainOutBusses[0]]
-					}),
-					group, \addToTail
-				);
-			};
+			badValueSynth = this.makeBadValueSynth;
 			badValueResp ?? {
 				badValueResp = OSCpathResponder(Server.default.addr,
 					['/hrBadValue', badValueSynth.nodeID],
@@ -370,9 +360,12 @@ HadronPlugin
 			//outConnections[argMyBusNo][0].inBusses[outConnections[argMyBusNo][1]] =
 			//	outConnections[argMyBusNo][0].dummyInBusses[outConnections[argMyBusNo][1]];
 
-			//remove old binding to this output from target plugin
-			outConnections[argMyBusNo][0].inConnections[outConnections[argMyBusNo][1]] = [nil, nil];
-
+			// remove old binding to this output from target plugin
+			// but we can't assume this was actually connected to something
+			// (i.e., the current target plug of this outConnection may be nil)
+			if(outConnections[argMyBusNo][0].notNil) {
+				outConnections[argMyBusNo][0].inConnections[outConnections[argMyBusNo][1]] = [nil, nil];
+			};
 			//remove my binding
 			outConnections[argMyBusNo] = [nil, nil];
 			//redirect my bus to blackhole.
@@ -641,5 +634,26 @@ HadronPlugin
 		if((node = this.tryPerform(\synthInstance)).notNil) {
 			node.map(paramName, ctlBus);
 		};
+	}
+
+	makeBadValueSynth {
+		var target, addAction;
+		if(badValueSynth.notNil) {
+			target = badValueSynth;
+			addAction = \addReplace;
+		} {
+			target = group;
+			addAction = \addToTail;
+		};
+		^Synth("hrCheckBad" ++ outBusses.size,
+			[uniqueID: uniqueID]
+			++ (if(outBusses.size > 0) {
+				[inBus0: outBusses[0], pr_outBus0: outBusses[0]]
+			})
+			++ (if(mainOutBusses.size > 0) {
+				[outBus0: mainOutBusses[0]]
+			}),
+			target, addAction
+		);
 	}
 }
