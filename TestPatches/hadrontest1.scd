@@ -280,3 +280,14 @@ h.alivePlugs[1].slotAt(\badValueSynth).trace;
 h.alivePlugs[0].inBusses
 
 s.audioBusAllocator.debug
+
+
+// multictlmod audio out
+f = h.alivePlugs.detect { |plug| plug.class == HrMultiCtlMod };
+f.synthInstance.trace
+
+f.slotAt(\badValueSynth).trace
+
+h.alivePlugs;  // List[ a HrMultiCtlMod, a HrDIYSynth, a HrDIYSynth, a HrStereoMixer, a HrDAC ]
+
+h.alivePlugs[1].slotAt(\synthInstance).trace
