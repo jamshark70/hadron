@@ -353,8 +353,8 @@ HrPresetMorph : HadronPlugin
 				nextVal = nextVal / tempSum;
 				newValues.add(nextVal);
 			};
+			lagCallback.value(newValues);
 		});
-		lagCallback.value(newValues);
 	}
 
 	addPreset
