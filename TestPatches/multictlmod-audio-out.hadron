@@ -1,0 +1,23 @@
+?Hadron 1
+?StartPlugs
+HrMultiCtlModunnamed1026785886nilPoint( 149, 94 )Rect(887, 344, 450, 375)Rect(168.10777711868, 218.26852297783, 450, 375)false
+HrDIYSynthleft24519449nilPoint( 87, 193 )Rect(1, 303, 450, 440)Rect(377, 99, 450, 440)true
+HrDIYSynthright358070877nilPoint( 265, 194 )Rect(1, 303, 450, 440)Rect(550, 202, 450, 440)true
+HrStereoMixerunnamed24328035[ "2" ]Point( 154, 266 )Rect(895, 199, 250, 220)Rect(200, 200, 250, 220)false
+HrDACunnamed161483919nilPoint( 163, 323 )Rect(87, 49, 250, 160)Rect(85.711049079895, 74.177525043488, 250, 160)false
+?EndPlugs
+?StartConnections
+1026785886[ [ nil, nil ] ][ [ 24519449, 0 ], [ 358070877, 0 ] ]
+24519449[ [ 1026785886, 0 ], [ nil, nil ] ][ [ 24328035, 0 ], [ 24328035, 1 ] ]
+358070877[ [ 1026785886, 1 ], [ nil, nil ] ][ [ 24328035, 2 ], [ 24328035, 3 ] ]
+24328035[ [ 24519449, 0 ], [ 24519449, 1 ], [ 358070877, 0 ], [ 358070877, 1 ] ][ [ 161483919, 0 ], [ 161483919, 1 ] ]
+161483919[ [ 24328035, 0 ], [ 24328035, 1 ] ][  ]
+?EndConnections
+?StartPlugParams
+1026785886"{ |sig| SinOsc.kr(1, 0, 0.5, 0.5) ! 2 }"[ [ 0, 0 ], [ 0, 0 ] ]04
+24519449"{ arg input;  SinOsc.ar(input.linexp(0, 1, 440, 880))}"
+358070877"{ arg input;  SinOsc.ar(input.linexp(0, 1, 880, 440))}"
+243280350.1011000.101100nilnilList[  ]List[  ]
+1614839190.254000nil0
+?EndPlugParams
+?EndSave

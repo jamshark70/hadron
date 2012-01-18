@@ -1,0 +1,20 @@
+?Hadron 1
+?StartPlugs
+HrMultiCtlModunnamed913804386nilPoint( 100, 100 )Rect(851, 325, 450, 375)Rect(223.51772022247, 148.76549768448, 450, 375)false
+HrDIYSynthunnamed1734466610nilPoint( 76, 189 )Rect(820, 153, 450, 440)Rect(205.1351685524, 188.16185379028, 450, 440)false
+HrDIYSynthunnamed1135452075nilPoint( 258, 190 )Rect(870, 67, 450, 440)Rect(108.96934652328, 212.28345298767, 450, 440)false
+HrDACunnamed485133911nilPoint( 191, 303 )Rect(1080, 161, 250, 160)Rect(461.44771957397, 753.79693460464, 250, 160)false
+?EndPlugs
+?StartConnections
+913804386[ [ nil, nil ] ][ [ 1734466610, 0 ], [ 1135452075, 0 ] ]
+1734466610[ [ 913804386, 0 ], [ nil, nil ] ][ [ 485133911, 0 ], [ nil, nil ] ]
+1135452075[ [ 913804386, 1 ], [ nil, nil ] ][ [ 485133911, 1 ], [ nil, nil ] ]
+485133911[ [ 1734466610, 0 ], [ 1135452075, 0 ] ][  ]
+?EndConnections
+?StartPlugParams
+913804386"{ |sig| SinOsc.kr(1, 0, 0.5, 0.5) ! 2 }"[ [ 0, 0 ], [ 0, 0 ] ]04
+1734466610"{ arg input; SinOsc.ar(input[0].linexp(0, 1, 220, 440)) }"
+1135452075"{ arg input; SinOsc.ar(input[0].linexp(0, 1, 440, 220)) }"
+4851339110.000000nil0
+?EndPlugParams
+?EndSave

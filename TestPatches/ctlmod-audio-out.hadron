@@ -1,0 +1,23 @@
+?Hadron 1
+?StartPlugs
+HrDACunnamed2116195571nilPoint( 271, 419 )Rect(917, 29, 250, 160)Rect(916.14165401459, 25.490009784698, 250, 160)false
+HrStereoMixerunnamed729097248nilPoint( 268, 358 )Rect(1109, 168, 250, 220)Rect(200, 200, 250, 220)false
+HrWrapSynthunnamed1880914870[ "analog" ]Point( 194, 288 )Rect(818, 389, 350, 330)Rect(400, 62, 350, 330)false
+HrCtlModunnamed1764511412nilPoint( 448, 174 )Rect(735, 109, 450, 240)Rect(733.87378692627, 133.76152610779, 450, 240)false
+HrDIYSynthunnamed1225838100nilPoint( 451, 248 )Rect(853, 120, 450, 440)Rect(490.87959241867, 210.28605270386, 450, 440)false
+?EndPlugs
+?StartConnections
+2116195571[ [ 729097248, 0 ], [ 729097248, 1 ] ][  ]
+729097248[ [ 1880914870, 0 ], [ 1880914870, 1 ], [ 1225838100, 0 ], [ 1225838100, 1 ] ][ [ 2116195571, 0 ], [ 2116195571, 1 ] ]
+1880914870[  ][ [ 729097248, 0 ], [ 729097248, 1 ] ]
+1764511412[ [ nil, nil ] ][ [ 1225838100, 0 ] ]
+1225838100[ [ 1764511412, 0 ], [ nil, nil ] ][ [ 729097248, 2 ], [ 729097248, 3 ] ]
+?EndConnections
+?StartPlugParams
+21161955710.333300nil0
+7290972481.0000001.000000nilnilList[  ]List[  ]
+18809148700.356200nilList[  ]0.529200nilList[  ]0.666600nilList[  ]0.768600nilList[  ]0.316200nilList[  ]1
+1764511412"{ |sig| SinOsc.kr(1, 0, 0.5, 0.5).linexp(0, 1, 220, 440) }"[ 3, 3 ]14
+1225838100"{ arg freq = 220; SinOsc.ar(freq * 8, 0, 0.1) }"
+?EndPlugParams
+?EndSave
