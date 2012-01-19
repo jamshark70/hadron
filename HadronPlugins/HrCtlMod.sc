@@ -47,7 +47,7 @@ HrCtlMod : HrSimpleModulator {
 		helpString = "Write a modulation function, maybe using an audio input.";
 		StaticText(window, Rect(10, 20, 150, 20)).string_("Modulation function");
 
-		postOpFunc = {|sig| (sig * 0.5) + 0.5; };
+		postOpFunc = {|sig| SinOsc.kr(1, 0, 0.5, 0.5) };
 
 		postOpText = TextView(window, Rect(10, 20, 430, 95))
 		.string_("{ |sig| SinOsc.kr(1, 0, 0.5, 0.5) }");
