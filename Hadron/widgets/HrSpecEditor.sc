@@ -9,7 +9,9 @@ HrSpecEditor : SCViewHolder {
 
 	value {
 		if(this.specIsValid) {
-			^value
+			// 'value' var should be internal only
+			// do not give the identical Spec object to the owner!
+			^value.copy
 		} {
 			Error("Spec has invalid parameters:" + didSilentUpdate.asString).throw;
 		}
@@ -171,9 +173,11 @@ HrSpecEditor : SCViewHolder {
 	viewDidClose {
 		didSilentUpdate = nil;
 		this.prStopRoutines;
+		this.changed(\viewDidClose);
 	}
 
 	prStopRoutines {
+		var saveUpdates;
 		badSpecRoutines.do(_.stop);
 		badSpecRoutines.clear;
 		[specMin, specMax, specWarp].do { |view|
@@ -182,8 +186,9 @@ HrSpecEditor : SCViewHolder {
 			};
 		};
 		if(didSilentUpdate.size > 0) {
-			didSilentUpdate.do { |param| action.value(this, param) };
-			didSilentUpdate = nil;
+			saveUpdates = didSilentUpdate;
+			didSilentUpdate = nil;  // actions may depend on this being cleared
+			saveUpdates.do { |param| action.value(this, param) };
 		};
 	}
 
