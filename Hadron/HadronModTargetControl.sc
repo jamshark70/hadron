@@ -142,6 +142,9 @@ HadronModTargetControl
 	remove {
 		this.changed(\didRemove);
 	}
+
+	pollRate { ^parentPlug.tryPerform(\pollRate) }
+	pollRate_ { |rate| currentSelPlugin.tryPerform(\pollRate_, rate) }
 }
 
 HadronModTargetControlView : SCViewHolder {
