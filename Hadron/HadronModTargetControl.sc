@@ -119,7 +119,9 @@ HadronModTargetControl
 	{
 		 ^[
 			 1 + (parentApp.alivePlugs.indexOf(currentSelPlugin) ? -1),
-			 1 + (paramNames.indexOf(currentSelParam) ? -1);
+			 if(paramNames.size > 0) {
+				 1 + (paramNames.indexOf(currentSelParam) ? -1);
+			 } { 0 }
 		 ];
 	}
 	
