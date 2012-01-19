@@ -1,9 +1,8 @@
 HrCtlEnv : HrCtlMod {
 	var <>spec,
 	loopNode, releaseNode,
-	specMin, specMax, specWarp, specStep,
-	badSpecRoutines,
-	timeScaleView, timeScale = 1;
+	specView, timeScaleView, timeScale = 1;
+
 	*initClass {
 		this.addHadronPlugin;
 	}
@@ -21,12 +20,7 @@ HrCtlEnv : HrCtlMod {
 	// copy and paste programming...
 	init
 	{
-		var expWarpIsBad = {
-			specMin.value.sign != specMax.value.sign
-			or: { specMin.value == 0 or: { specMax.value == 0 } }
-		}, adjustY = 0;
-
-		badSpecRoutines = ();
+		var adjustY = 0, specErrResp;
 
 		if(extraArgs.size >= 2 and: {
 			extraArgs[1].size > 0 and: { extraArgs[1].asFloat > 0 }
@@ -126,111 +120,23 @@ HrCtlEnv : HrCtlMod {
 		});
 
 		spec = HrControlSpec.new;
-		StaticText(window, Rect(10, 275 - adjustY, 80, 20)).string_("map min");
-		StaticText(window, Rect(210, 275 - adjustY, 80, 20)).string_("map max");
-		StaticText(window, Rect(10, 300 - adjustY, 80, 20)).string_("map warp");
-		StaticText(window, Rect(210, 300 - adjustY, 80, 20)).string_("map step");
 
-		specMin = NumberBox(window, Rect(100, 275 - adjustY, 100, 20))
-		.value_(spec.minval)
-		.maxDecimals_(5)
-		.action_({ |view|
-			if(spec.warp.class == ExponentialWarp and: expWarpIsBad) {
-				parentApp.displayStatus("Invalid warp: Exponential warp endpoints must be the same sign and nonzero", -1);
-				badSpecRoutines[\minval] ?? {
-					badSpecRoutines[\minval] = Routine({
-						var colors = Pseq([Color(1.0, 0.86, 0.86), Color.white], inf).asStream;
-						loop {
-							view.background = colors.next;
-							0.75.wait;
-						};
-					}).play(AppClock);
-				};
-			} {
-				spec.minval = view.value;
-				synthInstance.set(\minval, spec.minval);
-				this.prStopRoutines;
-				badSpecRoutines[\minval] = nil;
-				view.background = Color.white;
-			};
-		});
-		specMax = NumberBox(window, Rect(300, 275 - adjustY, 100, 20))
-		.value_(spec.maxval)
-		.maxDecimals_(5)
-		.action_({ |view|
-			if(spec.warp.class == ExponentialWarp and: expWarpIsBad) {
-				parentApp.displayStatus("Invalid warp: Exponential warp endpoints must be the same sign and nonzero", -1);
-				badSpecRoutines[\maxval] ?? {
-					badSpecRoutines[\maxval] = Routine({
-						var colors = Pseq([Color(1.0, 0.86, 0.86), Color.white], inf).asStream;
-						loop {
-							view.background = colors.next;
-							0.75.wait;
-						};
-					}).play(AppClock);
-				};
-			} {
-				spec.maxval = view.value;
-				synthInstance.set(\maxval, spec.maxval);
-				this.prStopRoutines;
-				badSpecRoutines[\maxval] = nil;
-				view.background = Color.white;
-			};
-		});
-		specWarp = TextField(window, Rect(100, 300 - adjustY, 100, 20))
-		.string_("lin")
-		.action_({ |view|
-			var warp, continue = true;
-			try {
-				warp = view.string;
-				if(warp.every(_.isAlpha)) {
-					warp = warp.asSymbol;
-				} {
-					warp = warp.asFloat;
-					if(warp == 0 and: {
-						view.string.any { |char|
-							char.isDecDigit.not and: { char != $. }
-						}
-					}) {
-						// this, of course, may throw a different error
-						// which is why all of this is in a try{} block
-						warp = view.string.interpret
-					};
-				};
-				if(warp.respondsTo(\asWarp).not) {
-					Error("Warp must be number, symbol or a valid SC expression").throw;
-				};
-				warp = warp.asWarp(spec);  // throws error if a wrong symbol
-				if(warp.class == ExponentialWarp and: expWarpIsBad) {
-					Error("Exponential warp endpoints must be the same sign and nonzero").throw
-				};
-			} { |err|
-				if(err.isKindOf(Exception)) {
-					continue = false;
-					err.reportError;
-					defer { parentApp.displayStatus("Invalid warp: " ++ err.errorString, -1) };
-					badSpecRoutines[\warp] ?? {
-						badSpecRoutines[\warp] = Routine({
-							var colors = Pseq([Color(1.0, 0.86, 0.86), Color.white], inf).asStream;
-							loop {
-								view.background = colors.next;
-								0.75.wait;
-							};
-						}).play(AppClock);
-					};
-				};
-			};
-			if(continue) {
-				spec.warp = warp;
+		specView = HrSpecEditor(window, Rect(5, 270 - adjustY, window.bounds.width - 10, 50), 5@5)
+		.value_(spec)
+		.action_({ |view, paramName|
+			spec = view.value;
+			if(paramName == \warp) {
 				this.makeSynth;
-				this.prStopRoutines;
-				badSpecRoutines[\warp] = nil;
-				view.background = Color.white;
+			} {
+				synthInstance.set(paramName, spec.perform(paramName));
 			};
 		});
-		specStep = NumberBox(window, Rect(300, 300 - adjustY, 100, 20))
-		.maxDecimals_(5)
-		.action_({ |view| spec.step = view.value; synthInstance.set(\step, spec.step) });
+		specErrResp = SimpleController(specView).put(\message, { |obj, what, string, mood = 0|
+			defer {
+				parentApp.displayStatus(string, mood);
+			};
+		})
+		.put(\viewDidClose, { specErrResp.remove });
 
 		timeScaleView = HrEZSlider(window, Rect(10, 325 - adjustY, 430, 20), "time scale", #[0.01, 20, \exp],
 			{ |view|
@@ -266,10 +172,11 @@ HrCtlEnv : HrCtlMod {
 			[
 				{|argg|
 					spec = argg.interpret;
-					specMin.value = spec.minval;
-					specMax.value = spec.maxval;
-					specWarp.string = spec.warp.asSpecifier.asString;
-					specStep.value = spec.step;
+					specView.value = spec;
+					// specMin.value = spec.minval;
+					// specMax.value = spec.maxval;
+					// specWarp.string = spec.warp.asSpecifier.asString;
+					// specStep.value = spec.step;
 				},
 				{|argg|
 					var env = argg.interpret;
@@ -348,22 +255,9 @@ HrCtlEnv : HrCtlMod {
 		}).add;
 	}
 
-	cleanUp {
-		this.prStopRoutines;
-		super.cleanUp;
-	}
-
-	// this should be called only when the spec is totally valid
-	// so it clears all flashy-flashy routines
-	// and resets the 3 relevant background colors
-	prStopRoutines {
-		badSpecRoutines.do(_.stop);
-		[specMin, specMax, specWarp].do { |view|
-			if(view.notClosed) {
-				view.background = Color.white;
-			};
-		};
-	}
+	// cleanUp {
+	// 	super.cleanUp;
+	// }
 }
 
 HrAudioEnv : HrCtlEnv {
