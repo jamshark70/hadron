@@ -34,7 +34,7 @@ HrEZSlider : SCViewHolder {
 			this.valueAction = view.value;
 		});
 		spec = controlSpec.asSpec;
-		this.value = initVal;
+		this.value = initVal ?? { spec.default };
 		action = argAction;
 		if(initAction ? false) { this.doAction };
 		this.prInit;  // copied from HrSlider
@@ -50,6 +50,11 @@ HrEZSlider : SCViewHolder {
 		this.doAction;
 	}
 	doAction { action.value(this) }
+
+	spec_ { |newSpec|
+		spec = newSpec.asSpec;
+		defer { sliderView.value = spec.unmap(value) };
+	}
 
 	//// copy and paste - thank you, no multiple inheritance ////
 	prInit
