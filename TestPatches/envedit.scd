@@ -436,3 +436,14 @@ v.refresh;
 
 v.curveZoneWidth = 10;
 v.fillColor = Color.blue;
+
+
+
+
+(
+w = Window(\test, Rect(800, 100, 450, 100));
+z = HrSpecEditor(w, w.view.bounds).action_({ |... args| args.debug("spec action") });
+w.front;
+)
+
+z.value.postcs
