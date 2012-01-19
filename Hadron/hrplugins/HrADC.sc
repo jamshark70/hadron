@@ -1,6 +1,6 @@
 HrADC : HadronPlugin
 {
-	var synthInstance, lButton, rButton, levSlider, lastLevel;
+	var <synthInstance, lButton, rButton, levSlider, lastLevel;
 	
 	*new
 	{|argParentApp, argIdent, argUniqueID, argExtraArgs, argCanvasXY|

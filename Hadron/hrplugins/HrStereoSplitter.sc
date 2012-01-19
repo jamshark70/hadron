@@ -145,4 +145,10 @@ HrStereoSplitter : HadronPlugin
 	{
 		//group will be freed for you
 	}
+
+	mapModCtl { |param, ctlBus|
+		synthInstances[param.asString[5..].asInteger].tryPerform(
+			\map, \mul, ctlBus
+		)
+	}
 }

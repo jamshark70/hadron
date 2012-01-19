@@ -156,4 +156,10 @@ HrStereoMixer : HadronPlugin
 	{
 		mixerGroup.free;
 	}
+
+	mapModCtl { |param, ctlBus|
+		synthInstances[param.asString[5..].asInteger].tryPerform(
+			\map, \mul, ctlBus
+		)
+	}
 }
