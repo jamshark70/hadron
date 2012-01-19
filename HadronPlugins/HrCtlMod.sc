@@ -82,10 +82,7 @@ HrCtlMod : HrSimpleModulator {
 		if(this.shouldWatch) {
 			pollRateView = HrEZSlider(window, Rect(10, 175, 430, 20),
 				"update rate", [1, 25], { |view|
-					pollRate = view.value;
-					if(synthInstance.notNil) {
-						synthInstance.set(\pollRate, pollRate * (watcher.notNil.binaryValue));
-					};
+					this.pollRate = view.value;
 				}, pollRate, labelWidth: 100, numberWidth: 45
 			);
 		};
@@ -213,6 +210,10 @@ HrCtlMod : HrSimpleModulator {
 		prOutBus.free;
 	}
 
+	updateBusConnections {
+		synthInstance.set(\inBus0, inBusses[0], \outBus0, outBusses[0]);
+	}
+
 	update { |obj, what, argument, oldplug, oldparam|
 		if(#[currentSelPlugin, currentSelParam].includes(what)) {
 			if(argument.notNil) {
@@ -232,4 +233,13 @@ HrCtlMod : HrSimpleModulator {
 	}
 
 	targetControlSize { ^numChannels }
+
+	pollRate_ { |rate|
+		pollRate = rate;
+		if(synthInstance.notNil) {
+			synthInstance.set(\pollRate, pollRate * (watcher.notNil.binaryValue));
+		};
+		// do? Yes... HrMultiCtlMod has several
+		modControl.do({ |ctl| ctl.pollRate = rate });
+	}
 }
