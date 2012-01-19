@@ -1,0 +1,142 @@
+HrRangeMap : HadronPlugin {
+	var inSpec, outSpec;
+	var inSpecView, outSpecView, inMod = 0, inModButton;
+	var modControl, modSlider, isMapped = false, prOutBus;
+	var <synthInstance;
+
+	*initClass {
+		this.addHadronPlugin;
+	}
+
+	*new { |argParentApp, argIdent, argUniqueID, argExtraArgs, argCanvasXY|
+		^super.new(argParentApp, this.class.name, argIdent, argUniqueID, argExtraArgs, Rect((Window.screenBounds.width - 410).rand, (Window.screenBounds.height - 245).rand, 410, 245), 1, 1, argCanvasXY).init
+	}
+
+	init {
+		var inColor = Color(1, 1, 0.8), outColor = Color(0.8, 1, 0.8);
+		var inSpecErrResp, outSpecErrResp;
+
+		inSpec = HrControlSpec.new;
+		outSpec = HrControlSpec.new;
+
+		prOutBus = Bus.control(Server.default, 1);
+
+		inModButton = Button(window, Rect(10, 10, 125, 20))
+		.states_([["Using modulator"], ["Using input cable"]])
+		.action_({ |view|
+			inMod = view.value;
+			synthInstance.set(\useAudioIn, inMod);
+		});
+
+		modSlider = HrEZSlider(window, Rect(10, 35, 390, 20), "Mod source", #[0, 1],
+			action: { |view|
+			}
+		);
+
+		StaticText(window, Rect(5, 60, 400, 20))
+		.background_(inColor)
+		.align_(\center)
+		.string_("Input spec");
+
+		inSpecView = HrSpecEditor(window, Rect(5, 80, 400, 50), labelPrefix: "in")
+		.background_(inColor)
+		.action_({ |view, paramName|
+			inSpec = view.value;
+			modSlider.spec = inSpec;
+			if(paramName == \warp) {
+				this.makeSynth;
+			} {
+				synthInstance.set("in" ++ paramName, inSpec.perform(paramName));
+			};
+		});
+		inSpecErrResp = SimpleController(inSpecView).put(\message, { |obj, what, string, mood = 0|
+			defer {
+				parentApp.displayStatus(string, mood);
+			};
+		})
+		.put(\viewDidClose, { inSpecErrResp.remove });
+
+		StaticText(window, Rect(5, 135, 400, 20))
+		.background_(outColor)
+		.align_(\center)
+		.string_("Output spec");
+
+		outSpecView = HrSpecEditor(window, Rect(5, 155, 400, 50), labelPrefix: "out")
+		.background_(outColor)
+		.action_({ |view, paramName|
+			outSpec = view.value;
+			if(paramName == \warp) {
+				this.makeSynth;
+			} {
+				synthInstance.set("out" ++ paramName, outSpec.perform(paramName));
+			};
+		});
+		outSpecErrResp = SimpleController(outSpecView).put(\message, { |obj, what, string, mood = 0|
+			defer {
+				parentApp.displayStatus(string, mood);
+			};
+		})
+		.put(\viewDidClose, { outSpecErrResp.remove });
+
+		modControl = HadronModTargetControl(window, Rect(10, 215, 390, 20), parentApp, this);
+		modControl.addDependant(this);
+
+		this.makeSynth;
+
+		saveGets =
+			[
+				{ [inSpec, outSpec].asCompileString },
+				{ inMod },
+				{ modControl.getSaveValues; },
+				{ modSlider.value }
+			];
+
+		saveSets =
+			[
+				{ |argg|
+					#inSpec, outSpec = argg.interpret;
+					inSpecView.value = inSpec;
+					outSpecView.value = outSpec;
+					modSlider.spec = inSpec;
+				},
+				{ |argg| inMod = argg; inModButton.value = inMod },
+				{ |argg| modControl.putSaveValues(argg); },
+				{ |argg| modSlider.value = argg }
+			];
+
+		modSets.put(\modValue, { |val|
+			synthInstance.set(\modValue, val);
+			defer { modSlider.value = val };
+		});
+
+		modMapSets.put(\modValue, { |val|
+			defer { modSlider.value = val };
+		});
+
+		modGets.put(\modValue, { modSlider.value });
+	}
+
+	makeSynth {}
+
+	update { |obj, what, argument, oldplug, oldparam|
+		if(#[currentSelPlugin, currentSelParam].includes(what)) {
+			if(argument.notNil) {
+				modControl.unmap(oldplug, oldparam);
+				isMapped = modControl.map(prOutBus);
+				// synthInstance.set(\pollRate,
+				// 	pollRate * isMapped.binaryValue // * (watcher.notNil.binaryValue)
+				// );
+				// defer { startButton.value = isMapped.binaryValue };
+			} {
+				modControl.unmap(oldplug, oldparam);
+				// synthInstance.set(\pollRate, 0);
+				isMapped = false;
+				// defer { startButton.value = 0 };
+			};
+		};
+	}
+
+	cleanUp {
+		prOutBus.free
+	}
+}
