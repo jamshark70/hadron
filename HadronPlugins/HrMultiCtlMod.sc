@@ -138,11 +138,13 @@ HrMultiCtlMod : HrCtlMod {
 		prOutBus.free;
 	}
 
-	synthArgs { ^[
-		inBus0: inBusses[0], prOutBus: prOutBus, outBus0: outBusses[0],
-		pollRate: pollRate * isMapped.any({ |bool| bool }).binaryValue
+	synthArgs {
+		^[
+			inBus0: inBusses[0], prOutBus: prOutBus, outBus0: outBusses[0],
+			pollRate: pollRate * isMapped.any({ |bool| bool }).binaryValue
 			* (watcher.notNil.binaryValue)
-	] }
+		] ++ this.getMapModArgs
+	}
 
 	// change here: we're not checking numchannels
 	// now, numchannels of the func determines number of modtargets

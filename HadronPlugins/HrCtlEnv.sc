@@ -230,7 +230,7 @@ HrCtlEnv : HrCtlMod {
 			timeScale: timeScale, env: postOpText.value,
 			minval: spec.minval, maxval: spec.maxval, step: spec.step,
 			pollRate: pollRate * isMapped.binaryValue * (watcher.notNil.binaryValue)
-		]
+		] ++ this.getMapModArgs
 	}
 
 	makeSynthDef {
@@ -280,7 +280,7 @@ HrAudioEnv : HrCtlEnv {
 		^[inBus0: inBusses[0], outBus0: outBusses[0], outBus1: outBusses[1],
 			timeScale: timeScale, env: postOpText.value,
 			minval: spec.minval, maxval: spec.maxval, step: spec.step
-		]
+		] ++ this.getMapModArgs
 	}
 
 	makeSynthDef {
