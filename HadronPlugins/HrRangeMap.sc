@@ -9,7 +9,7 @@ HrRangeMap : HadronPlugin {
 	}
 
 	*new { |argParentApp, argIdent, argUniqueID, argExtraArgs, argCanvasXY|
-		^super.new(argParentApp, this.class.name, argIdent, argUniqueID, argExtraArgs, Rect((Window.screenBounds.width - 410).rand, (Window.screenBounds.height - 245).rand, 410, 245), 1, 1, argCanvasXY).init
+		^super.new(argParentApp, "HrRangeMap", argIdent, argUniqueID, argExtraArgs, Rect((Window.screenBounds.width - 410).rand, (Window.screenBounds.height - 245).rand, 410, 245), 1, 1, argCanvasXY).init
 	}
 
 	init {
@@ -27,6 +27,7 @@ HrRangeMap : HadronPlugin {
 		.action_({ |view|
 			inMod = view.value;
 			synthInstance.set(\useAudioIn, inMod);
+			modSlider.visible = (inMod == 0);
 		});
 
 		modSlider = HrEZSlider(window, Rect(10, 35, 390, 20), "Mod source", #[0, 1],
@@ -106,9 +107,13 @@ HrRangeMap : HadronPlugin {
 					modSlider.spec = inSpec;
 					synthInstance.set(*this.synthArgs);
 				},
-				{ |argg| inMod = argg; inModButton.value = inMod },
 				{ |argg|
-					modControl.putSaveValues(argg.debug("putSaveValues"));
+					inMod = argg;
+					inModButton.value = inMod;
+					modSlider.visible = (inMod == 0);
+				},
+				{ |argg|
+					modControl.putSaveValues(argg);
 					isMapped = modControl.map(prOutBus);
 				},
 				{ |argg| modSlider.value = argg }
@@ -116,11 +121,11 @@ HrRangeMap : HadronPlugin {
 
 		modSets.put(\modValue, { |val|
 			synthInstance.set(\modValue, val);
-			defer { modSlider.value = val };
+			defer { if(inMod == 0) { modSlider.value = val } };
 		});
 
 		modMapSets.put(\modValue, { |val|
-			defer { modSlider.value = val };
+			defer { if(inMod == 0) { modSlider.value = val } };
 		});
 
 		modGets.put(\modValue, { modSlider.value });
@@ -163,12 +168,14 @@ HrRangeMap : HadronPlugin {
 			doIt.fork
 		}
 	}
-	synthArgs { ^[inBus0: inBusses[0], prOutBus: prOutBus,
+	synthArgs {
+		^[inBus0: inBusses[0], prOutBus: prOutBus,
 		outBus0: outBusses[0], useAudioIn: inMod, modValue: modSlider.value,
 		inminval: inSpec.minval, inmaxval: inSpec.maxval, instep: inSpec.step,
 		outminval: outSpec.minval, outmaxval: outSpec.maxval, outstep: outSpec.step,
 		pollRate: pollRate * isMapped.binaryValue * (watcher.notNil.binaryValue)
-	] }
+		] ++ this.getMapModArgs
+	}
 
 	makeSynthDef {
 		replyID = UniqueID.next;
