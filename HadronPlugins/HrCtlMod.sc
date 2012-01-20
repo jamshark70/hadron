@@ -174,10 +174,12 @@ HrCtlMod : HrSimpleModulator {
 			doIt.fork
 		}
 	}
-	synthArgs { ^[inBus0: inBusses[0], prOutBus: prOutBus,
-		outBus0: outBusses[0],
-		pollRate: pollRate * isMapped.binaryValue * (watcher.notNil.binaryValue)
-	] }
+	synthArgs {
+		^[inBus0: inBusses[0], prOutBus: prOutBus,
+			outBus0: outBusses[0],
+			pollRate: pollRate * isMapped.binaryValue * (watcher.notNil.binaryValue)
+		] ++ this.getMapModArgs
+	}
 
 	makeSynthDef {
 		// this is kind of dumb

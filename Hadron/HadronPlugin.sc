@@ -4,7 +4,7 @@ HadronPlugin
 	<outerWindow, window, <>oldWinBounds, <>isHidden, <name, <ident,
 	<>inConnections, <>outConnections, <dummyInBusses, <conWindow,
 	<>saveGets, <>saveSets, <extraArgs, <boundCanvasItem, <helpString,
-	<modSets, <modGets, <modMapSets;
+	<modSets, <modGets, <modMapSets, <mappedMods;
 
 	var badValueSynth, badValueResp;
 
@@ -63,6 +63,7 @@ HadronPlugin
 		modGets = Dictionary.new;
 		modSets = Dictionary.new;
 		modMapSets = Dictionary.new;
+		mappedMods = Dictionary.new;
 
 		helpString = "No help available for this plugin.";
 
@@ -636,9 +637,27 @@ HadronPlugin
 	// you may override
 	mapModCtl { |paramName, ctlBus|
 		var node;
+		if(ctlBus == -1 or: { ctlBus.tryPerform(\index) == -1 }) {
+			mappedMods.removeAt(paramName.asSymbol);
+		} {
+			mappedMods.put(paramName.asSymbol, ctlBus);
+		};
 		if((node = this.tryPerform(\synthInstance)).notNil) {
 			node.map(paramName, ctlBus);
 		};
+	}
+	getMapModArgs {
+		var result = Array(mappedMods.size * 2);
+		mappedMods.keysValuesDo { |param, bus|
+			case { bus.isNumber } {
+				result.add(param).add(("c" ++ bus).asSymbol)
+			}
+			{ bus.isKindOf(Bus) } {
+				result.add(param).add(bus.asMap)
+			}
+			// else, invalid map - ignore
+		};
+		^result
 	}
 
 	makeBadValueSynth {

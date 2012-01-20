@@ -121,7 +121,7 @@ HrChorus2 : HadronPlugin {
 				phdiffSlider.value,
 				preampSlider.value
 			]
-		].flop.flat
+		].flop.flat ++ this.getMapModArgs
 	}
 
 	releaseSynth {
@@ -230,7 +230,7 @@ HrFlanger : HrChorus2 {
 	}
 
 	synthArgs {
-		^super.synthArgs ++ [decay: this.decay]
+		^[decay: this.decay] ++ super.synthArgs
 	}
 
 	makeSynth {
