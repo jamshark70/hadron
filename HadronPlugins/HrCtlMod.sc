@@ -110,8 +110,8 @@ HrCtlMod : HrSimpleModulator {
 				{ |argg| startButton.valueAction_(argg); },
 				{ |argg|
 					if(argg.notNil) {
-						pollRate = argg;
-						pollRateView.tryPerform(\valueAction_, argg);
+						this.pollRate = argg;
+						pollRateView.tryPerform(\value_, argg);
 					}
 				}
 			];

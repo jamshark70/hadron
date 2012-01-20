@@ -136,6 +136,7 @@ HadronModTargetControl
 		if(loadHolder.notNil) {
 			this.currentSelPlugin = parentApp.alivePlugs[loadHolder[0] - 1];
 			this.currentSelParam = paramNames[loadHolder[1] - 1];
+			loadHolder = nil;
 		}
 	}
 
@@ -144,7 +145,15 @@ HadronModTargetControl
 	}
 
 	pollRate { ^parentPlug.tryPerform(\pollRate) }
-	pollRate_ { |rate| currentSelPlugin.tryPerform(\pollRate_, rate) }
+	pollRate_ { |rate|
+		var plug = currentSelPlugin;
+		// we might need to do this during loading as part of a saveSets[] item
+		// currentSelPlugin isn't populated at that time! but loadHolder is
+		if(plug.isNil and: { loadHolder.notNil }) {
+			plug = parentApp.alivePlugs[loadHolder[0] - 1];
+		};
+		plug.tryPerform(\pollRate_, rate)
+	}
 }
 
 HadronModTargetControlView : SCViewHolder {
