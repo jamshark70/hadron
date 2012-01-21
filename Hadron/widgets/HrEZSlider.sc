@@ -3,7 +3,7 @@
 // doesn't support all the formatting options of EZSlider
 
 HrEZSlider : SCViewHolder {
-	var <labelView, <sliderView, <numberView, <value, <spec, <>action;
+	var <labelView, <sliderView, <numberView, <value, <spec, <>action, <label;
 
 	var isLearning, isRecording, didLearn, didRecord, learnResponder, midiResponder,
 	<boundMidiArgs, <>automationData, <automationSize, oldBackground, recRoutine,
@@ -15,7 +15,8 @@ HrEZSlider : SCViewHolder {
 		^super.new.init(parent, bounds, label, controlSpec, action, initVal, initAction, labelWidth, numberWidth)
 	}
 
-	init { |parent, bounds, label, controlSpec, argAction, initVal, initAction, labelWidth, numberWidth|
+	init { |parent, bounds, argLabel, controlSpec, argAction, initVal, initAction, labelWidth, numberWidth|
+		label = argLabel;
 		bounds = bounds.asRect;
 		view = CompositeView(parent, bounds);
 		labelView = StaticText(view, Rect(2, 0, labelWidth, bounds.height))
@@ -54,6 +55,11 @@ HrEZSlider : SCViewHolder {
 	spec_ { |newSpec|
 		spec = newSpec.asSpec;
 		defer { sliderView.value = spec.unmap(value) };
+	}
+
+	label_ { |newLabel|
+		label = newLabel;
+		defer { labelView.string = newLabel };
 	}
 
 	//// copy and paste - thank you, no multiple inheritance ////
