@@ -11,27 +11,36 @@ HrEZSlider : SCViewHolder {
 	<>automationPlaySize, userCloseFunc;
 
 
-	*new { |parent, bounds, label, controlSpec, action, initVal, initAction = false, labelWidth = 60, numberWidth = 45|
-		^super.new.init(parent, bounds, label, controlSpec, action, initVal, initAction, labelWidth, numberWidth)
+	*new { |parent, bounds, label, controlSpec, action, initVal, initAction = false, labelWidth = 60, numberWidth = 45, layout = \horz|
+		^super.new.init(parent, bounds, label, controlSpec, action, initVal, initAction, labelWidth, numberWidth, layout)
 	}
 
-	init { |parent, bounds, argLabel, controlSpec, argAction, initVal, initAction, labelWidth, numberWidth|
+	init { |parent, bounds, argLabel, controlSpec, argAction, initVal, initAction, labelWidth, numberWidth, layout|
+		var labelBounds, sliderBounds, numberBounds;
 		label = argLabel;
 		bounds = bounds.asRect;
-		view = CompositeView(parent, bounds);
-		labelView = StaticText(view, Rect(2, 0, labelWidth, bounds.height))
-		.string_(label);
-		sliderView = Slider(view,
-			Rect(labelWidth + 6, 0,
+		if(layout == \vert) {
+			labelBounds = Rect(2, 2, bounds.width - 4, 20);
+			sliderBounds = Rect((bounds.width - 20) div: 2, 24, 20, bounds.height - 48);
+			numberBounds = Rect(2, sliderBounds.bottom + 2, bounds.width, 20);
+		} {
+			labelBounds = Rect(2, 0, labelWidth, bounds.height);
+			sliderBounds = Rect(labelWidth + 6, 0,
 				bounds.width - labelWidth - numberWidth - 12,
 				bounds.height
-			)
-		).action_({ |view|
+			);
+			numberBounds = Rect(sliderBounds.right + 4, 0, numberWidth, bounds.height);
+		};
+		view = CompositeView(parent, bounds);
+		labelView = StaticText(view, labelBounds)
+		.align_(if(layout == \vert) { \center } { \left })
+		.string_(label);
+		sliderView = Slider(view, sliderBounds)
+		.action_({ |view|
 			this.valueAction = spec.map(view.value);
 		});
-		numberView = NumberBox(view,
-			Rect(sliderView.bounds.right + 4, 0, numberWidth, bounds.height)
-		).action_({ |view|
+		numberView = NumberBox(view, numberBounds)
+		.action_({ |view|
 			this.valueAction = view.value;
 		});
 		spec = controlSpec.asSpec;
