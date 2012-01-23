@@ -2,7 +2,6 @@ HrRangeMap : HadronPlugin {
 	var inSpec, outSpec;
 	var inSpecView, outSpecView, inMod = 0, inModButton;
 	var modControl, modSlider, isMapped = false, prOutBus, watcher, replyID, <pollRate;
-	var <synthInstance;
 
 	*initClass {
 		this.addHadronPlugin;
@@ -131,43 +130,6 @@ HrRangeMap : HadronPlugin {
 		modGets.put(\modValue, { modSlider.value });
 	}
 
-	makeSynth { |newSynthDef(true)|
-		// it's a little bit dumb that I have to do this, but
-		// it's the only way to conditionally not execute something after try
-		var shouldPlay = true,
-		// and this: don't recall if forkIfNeeded exists in 3.4
-		doIt = {
-			if(newSynthDef) {
-				try {
-					this.makeSynthDef;
-				} { |err|
-					if(err.isKindOf(Exception)) {
-						shouldPlay = false;
-						err.reportError;
-						defer { parentApp.displayStatus(err.errorString, -1) };
-					};
-				};
-			};
-			if(shouldPlay) {
-				Server.default.sync;
-				if(synthInstance.notNil) {
-					synthInstance = Synth(this.class.name++uniqueID,
-						this.synthArgs,
-						target: synthInstance, addAction: \addReplace
-					);
-				} {
-					synthInstance = Synth(this.class.name++uniqueID,
-						this.synthArgs, target: group
-					);
-				};
-			};
-		};
-		if(thisThread.isKindOf(Routine)) {
-			doIt.value
-		} {
-			doIt.fork
-		}
-	}
 	synthArgs {
 		^[inBus0: inBusses[0], prOutBus: prOutBus,
 		outBus0: outBusses[0], useAudioIn: inMod, modValue: modSlider.value,

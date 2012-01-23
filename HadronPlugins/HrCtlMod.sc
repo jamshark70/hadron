@@ -137,11 +137,11 @@ HrCtlMod : HrSimpleModulator {
 
 	releaseSynth { synthInstance.free; synthInstance = nil; }
 
+	// same as HadronPlugin but, due to a messy class hierarchy
+	// that I haven't time to clean up now, I have to copy it here
+	// because HrSimpleModulator overrides makeSynth
 	makeSynth { |newSynthDef(true)|
-		// it's a little bit dumb that I have to do this, but
-		// it's the only way to conditionally not execute something after try
 		var shouldPlay = true,
-		// and this: don't recall if forkIfNeeded exists in 3.4
 		doIt = {
 			if(newSynthDef) {
 				try {

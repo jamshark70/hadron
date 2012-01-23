@@ -1,6 +1,6 @@
 HrWrapSynth : HadronPlugin
 {
-	var <synthInstance, sliders, numBoxes, setFunctions, synthBusArgs, startButton, storeArgs, specs;
+	var sliders, numBoxes, setFunctions, synthBusArgs, startButton, storeArgs, specs;
 	var synthDesc, ctlNameStrings;
 	var sName;
 	

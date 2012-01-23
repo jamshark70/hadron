@@ -1,5 +1,4 @@
 HrChorus2 : HadronPlugin {
-	var <synthInstance;
 	var numDelaySlider, predelaySlider, speedSlider, 
 	depthSlider, phdiffSlider, preampSlider;
 	var numDelays;

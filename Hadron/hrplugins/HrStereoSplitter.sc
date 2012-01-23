@@ -1,7 +1,6 @@
 HrStereoSplitter : HadronPlugin
 {
-	var synthInstances, summerSynth, sourceSlider, parNumIns, volSliders, volNums,
-	transitBus, mixerGroup, currentSlValues;
+	var sourceSlider, parNumIns, volSliders, volNums, mixerGroup, currentSlValues;
 
 	// special override: this has outputs, but we don't need them to be checked
 	shouldCheckBad { ^false }
@@ -23,7 +22,7 @@ HrStereoSplitter : HadronPlugin
 
 		window.background_(Color.gray(0.9));
 		helpString = "Number of stereo outputs are set by an argument. Input is distributed to outputs in LRLR alignment.";
-		synthInstances = List.new;
+		synthInstance = List.new;
 		volSliders = List.new;
 		volNums = List.new;
 		currentSlValues = List.fill(outBusses.size div: 2, 0);
@@ -44,7 +43,7 @@ HrStereoSplitter : HadronPlugin
 			volNums.add(NumberBox(window, Rect(25+(40*cnt), 120, 40, 20)).value_(1)
 				.action_
 				({|nmb|
-					synthInstances[cnt].set(\mul, nmb.value);
+					synthInstance[cnt].set(\mul, nmb.value);
 					volSliders[cnt].value_(nmb.value);
 				})
 			);
@@ -86,7 +85,7 @@ HrStereoSplitter : HadronPlugin
 			modSets.put(("level"++cnt).asSymbol,
 			{|argg|
 
-				synthInstances[cnt].set(\mul, argg);
+				synthInstance[cnt].set(\mul, argg);
 				currentSlValues[cnt] = argg;
 
 				{ volSliders[cnt].value_(argg) }.defer;
@@ -100,9 +99,9 @@ HrStereoSplitter : HadronPlugin
 	}
 
 	releaseSynth {
-		if(synthInstances.size > 0) {
-			synthInstances.do(_.free);
-			synthInstances.clear;  // now size == 0
+		if(synthInstance.size > 0) {
+			synthInstance.do(_.free);
+			synthInstance.clear;  // now size == 0
 		};
 	}
 
@@ -111,7 +110,7 @@ HrStereoSplitter : HadronPlugin
 		(outBusses.size/2).do
 		({|cnt|
 
-			synthInstances.add
+			synthInstance.add
 			(
 				Synth("hrSplitOut"++uniqueID,
 					[
@@ -131,7 +130,7 @@ HrStereoSplitter : HadronPlugin
 		(outBusses.size/2).do
 		({|cnt|
 
-			synthInstances[cnt].set
+			synthInstance[cnt].set
 			(
 				\outBusL, mainOutBusses[0 + (cnt*2)],
 				\outBusR, mainOutBusses[1 + (cnt*2)]
@@ -147,7 +146,7 @@ HrStereoSplitter : HadronPlugin
 	}
 
 	mapModCtl { |param, ctlBus|
-		synthInstances[param.asString[5..].asInteger].tryPerform(
+		synthInstance[param.asString[5..].asInteger].tryPerform(
 			\map, \mul, ctlBus
 		)
 	}

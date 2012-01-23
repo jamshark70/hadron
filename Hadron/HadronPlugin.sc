@@ -6,6 +6,8 @@ HadronPlugin
 	<>saveGets, <>saveSets, <extraArgs, <boundCanvasItem, <helpString,
 	<modSets, <modGets, <modMapSets, <mappedMods;
 
+	var <synthInstance;
+
 	var badValueSynth, badValueResp;
 
 	classvar <>plugins; //holder for external plugins
@@ -512,12 +514,6 @@ HadronPlugin
 		"Plugin needs to update necessary bus mappings in updateBusConnections() method.".postln;
 	}
 
-	makeSynth {
-		// called from the plugin's init method,
-		// AND if a bad value is detected, to kill the offender and replace it
-		"Plugin needs to create its synth(s) in the makeSynth() method.".postln;
-	}
-
 	cleanUp
 	{//called when plugin (this instance) is being killed
 		"You need to do your cleanup by overriding cleanUp()".postln;
@@ -682,4 +678,52 @@ HadronPlugin
 			target, addAction
 		);
 	}
+
+	// HadronPlugins may ignore this method
+	// but I'm using it all over the place
+	// so it makes sense to have it in the parent class
+
+	// makeSynth depends on makeSynthDef, but I am *not* implementing it
+	// for HadronPlugin so that it will throw an error if you try
+	makeSynth { |newSynthDef(true)|
+		// it's a little bit dumb that I have to do this, but
+		// it's the only way to conditionally not execute something after try
+		var shouldPlay = true,
+		// and this: don't recall if forkIfNeeded exists in 3.4
+		doIt = {
+			if(newSynthDef) {
+				try {
+					this.makeSynthDef;
+				} { |err|
+					if(err.isKindOf(Exception)) {
+						shouldPlay = false;
+						err.reportError;
+						defer { parentApp.displayStatus(err.errorString, -1) };
+					};
+				};
+			};
+			if(shouldPlay) {
+				Server.default.sync;
+				this.releaseSynth;
+				synthInstance = Synth(this.class.name++uniqueID, this.synthArgs, group);
+			};
+		};
+		if(thisThread.isKindOf(Routine)) {
+			doIt.value
+		} {
+			doIt.fork
+		}
+	}
+
+	// IF you use makeSynth above, override this
+	// ^[arg list] ++ this.getMapModArgs
+	synthArgs { ^nil }
+
+	releaseSynth {
+		if(synthInstance.notNil) {
+			synthInstance.free;
+			synthInstance = nil;
+		};
+	}
+
 }

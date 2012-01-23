@@ -1,6 +1,6 @@
 HrDAC : HadronPlugin
 {
-	var <synthInstance, levelSlider, limButton, lastLevel;
+	var levelSlider, limButton, lastLevel;
 
 	*new
 	{|argParentApp, argIdent, argUniqueID, argExtraArgs, argCanvasXY|
@@ -73,15 +73,8 @@ HrDAC : HadronPlugin
 		modMapSets.put(\level, {|argg| defer { levelSlider.value_(argg) } });
 	}
 
-	releaseSynth {
-		if(synthInstance.notNil) {
-			synthInstance.free;
-			synthInstance = nil;
-		};
-	}
-
 	makeSynth {
-		if(synthInstance.notNil) { synthInstance.free };
+		this.releaseSynth;
 		synthInstance = Synth("hrDAC"++uniqueID, [\inBus1, inBusses[0], \inBus2, inBusses[1]], group);
 	}
 	

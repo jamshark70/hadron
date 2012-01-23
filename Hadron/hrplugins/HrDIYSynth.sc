@@ -1,6 +1,6 @@
 HrDIYSynth : HadronPlugin
 {
-	var synthInstance, sDef, codeView, wrapFunc;
+	var sDef, codeView, wrapFunc;
 
 	*new
 	{|argParentApp, argIdent, argUniqueID, argExtraArgs, argCanvasXY|

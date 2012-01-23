@@ -1,6 +1,6 @@
 HrSimpleModulator : HadronPlugin
 {
-	var <synthInstance, prOutBus, postOpText, postOpFunc, pollRoutine,
+	var prOutBus, postOpText, postOpFunc, pollRoutine,
 	modControl, startButton;
 	
 	*new

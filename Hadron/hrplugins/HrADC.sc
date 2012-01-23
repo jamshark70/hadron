@@ -1,6 +1,6 @@
 HrADC : HadronPlugin
 {
-	var <synthInstance, lButton, rButton, levSlider, lastLevel;
+	var lButton, rButton, levSlider, lastLevel;
 	
 	*new
 	{|argParentApp, argIdent, argUniqueID, argExtraArgs, argCanvasXY|
@@ -112,13 +112,6 @@ HrADC : HadronPlugin
 		modGets.put(\level, { lastLevel; });
 		modSets.put(\level, {|argg| lastLevel = argg; synthInstance.set(\mul, argg); { levSlider.value_(argg); }.defer; });
 		modMapSets.put(\level, {|argg| lastLevel = argg; { levSlider.value_(argg); }.defer; });
-	}
-
-	releaseSynth {
-		if(synthInstance.notNil) {
-			synthInstance.free;
-			synthInstance = nil;
-		};
 	}
 
 	makeSynth {

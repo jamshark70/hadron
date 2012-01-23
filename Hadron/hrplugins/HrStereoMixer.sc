@@ -1,7 +1,6 @@
 HrStereoMixer : HadronPlugin
 {
-	var synthInstances, summerSynth, sourceSlider, parNumIns, volSliders, volNums,
-	/*transitBus,*/ mixerGroup, currentSlValues;
+	var sourceSlider, parNumIns, volSliders, volNums, mixerGroup, currentSlValues;
 	
 	*new
 	{|argParentApp, argIdent, argUniqueID, argExtraArgs, argCanvasXY|
@@ -21,13 +20,11 @@ HrStereoMixer : HadronPlugin
 		window.background_(Color.gray(0.5));
 		helpString = "Number of stereo outputs are set by an argument. Out 1/2 is all inputs mixed together.";
 		
-		synthInstances = List.new;
+		synthInstance = List.new;
 		volSliders = List.new;
 		volNums = List.new;
 		currentSlValues = List.new;
 		mixerGroup = Group.new(target: group);
-		
-		// transitBus = Bus.audio(Server.default, 2);
 		
 		(inBusses.size/2).do
 		({|cnt|
@@ -44,7 +41,7 @@ HrStereoMixer : HadronPlugin
 			volNums.add(NumberBox(window, Rect(25+(40*cnt), 120, 40, 20)).value_(1)
 				.action_
 				({|nmb| 
-					synthInstances[cnt].set(\mul, nmb.value); 
+					synthInstance[cnt].set(\mul, nmb.value); 
 					volSliders[cnt].value_(nmb.value);
 				}) 
 			);
@@ -68,15 +65,6 @@ HrStereoMixer : HadronPlugin
 				
 			}).add;
 
-			// badvalues synth will take care of this
-			// SynthDef("hrMixerSummer"++uniqueID,
-			// {
-			// 	arg outBus0, outBus1;
-			// 	var sound = [In.ar(transitBus.index), In.ar(transitBus.index+1)];
-			// 	Out.ar(outBus0, sound[0]);
-			// 	Out.ar(outBus1, sound[1]);
-			// }).add;
-			
 			Server.default.sync;
 			this.makeSynth;
 			
@@ -99,7 +87,7 @@ HrStereoMixer : HadronPlugin
 			modSets.put(("level"++cnt).asSymbol, 
 			{|argg| 
 				
-				synthInstances[cnt].set(\mul, argg); 
+				synthInstance[cnt].set(\mul, argg); 
 				currentSlValues[cnt] = argg;
 				
 				{ volSliders[cnt].value_(argg) }.defer;
@@ -113,9 +101,9 @@ HrStereoMixer : HadronPlugin
 	}
 
 	releaseSynth {
-		if(synthInstances.size > 0) {
-			synthInstances.do(_.free);
-			synthInstances.clear;  // now size == 0
+		if(synthInstance.size > 0) {
+			synthInstance.do(_.free);
+			synthInstance.clear;  // now size == 0
 		};
 	}
 
@@ -123,7 +111,7 @@ HrStereoMixer : HadronPlugin
 		(inBusses.size/2).do
 		({|cnt|
 			
-			synthInstances.add
+			synthInstance.add
 			(
 				Synth("hrMixerInput"++uniqueID, 
 					[
@@ -136,20 +124,10 @@ HrStereoMixer : HadronPlugin
 			);			
 			
 		});
-		
-		// summerSynth = 
-		// Synth("hrMixerSummer"++uniqueID, 
-		// 	[
-		// 		\outBus0, outBusses[0], 
-		// 		\outBus1, outBusses[1]
-		// 	],
-		// 	mixerGroup,
-		// 	\addToTail);
 	}
 
 	updateBusConnections
 	{
-		// summerSynth.set(\outBus0, outBusses[0], \outBus1, outBusses[1]);
 	}
 	
 	cleanUp
@@ -158,7 +136,7 @@ HrStereoMixer : HadronPlugin
 	}
 
 	mapModCtl { |param, ctlBus|
-		synthInstances[param.asString[5..].asInteger].tryPerform(
+		synthInstance[param.asString[5..].asInteger].tryPerform(
 			\map, \mul, ctlBus
 		)
 	}

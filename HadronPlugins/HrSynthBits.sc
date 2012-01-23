@@ -1,5 +1,4 @@
 HrPan : HadronPlugin {
-	var <synthInstance;
 	var monoButton, panSlider;
 
 	*initClass {
@@ -62,7 +61,6 @@ HrPan : HadronPlugin {
 
 
 HrFilter : HadronPlugin {
-	var <synthInstance;
 	var filtType, clipType, filtTypes, clipTypes, filtMenu, clipMenu;
 	var preAmpSlider, postAmpSlider, params;
 
@@ -103,6 +101,7 @@ HrFilter : HadronPlugin {
 		var paramNotInited = true ! 3;
 
 		filtTypes = [
+			// arrays are pairs: param name, spec name
 			['LPF': #[freq, freq]],
 			['HPF': #[freq, freq]],
 			['RLPF': #[freq, freq, rq, hadronrq]],
@@ -223,45 +222,6 @@ HrFilter : HadronPlugin {
 			};
 			Out.ar(outBus0, sig * postamp);
 		}).add;
-	}
-
-	// copied from HrCtlMod: generally useful
-	makeSynth { |newSynthDef(true)|
-		// it's a little bit dumb that I have to do this, but
-		// it's the only way to conditionally not execute something after try
-		var shouldPlay = true,
-		// and this: don't recall if forkIfNeeded exists in 3.4
-		doIt = {
-			if(newSynthDef) {
-				try {
-					this.makeSynthDef;
-				} { |err|
-					if(err.isKindOf(Exception)) {
-						shouldPlay = false;
-						err.reportError;
-						defer { parentApp.displayStatus(err.errorString, -1) };
-					};
-				};
-			};
-			if(shouldPlay) {
-				Server.default.sync;
-				if(synthInstance.notNil) {
-					synthInstance = Synth(this.class.name++uniqueID,
-						this.synthArgs,
-						target: synthInstance, addAction: \addReplace
-					);
-				} {
-					synthInstance = Synth(this.class.name++uniqueID,
-						this.synthArgs, target: group
-					);
-				};
-			};
-		};
-		if(thisThread.isKindOf(Routine)) {
-			doIt.value
-		} {
-			doIt.fork
-		}
 	}
 
 	mapModCtl { |paramName, ctlBus|
