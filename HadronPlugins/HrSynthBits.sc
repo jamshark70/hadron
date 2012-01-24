@@ -264,15 +264,19 @@ HrFilter : HadronPlugin {
 	cleanUp {}
 }
 
+
+
 HrOscil : HadronPlugin {
-	var oscilGuis, freqSl, ampSl;
+	var oscilGuis, freqSl, ampSl, noiseFreqSl, noiseAmpSl, noiseRqSl, noisePanSl;
 
 	*new { |argParentApp, argIdent, argUniqueID, argExtraArgs, argCanvasXY|
 
-		^super.new(argParentApp, "HrOscil", argIdent, argUniqueID, argExtraArgs, Rect(Window.screenBounds.width - 560.rand, Window.screenBounds.height - 310.rand, 560, 310), 0, 2, argCanvasXY).init
+		^super.new(argParentApp, "HrOscil", argIdent, argUniqueID, argExtraArgs, Rect(Window.screenBounds.width - 560.rand, Window.screenBounds.height - 375.rand, 560, 375), 0, 2, argCanvasXY).init
 	}
 
 	init {
+		var noiseComp;
+
 		if(Library.at('HrOscil', \sawbufs).isNil) {
 			Library.put('HrOscil', \sawbufs, Library.at('HrOscil', \makeWavetables).value(
 				8, Server.default, 2048
@@ -297,10 +301,32 @@ HrOscil : HadronPlugin {
 			out
 		});
 
-		freqSl = HrEZSlider(window, Rect(130, 254, 300, 20), "freq", \freq, { |view|
+		noiseComp = CompositeView(window, Rect(2, 254, 556, 68))
+		.background_(Color(0.8, 0.8, 1));
+		StaticText(noiseComp, Rect(2, 2, 552, 20))
+		.align_(\center).string_("Noise oscillator");
+		noiseFreqSl = HrEZSlider(noiseComp, Rect(2, 22, 270, 20),
+			"detune", #[-12, 12, \lin, 0, 0], { |view|
+				synthInstance.set(\noiseDetune, view.value);
+			}
+		);
+		noiseRqSl = HrEZSlider(noiseComp, Rect(286, 22, 270, 20), "rq", \hadronrq, { |view|
+			synthInstance.set(\noiseRq, view.value);
+		}, 1);
+		noiseAmpSl = HrEZSlider(noiseComp, Rect(2, 44, 270, 20),
+			// 20.ampdb = 26.02 dB
+			"amp", #[0, 80, \amp], { |view|
+				synthInstance.set(\noiseAmp, view.value);
+			}, 0
+		);
+		noisePanSl = HrEZSlider(noiseComp, Rect(286, 44, 270, 20), "pan", \bipolar, { |view|
+			synthInstance.set(\noisePan, view.value);
+		}, 0);
+
+		freqSl = HrEZSlider(window, Rect(130, 328, 300, 20), "freq", \freq, { |view|
 			synthInstance.set(\freq, view.value);
 		}, 440);
-		ampSl = HrEZSlider(window, Rect(130, 276, 300, 20), "amp", \amp, { |view|
+		ampSl = HrEZSlider(window, Rect(130, 350, 300, 20), "amp", \amp, { |view|
 			synthInstance.set(\amp, view.value);
 		}, 0.1);
 		
@@ -316,7 +342,11 @@ HrOscil : HadronPlugin {
 						]
 					}
 				}
-			}
+			},
+			{ noiseFreqSl.value },
+			{ noiseAmpSl.value },
+			{ noiseRqSl.value },
+			{ noisePanSl.value }
 		];
 
 		saveSets = [
@@ -341,28 +371,40 @@ HrOscil : HadronPlugin {
 					};
 				};
 				this.makeSynth;
-			}
+			},
+			{ |argg| noiseFreqSl.valueAction = argg },
+			{ |argg| noiseAmpSl.valueAction = argg },
+			{ |argg| noiseRqSl.valueAction = argg },
+			{ |argg| noisePanSl.valueAction = argg }			
 		];
 
 		modGets = (
-			freq: { ~freqSl.value },
-			amp: { ~ampSl.value }
+			freq: { freqSl.value },
+			amp: { ampSl.value }
 		);
 		modSets = (
-			freq: { |argg| defer { ~freqSl.valueAction = argg } },
-			amp: { |argg| defer { ~ampSl.valueAction = argg } }
+			freq: { |argg| defer { freqSl.valueAction = argg } },
+			amp: { |argg| defer { ampSl.valueAction = argg } },
+			noiseDetune: { |argg| defer { noiseFreqSl.valueAction = argg } },
+			noiseAmp: { |argg| defer { noiseAmpSl.valueAction = argg } },
+			noiseRq: { |argg| defer { noiseRqSl.valueAction = argg } },
+			noisePan: { |argg| defer { noisePanSl.valueAction = argg } }
 		);
 		modMapSets = (
-			freq: { |argg| defer { ~freqSl.value = argg } },
-			amp: { |argg| defer { ~ampSl.value = argg } }
+			freq: { |argg| defer { freqSl.value = argg } },
+			amp: { |argg| defer { ampSl.value = argg } },
+			noiseDetune: { |argg| defer { noiseFreqSl.value = argg } },
+			noiseAmp: { |argg| defer { noiseAmpSl.value = argg } },
+			noiseRq: { |argg| defer { noiseRqSl.value = argg } },
+			noisePan: { |argg| defer { noisePanSl.value = argg } }
 		);
 		2.do { |i|
 			#[\coarse, \fine, \amp, \pwidth, \pan].do { |key|
-				var modname = "o%_%".format(i, key),
+				var modname = "o%_%".format(i, key).asSymbol,
 				guiName = (key ++ "Sl").asSymbol;
-				modGets.put(key, { oscilGuis[i][guiName].value });
-				modSets.put(key, { |argg| defer { oscilGuis[i][guiName].valueAction = argg } });
-				modMapSets.put(key, { |argg| defer { oscilGuis[i][guiName].value = argg } });
+				modGets.put(modname, { oscilGuis[i][guiName].value });
+				modSets.put(modname, { |argg| defer { oscilGuis[i][guiName].valueAction = argg } });
+				modMapSets.put(modname, { |argg| defer { oscilGuis[i][guiName].value = argg } });
 			}
 		};
 
@@ -372,7 +414,11 @@ HrOscil : HadronPlugin {
 	updateBusConnections { synthInstance.set(\outBus0, outBusses[0]) }
 
 	synthArgs {
-		^[freq: freqSl.value, amp: ampSl.value, outBus0: outBusses[0]]
+		^[
+			freq: freqSl.value, amp: ampSl.value, outBus0: outBusses[0],
+			noiseDetune: noiseFreqSl.value, noiseAmp: noiseAmpSl.value,
+			noiseRq: noiseRqSl.value, noisePan: noisePanSl.value
+		]
 		++ oscilGuis.collect { |env, i|
 			[
 				[i, ["coarse", "fine", "amp", "pwidth", "pan", "wavebuf"]]
@@ -386,7 +432,6 @@ HrOscil : HadronPlugin {
 					{ \triangle } { Library.at('HrOscil', \tribufs)[0] }
 					// { \sine } { ... }
 				]
-			//noiseDetune: noiseDetune, noiseAmp: noiseAmp, noiseRq: noiseRq, noisePan: noisePan,
 			].flop
 		}.flat ++ this.getMapModArgs
 	}
@@ -395,7 +440,7 @@ HrOscil : HadronPlugin {
 		SynthDef("HrOscil" ++ uniqueID, { |freq = 440, amp = 0.1,
 			o0_coarse = 0, o0_fine = 0, o0_amp = 1, o0_wavebuf, o0_pwidth, o0_pan,
 			o1_coarse = 0, o1_fine = 0, o1_amp = 1, o1_wavebuf, o1_pwidth, o1_pan,
-			noiseDetune = 1, noiseAmp = 0, noiseRq = 1, noisePan,
+			noiseDetune = 0, noiseAmp = 0, noiseRq = 1, noisePan,
 			outBus0|
 
 			// assuming 8 buffers
@@ -419,7 +464,7 @@ HrOscil : HadronPlugin {
 			}).sum;
 			oscs = oscs + Pan2.ar(BPF.ar(
 				PinkNoise.ar(noiseAmp),
-				freq * noiseDetune, noiseRq
+				freq * noiseDetune.midiratio, noiseRq
 			), noisePan, amp);
 			Out.ar(outBus0, oscs);
 		}, (0.05 ! 19).putEach(#[5, 11, 18], nil)).add;
