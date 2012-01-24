@@ -1,0 +1,11 @@
+?Hadron 1
+?StartPlugs
+HrRangeMapunnamed793956017nilPoint( 100, 100 )Rect(866, 351, 410, 315)Rect(395.7956571579, 206.44832658768, 410, 315)false
+?EndPlugs
+?StartConnections
+793956017[ [ nil, nil ] ][ [ nil, nil ] ]
+?EndConnections
+?StartPlugParams
+793956017"[ HrControlSpec(0.0, 6.28, 'linear', 0.0, 0.0, \"\"), HrControlSpec(200.0, 800.0, 'exp', 0.0, 0.0, \"\") ]"1[ 0, 0 ]0
+?EndPlugParams
+?EndSave

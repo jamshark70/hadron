@@ -1,0 +1,23 @@
+?Hadron 1
+?StartPlugs
+HrCtlModunnamed1070779231nilPoint( 65, 57 )Rect(717, 479, 450, 240)Rect(765.38188123703, 74.545815467834, 450, 240)false
+HrRangeMapunnamed1311146384nilPoint( 170, 245 )Rect(944, 206, 410, 315)Rect(481.29515743256, 310.93431985378, 410, 315)false
+HrDACunnamed1815030289nilPoint( 197, 419 )Rect(624, 136, 250, 160)Rect(511.28878068924, 360.15045118332, 250, 160)false
+HrDIYSynthunnamed927264500nilPoint( 195, 322 )Rect(728, 206, 450, 440)Rect(233.96971511841, 128.80752182007, 450, 440)false
+HrDIYSynthunnamed899322597nilPoint( 287, 113 )Rect(1, 303, 450, 440)Rect(521, 85, 450, 440)true
+?EndPlugs
+?StartConnections
+1070779231[ [ nil, nil ] ][ [ nil, nil ] ]
+1311146384[ [ 899322597, 0 ] ][ [ nil, nil ] ]
+1815030289[ [ 927264500, 0 ], [ 927264500, 1 ] ][  ]
+927264500[ [ nil, nil ], [ nil, nil ] ][ [ 1815030289, 0 ], [ 1815030289, 1 ] ]
+899322597[ [ nil, nil ], [ nil, nil ] ][ [ 1311146384, 0 ], [ nil, nil ] ]
+?EndConnections
+?StartPlugParams
+1070779231"{ |sig| SinOsc.kr(0.5, 0, 0.5, 0.5) }"[ 2, 1 ]113.916799
+1311146384"[ HrControlSpec(0.0, 1.0, 'linear', 0.0, 0.0, \"\"), HrControlSpec(0.0, 0.2, 'linear', 0.0, 0.0, \"\") ]"0[ 3, 1 ]0.960103
+18150302891nil0
+927264500"{ SinOsc.ar(440, 0, 0.1) }"
+899322597"{ arg input; LFNoise1.ar(1) }"
+?EndPlugParams
+?EndSave

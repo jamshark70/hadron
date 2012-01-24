@@ -1,0 +1,20 @@
+?Hadron 1
+?StartPlugs
+HrCtlModunnamed1070779231nilPoint( 65, 57 )Rect(717, 479, 450, 240)Rect(765.38188123703, 74.545815467834, 450, 240)false
+HrRangeMapunnamed1311146384nilPoint( 100, 100 )Rect(944, 206, 410, 315)Rect(481.29515743256, 310.93431985378, 410, 315)false
+HrDACunnamed1815030289nilPoint( 193, 324 )Rect(830, 82, 250, 160)Rect(511.28878068924, 360.15045118332, 250, 160)false
+HrDIYSynthunnamed927264500nilPoint( 197, 254 )Rect(728, 206, 450, 440)Rect(233.96971511841, 128.80752182007, 450, 440)false
+?EndPlugs
+?StartConnections
+1070779231[ [ nil, nil ] ][ [ nil, nil ] ]
+1311146384[ [ nil, nil ] ][ [ nil, nil ] ]
+1815030289[ [ 927264500, 0 ], [ 927264500, 1 ] ][  ]
+927264500[ [ nil, nil ], [ nil, nil ] ][ [ 1815030289, 0 ], [ 1815030289, 1 ] ]
+?EndConnections
+?StartPlugParams
+1070779231"{ |sig| SinOsc.kr(0.5, 0, 0.5, 0.5) }"[ 2, 1 ]18.420800
+1311146384"[ HrControlSpec(0.0, 1.0, 'linear', 0.0, 0.0, \"\"), HrControlSpec(0.0, 1.0, 'linear', 0.0, 0.0, \"\") ]"0[ 3, 1 ]0.130865
+18150302891nil0
+927264500"{ SinOsc.ar(440, 0, 0.1) }"
+?EndPlugParams
+?EndSave

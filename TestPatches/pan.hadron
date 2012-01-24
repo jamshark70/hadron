@@ -1,0 +1,20 @@
+?Hadron 1
+?StartPlugs
+HrDIYSynthunnamed1112434361nilPoint( 100, 100 )Rect(852, 278, 450, 440)Rect(107.10450220108, 28.074504852295, 450, 440)false
+HrPanunnamed1342100436nilPoint( 98, 161 )Rect(741, 107, 350, 140)Rect(125.00775241852, 52.174939870834, 350, 140)false
+HrDACunnamed945340169nilPoint( 102, 228 )Rect(574, 89, 250, 160)Rect(573.38845539093, 113.69844913483, 250, 160)false
+HrCtlModunnamed1690826753nilPoint( 269, 43 )Rect(883, 29, 450, 240)Rect(881.8527545929, 36.424906730652, 450, 240)false
+?EndPlugs
+?StartConnections
+1112434361[ [ nil, nil ], [ nil, nil ] ][ [ 1342100436, 0 ], [ nil, nil ] ]
+1342100436[ [ 1112434361, 0 ], [ nil, nil ] ][ [ 945340169, 0 ], [ 945340169, 1 ] ]
+945340169[ [ 1342100436, 0 ], [ 1342100436, 1 ] ][  ]
+1690826753[ [ nil, nil ] ][ [ nil, nil ] ]
+?EndConnections
+?StartPlugParams
+1112434361"{  var trig = Dust.kr(5);  SinOsc.ar(TExpRand.kr(200, 800, trig)) * Decay2.kr(trig, 0.01, 0.05)}"
+134210043610.985545
+9453401690.312200nil0
+1690826753"{ |sig| SinOsc.kr(0.1) }"[ 2, 1 ]04
+?EndPlugParams
+?EndSave

@@ -1,0 +1,23 @@
+?Hadron 1
+?StartPlugs
+HrOscilunnamed794977131nilPoint( 109, 241 )Rect(805, 304, 560, 415)Rect(974, 456, 560, 415)false
+HrDACunnamed552728017nilPoint( 106, 385 )Rect(1, 559, 250, 160)Rect(741, 253, 250, 160)true
+HrFilterunnamed870128436nilPoint( 106, 307 )Rect(1, 459, 350, 260)Rect(54, 96, 350, 260)true
+HrCtlEnvunnamed2063427900nilPoint( 297, 110 )Rect(2, 328, 450, 390)Rect(454, 168, 450, 390)true
+HrMultiCtlModunnamed10952215nilPoint( 266, 46 )Rect(488, 130, 450, 375)Rect(73.577488422394, 97.464962363243, 450, 375)false
+?EndPlugs
+?StartConnections
+794977131[  ][ [ 870128436, 0 ], [ 870128436, 1 ] ]
+552728017[ [ 870128436, 0 ], [ 870128436, 1 ] ][  ]
+870128436[ [ 794977131, 0 ], [ 794977131, 1 ] ][ [ 552728017, 0 ], [ 552728017, 1 ] ]
+2063427900[ [ nil, nil ] ][ [ nil, nil ], [ nil, nil ] ]
+10952215[ [ nil, nil ] ][ [ nil, nil ], [ nil, nil ], [ nil, nil ], [ nil, nil ] ]
+?EndConnections
+?StartPlugParams
+7949771310.10000087.307053[ [ 0, 0, 1.0, 0.5, 0, 'sawtooth' ], [ 0, 9.2199921607971, 1, 0.5, 0, 'pulse' ] ]0010
+5527280170.666700nil0
+8701284362000[ 383.62930297852, 0.10232931102517, 0.0 ]
+2063427900"HrControlSpec(0.0, 0.1, 'linear', 0.0, 0.0, \"\")""Env([ 0.0, 1.0, 0.5, 0.0 ], [ 0.0076335877862595, 0.22900763358779, 0.76335877862595 ], [ -4.0, -4.0, -4.0 ])""0.2588574886322"[ 1, 1 ]1
+10952215"{ var trig; [ 	trig = TDuty.kr(Dseq([Drand(#[0.25, 0.375, 0.5], 1), Dseq(0.125, Dwhite(2, 7, inf))], inf)), 	Demand.kr(trig, 0, Dxrand([33, 34, 36, 38, 40, 41, 43, 45], inf).midicps), 	TExpRand.kr(300, 800, trig) * EnvGen.kr(Env([1, TRand.kr(2.2, 6.0, trig), 1], [0.01, TExpRand.kr(0.08, 0.17, trig)], \\exp), trig * (TRand.kr(0, 1, trig) < 0.2)), 	TExpRand.kr(0.125, 0.5, trig) ] }"[ [ 4, 1 ], [ 1, 2 ], [ 3, 1 ], [ 4, 2 ] ]14
+?EndPlugParams
+?EndSave

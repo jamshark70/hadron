@@ -1,0 +1,20 @@
+?Hadron 1
+?StartPlugs
+HrFilterunnamed1802942808nilPoint( 183, 295 )Rect(895, 160, 350, 260)Rect(892.76963424683, 253.41919565201, 350, 260)false
+HrCtlModunnamed1720569258nilPoint( 235, 89 )Rect(861, 479, 450, 240)Rect(213.66575574875, 220.78180789948, 450, 240)false
+HrWrapSynthunnamed470383513[ "analog" ]Point( 177, 254 )Rect(980, 29, 350, 330)Rect(400, 62, 350, 330)false
+HrDACunnamed613172039nilPoint( 173, 350 )Rect(554, 169, 250, 160)Rect(553.25747680664, 193.50530004501, 250, 160)false
+?EndPlugs
+?StartConnections
+1802942808[ [ 470383513, 0 ], [ 470383513, 1 ] ][ [ 613172039, 0 ], [ 613172039, 1 ] ]
+1720569258[ [ nil, nil ] ][ [ nil, nil ] ]
+470383513[  ][ [ 1802942808, 0 ], [ 1802942808, 1 ] ]
+613172039[ [ 1802942808, 0 ], [ 1802942808, 1 ] ][  ]
+?EndConnections
+?StartPlugParams
+18029428082319.008000-12.080000[ 388.44766235352, 0.12560300698831, 0.0 ]
+1720569258"{ |sig| SinOsc.kr(SinOsc.kr(0.2).exprange(0.1, 10)).exprange(200, 12000) }"[ 1, 5 ]18.236000
+4703835130.259300nilList[  ]0.529200nilList[  ]1.000000nilList[  ]0.768600nilList[  ]0.316200nilList[  ]1
+6131720390.116400nil0
+?EndPlugParams
+?EndSave
