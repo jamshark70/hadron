@@ -263,3 +263,242 @@ HrFilter : HadronPlugin {
 
 	cleanUp {}
 }
+
+HrOscil : HadronPlugin {
+	var oscilGuis, freqSl, ampSl;
+
+	*new { |argParentApp, argIdent, argUniqueID, argExtraArgs, argCanvasXY|
+
+		^super.new(argParentApp, "HrOscil", argIdent, argUniqueID, argExtraArgs, Rect(Window.screenBounds.width - 560.rand, Window.screenBounds.height - 310.rand, 560, 310), 0, 2, argCanvasXY).init
+	}
+
+	init {
+		if(Library.at('HrOscil', \sawbufs).isNil) {
+			Library.put('HrOscil', \sawbufs, Library.at('HrOscil', \makeWavetables).value(
+				8, Server.default, 2048
+			));
+			Library.put('HrOscil', \tribufs, Library.at('HrOscil', \makeWavetables).value(
+				8, Server.default, 2048, spectrumFunc: { |topPartial|
+					[(1, 3 .. topPartial).reciprocal.squared * #[1, -1], 0].lace(topPartial)
+				}
+			));
+		};
+
+		2.do { |i|
+			StaticText(window, Rect(2 + (280*i), 2, 270, 20))
+			.align_(\center).string_("Oscillator" + (i+1))
+			.background_(Color(0.8 + (0.2 * i), 1, 0.8));
+		};
+		oscilGuis = Array.fill(2, { |i|
+			var out;
+			out = Library.at('HrOscil', \makeOscilGui).value(window,
+				Rect(2 + (280*i), 22, 270, 226), this, i);
+			out[\comp].background_(Color(0.8 + (0.2 * i), 1, 0.8));
+			out
+		});
+
+		freqSl = HrEZSlider(window, Rect(130, 254, 300, 20), "freq", \freq, { |view|
+			synthInstance.set(\freq, view.value);
+		}, 440);
+		ampSl = HrEZSlider(window, Rect(130, 276, 300, 20), "amp", \amp, { |view|
+			synthInstance.set(\amp, view.value);
+		}, 0.1);
+		
+		saveGets = [
+			{ ampSl.value },
+			{ freqSl.value },
+			{
+				oscilGuis.collect { |env|
+					env.use {
+						[env[\coarseSl].value, env[\fineSl].value,
+							env[\ampSl].value, env[\pwidthSl].value,
+							env[\panSl].value, env[\waveType]
+						]
+					}
+				}
+			}
+		];
+
+		saveSets = [
+			{ |argg| ampSl.valueAction_(argg) },
+			{ |argg| freqSl.valueAction_(argg) },
+			{ |argg|
+				argg.do { |list, i|
+					[#[\coarseSl, \fineSl, \ampSl, \pwidthSl, \panSl, \waveType],
+						list]
+					.flop.do { |row|
+						var key, val;
+						#key, val = row;
+						if(key == \waveType) {
+							oscilGuis[i].use {
+								~waveType = val;
+								~typeMenu.value = ~waveTypeNumbers[val];
+								~pwidthSl.visible = (~waveType == \pulse);
+							}
+						} {
+							oscilGuis[i][key].value = val;
+						};
+					};
+				};
+				this.makeSynth;
+			}
+		];
+
+		modGets = (
+			freq: { ~freqSl.value },
+			amp: { ~ampSl.value }
+		);
+		modSets = (
+			freq: { |argg| defer { ~freqSl.valueAction = argg } },
+			amp: { |argg| defer { ~ampSl.valueAction = argg } }
+		);
+		modMapSets = (
+			freq: { |argg| defer { ~freqSl.value = argg } },
+			amp: { |argg| defer { ~ampSl.value = argg } }
+		);
+		2.do { |i|
+			#[\coarse, \fine, \amp, \pwidth, \pan].do { |key|
+				var modname = "o%_%".format(i, key),
+				guiName = (key ++ "Sl").asSymbol;
+				modGets.put(key, { oscilGuis[i][guiName].value });
+				modSets.put(key, { |argg| defer { oscilGuis[i][guiName].valueAction = argg } });
+				modMapSets.put(key, { |argg| defer { oscilGuis[i][guiName].value = argg } });
+			}
+		};
+
+		this.makeSynth;
+	}
+
+	updateBusConnections { synthInstance.set(\outBus0, outBusses[0]) }
+
+	synthArgs {
+		^[freq: freqSl.value, amp: ampSl.value, outBus0: outBusses[0]]
+		++ oscilGuis.collect { |env, i|
+			[
+				[i, ["coarse", "fine", "amp", "pwidth", "pan", "wavebuf"]]
+				.flop.collect({ |row| "o%_%".format(*row).asSymbol }),
+				[
+					env[\coarseSl].value, env[\fineSl].value,
+					env[\ampSl].value, env[\pwidthSl].value, env[\panSl].value,
+					switch(env[\waveType])
+					{ \sawtooth } { Library.at('HrOscil', \sawbufs)[0] }
+					{ \pulse } { Library.at('HrOscil', \sawbufs)[0] }
+					{ \triangle } { Library.at('HrOscil', \tribufs)[0] }
+					// { \sine } { ... }
+				]
+			//noiseDetune: noiseDetune, noiseAmp: noiseAmp, noiseRq: noiseRq, noisePan: noisePan,
+			].flop
+		}.flat ++ this.getMapModArgs
+	}
+
+	makeSynthDef {
+		SynthDef("HrOscil" ++ uniqueID, { |freq = 440, amp = 0.1,
+			o0_coarse = 0, o0_fine = 0, o0_amp = 1, o0_wavebuf, o0_pwidth, o0_pan,
+			o1_coarse = 0, o1_fine = 0, o1_amp = 1, o1_wavebuf, o1_pwidth, o1_pan,
+			noiseDetune = 1, noiseAmp = 0, noiseRq = 1, noisePan,
+			outBus0|
+
+			// assuming 8 buffers
+			var basefreq = 48.midicps,
+			topfreq = basefreq * (2 ** 7),
+			baselog = log2(basefreq),
+			freqmap = ((log2(freq) - baselog) / (log2(topfreq) - baselog) * 7)
+				.clip(0, 6.999);
+			
+			var oscs = [
+				[o0_coarse, o0_fine, o0_amp, o0_wavebuf, o0_pwidth, o0_pan],
+				[o1_coarse, o1_fine, o1_amp, o1_wavebuf, o1_pwidth, o1_pan]
+			].collect({ |params, i|
+				var localFreq, osc;
+				localFreq = freq * midiratio(params[0] + (0.01 * params[1]));
+				osc = VOsc.ar(params[3] + freqmap, localFreq, 0, params[2]);
+				if(oscilGuis[i][\waveType] == \pulse) {
+					osc = osc - DelayL.ar(osc, 0.08, params[4] / freq);
+				};
+				Pan2.ar(osc, params[5], amp)
+			}).sum;
+			oscs = oscs + Pan2.ar(BPF.ar(
+				PinkNoise.ar(noiseAmp),
+				freq * noiseDetune, noiseRq
+			), noisePan, amp);
+			Out.ar(outBus0, oscs);
+		}, (0.05 ! 19).putEach(#[5, 11, 18], nil)).add;
+	}
+
+	cleanUp {}
+
+	*initClass {
+		this.addHadronPlugin;
+		StartUp.add {
+			// need some shared resources but don't want too many classvars
+			Library.put('HrOscil', \makeWavetables, { |numbufs, server, numFrames, lowMidi, spectrumFunc|
+				numbufs = numbufs ? 8;
+				server = server ? Server.default;
+				numFrames = numFrames ? 2048;
+				// default is sawtooth
+				spectrumFunc = spectrumFunc ? { |numharm| (1..numharm).reciprocal };
+				lowMidi = (lowMidi ? 48) / 12;
+				
+				Buffer.allocConsecutive(numbufs, server, numFrames, 1, { |buf, i|
+					var	base = (i + lowMidi) * 12,
+					numharm = (20000 / base.midicps).asInteger;
+					buf.sine1Msg(spectrumFunc.(numharm));
+				});
+			});
+
+			// common across all copies -- make once and share
+			Library.put('HrOscil', \oscilGuiParent, Environment.make({
+				~waveTypes = #[sawtooth, pulse, triangle/*, sine*/];
+				~waveTypeNumbers = IdentityDictionary.new;
+				~waveTypes.do { |type, i| ~waveTypeNumbers[type] = i };
+			}));
+
+			Library.put('HrOscil', \makeOscilGui, { |parent, bounds, inst, i = 0|
+				var env = Environment(parent: Library.at('HrOscil', \oscilGuiParent))
+				.make({
+					~comp = CompositeView(parent, bounds);
+					~waveType = \sawtooth;
+					~typeMenu = PopUpMenu(~comp, Rect(2, 2, bounds.width - 4, 20))
+					.items_(~waveTypes)
+					.action_({ |view|
+						env[\waveType] = env[\waveTypes][view.value];
+						env[\pwidthSl].visible = (env[\waveType] == \pulse);
+						inst.makeSynth;
+					});
+
+					~coarseSym = "o%_coarse".format(i).asSymbol;
+					~fineSym = "o%_fine".format(i).asSymbol;
+					~ampSym = "o%_amp".format(i).asSymbol;
+					~panSym = "o%_pan".format(i).asSymbol;
+					~pwidthSym = "o%_pwidth".format(i).asSymbol;
+					~coarseSl = HrEZSlider(~comp, Rect(2, 24, 50, 200),
+						"coarse", #[-12, 12, \lin, 1, 0], { |view|
+							inst.synthInstance.set(env[\coarseSym], view.value);
+						}, layout: \vert
+					);
+					~fineSl = HrEZSlider(~comp, Rect(54, 24, 50, 200),
+						"fine", #[-100, 100, \lin, 0, 0], { |view|
+							inst.synthInstance.set(env[\fineSym], view.value);
+						}, layout: \vert
+					);
+					~ampSl = HrEZSlider(~comp, Rect(106, 24, 50, 200),
+						"amp", #[0, 1, \amp, 0, 1], { |view|
+							inst.synthInstance.set(env[\ampSym], view.value);
+						}, layout: \vert
+					);
+					~panSl = HrEZSlider(~comp, Rect(158, 24, 50, 200),
+						"pan", \bipolar, { |view|
+							inst.synthInstance.set(env[\panSym], view.value);
+						}, layout: \vert
+					);
+					~pwidthSl = HrEZSlider(~comp, Rect(210, 24, 50, 200),
+						"width", #[0, 1, \lin, 0, 0.5], { |view|
+							inst.synthInstance.set(env[\pwidthSym], view.value);
+						}, layout: \vert
+					).visible_(false);
+				}).know_(true);
+				env
+			});
+		}
+	}
+}
