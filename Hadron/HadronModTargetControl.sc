@@ -57,7 +57,7 @@ HadronModTargetControl
 				};
 				false  // reject this modSet if the func is not valid
 			}
-		}).keys.asArray;
+		}).keys.asArray.sort;
 		this.changed(\paramNames, paramNames);
 	}
 
