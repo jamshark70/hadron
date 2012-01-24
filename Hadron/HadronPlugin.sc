@@ -440,7 +440,7 @@ HadronPlugin
 			oldSize = mainOutBusses.size;
 			mainOutBusses = mainOutBusses.extend(outConnections.size);
 			(oldSize .. outConnections.size-1).do { |i|
-				mainOutBusses[i] = [nil, nil];
+				mainOutBusses[i] = parentApp.blackholeBus;
 			};
 		};
 		outConnections.do
