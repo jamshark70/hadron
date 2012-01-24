@@ -118,16 +118,70 @@ HrRangeMap : HadronPlugin {
 				{ |argg| modSlider.value = argg }
 			];
 
-		modSets.put(\modValue, { |val|
-			synthInstance.set(\modValue, val);
-			defer { if(inMod == 0) { modSlider.value = val } };
-		});
+		modSets.putAll((
+			modValue: { |val|
+				synthInstance.set(\modValue, val);
+				defer { if(inMod == 0) { modSlider.value = val } };
+			},
+			inminval: { |val|
+				synthInstance.set(\inminval, val);
+				defer { modSlider.value = val };
+			},
+			inmaxval: { |val|
+				synthInstance.set(\inmaxval, val);
+				defer { modSlider.value = val };
+			},
+			instep: { |val|
+				synthInstance.set(\instep, val);
+				defer { modSlider.value = val };
+			},
+			outminval: { |val|
+				synthInstance.set(\outminval, val);
+				defer { modSlider.value = val };
+			},
+			outmaxval: { |val|
+				synthInstance.set(\outmaxval, val);
+				defer { modSlider.value = val };
+			},
+			outstep: { |val|
+				synthInstance.set(\outstep, val);
+				defer { modSlider.value = val };
+			}
+		));
 
-		modMapSets.put(\modValue, { |val|
-			defer { if(inMod == 0) { modSlider.value = val } };
-		});
+		modMapSets.putAll((
+			modValue: { |val|
+				defer { if(inMod == 0) { modSlider.value = val } };
+			},
+			inminval: { |val|
+				defer { modSlider.value = val };
+			},
+			inmaxval: { |val|
+				defer { modSlider.value = val };
+			},
+			instep: { |val|
+				defer { modSlider.value = val };
+			},
+			outminval: { |val|
+				defer { modSlider.value = val };
+			},
+			outmaxval: { |val|
+				defer { modSlider.value = val };
+			},
+			outstep: { |val|
+				defer { modSlider.value = val };
+			}
+		));
 
-		modGets.put(\modValue, { modSlider.value });
+		modGets.putAll((
+			modValue: { modSlider.value },
+			inminval: { modSlider.value },
+			inmaxval: { modSlider.value },
+			instep: { modSlider.value },
+			outminval: { modSlider.value },
+			outmaxval: { modSlider.value },
+			outstep: { modSlider.value }
+		));
 	}
 
 	synthArgs {
