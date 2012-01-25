@@ -246,7 +246,9 @@ Hadron
 				AppClock.sched(0.05, r {
 					statusView.background_(Color(1, 0.2, 0.2));
 					4.wait;
-					statusView.background_(Color.gray(0.8));
+					if(statusView.notClosed) {
+						statusView.background_(Color.gray(0.8));
+					};
 				});
 			},
 			0,
@@ -258,7 +260,9 @@ Hadron
 				AppClock.sched(0.05, r {
 					statusView.background_(Color(0.2, 1, 0.2));
 					4.wait;
-					statusView.background_(Color.gray(0.8));
+					if(statusView.notClosed) {
+						statusView.background_(Color.gray(0.8));
+					};
 				});
 			}
 		);
