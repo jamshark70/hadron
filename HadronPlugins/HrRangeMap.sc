@@ -110,12 +110,24 @@ HrRangeMap : HadronPlugin {
 					inMod = argg;
 					inModButton.value = inMod;
 					modSlider.visible = (inMod == 0);
+					synthInstance.set(\useAudioIn, inMod);
 				},
 				{ |argg|
 					modControl.putSaveValues(argg);
-					isMapped = modControl.map(prOutBus);
+					if(inMod == 0) {
+						isMapped = modControl.map(prOutBus)
+					} {
+						isMapped = false;
+					};
 				},
-				{ |argg| modSlider.value = argg }
+				{ |argg|
+					modSlider.value = argg;
+					if(isMapped.not) {
+						synthInstance.set(\modValue, argg)
+					} {
+						prOutBus.set(argg)
+					};
+				}
 			];
 
 		modSets.putAll((
