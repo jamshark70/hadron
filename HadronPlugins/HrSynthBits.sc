@@ -162,7 +162,7 @@ HrFilter : HadronPlugin {
 		saveSets = [
 			{ |argg|
 				filtType = argg;
-				defer { filtMenu.value = argg };
+				defer { filtMenu.value = argg; fixParamViews.value };
 				this.makeSynth;
 			},
 			{ |argg|
