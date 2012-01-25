@@ -29,10 +29,11 @@ HadronCanvasItem
 			Rect
 			(
 				argX, argY,
+				// this width is an estimate, will fix in a routine later
 				max
 				(
 					max(100, (numMaxPorts * 10) + 10),
-					((this.class.asString.size + parentPlugin.extraArgs.asString.size) * 6) + 10
+					(this.string.size * 6) + 10
 				),
 			20)
 		)
@@ -41,15 +42,8 @@ HadronCanvasItem
 		.drawFunc_
 		({|view|
 
-			var tempString;
-
 			Pen.font = Font("Helvetica", 10);
-			tempString = parentPlugin.class.asString;
-			if(parentPlugin.ident != "unnamed") {
-				tempString = tempString ++ ":" ++ parentPlugin.ident;
-			};
-			if(parentPlugin.extraArgs.notNil, { tempString = tempString + parentPlugin.extraArgs.asString; });
-			Pen.stringAtPoint(tempString, 5@3);
+			Pen.stringAtPoint(this.string, 5@3);
 			inPortBlobs.do
 			({|blob|
 
@@ -167,7 +161,7 @@ HadronCanvasItem
 			parentPlugin.parentApp.isDirty = true;
 			parentCanvas.handleKeys(view, char, modifiers, unicode, keycode);
 		});
-		this.setBlobs;
+		this.setBlobs.resize;
 	}
 
 	moveBlob
@@ -246,5 +240,43 @@ HadronCanvasItem
 			Rect(5 + (count*10), 17, 5, 3);
 		});
 		{ objView.refresh }.defer;
+	}
+
+	string {
+		var result;
+		result = parentPlugin.class.asString;
+		if(parentPlugin.ident != "unnamed") {
+			result = result ++ ":" ++ parentPlugin.ident;
+		};
+		if(parentPlugin.extraArgs.notNil, { result = result + parentPlugin.extraArgs.asString; });
+		^result
+	}
+
+	extent {
+		^Point
+	}
+
+	resize {
+		var doIt = {
+			objView.bounds = objView.bounds.resizeTo(
+				max(
+					max(
+						100,
+						(max(parentPlugin.inBusses.size, parentPlugin.outBusses.size) * 10) + 10
+					),
+					GUI.stringBounds(this.string, Font("Helvetica", 10)).width + 10
+				),
+				20
+			);
+			if(GUI.id == \swing) { objView.refresh };
+		};
+		// this MUST be forked for SwingOSC:
+		// GUI.stringBounds is asynchronous
+		// (forkIfNeeded doesn't check the clock in 3.4 so I have to rewrite)
+		if(thisThread.isKindOf(Routine) and: { thisThread.clock === AppClock }) {
+			doIt.value
+		} {
+			doIt.fork(AppClock);
+		};
 	}
 }

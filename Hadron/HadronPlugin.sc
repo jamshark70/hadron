@@ -622,6 +622,7 @@ HadronPlugin
 				if(plug !== this) { plug.notifyIdentChanged(this, ident) };
 			};
 		}.defer;
+		boundCanvasItem.resize;  // will defer/fork itself
 	}
 
 	// one plugin might use another plugin's 'ident' in a gui
