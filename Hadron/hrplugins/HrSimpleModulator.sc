@@ -10,7 +10,7 @@ HrSimpleModulator : HadronPlugin
 		var numOuts = this.numOuts(argExtraArgs);
 		var height = this.height(argExtraArgs);
 		var bounds = Rect((Window.screenBounds.width - 450).rand, (Window.screenBounds.height - height).rand, 450, height);
-		var name = this.name;
+		var name = this.name.asString;
 		^super.new(argParentApp, name, argIdent, argUniqueID, argExtraArgs, bounds, numIns, numOuts, argCanvasXY).init;
 	}
 	*height { ^115 }
