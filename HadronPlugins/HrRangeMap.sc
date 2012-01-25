@@ -213,7 +213,7 @@ HrRangeMap : HadronPlugin {
 			useAudioIn = 0|
 			var input = A2K.kr(InFeedback.ar(inBus0)),
 			localSpec;
-			input = XFade2.kr(modValue, input, Lag.kr(useAudioIn.clip(0, 1), 0.05).madd(2, -1));
+			input = (input - modValue) * Lag.kr(useAudioIn.clip(0, 1), 0.05) + modValue;
 			localSpec = inSpec.copy
 			.minval_(inminval)  // replace hardcoded endpoints with control inputs
 			.maxval_(inmaxval)
