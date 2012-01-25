@@ -9,6 +9,7 @@ HadronPlugin
 	var <synthInstance;
 
 	var badValueSynth, badValueResp;
+	var identView;
 
 	classvar <>plugins; //holder for external plugins
 
@@ -194,7 +195,7 @@ HadronPlugin
 				90, oldWinBounds.height - 30,
 				50, 20
 			)).string_("name");
-			TextField(outerWindow, Rect(
+			identView = TextField(outerWindow, Rect(
 				150, oldWinBounds.height - 30,
 				oldWinBounds.width - 320, 20
 			)).string_(ident)
@@ -206,7 +207,7 @@ HadronPlugin
 				10, oldWinBounds.height - 60,
 				50, 20
 			)).string_("name");
-			TextField(outerWindow, Rect(
+			identView = TextField(outerWindow, Rect(
 				70, oldWinBounds.height - 60,
 				oldWinBounds.width - 80, 20
 			)).string_(ident)
@@ -616,6 +617,7 @@ HadronPlugin
 		ident = string;
 		{
 			outerWindow.name = name + ident;
+			identView.string = string;
 			parentApp.alivePlugs.do { |plug|
 				if(plug !== this) { plug.notifyIdentChanged(this, ident) };
 			};
