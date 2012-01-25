@@ -99,6 +99,10 @@ HadronPlugin
 		uniqueID = argUniqueID ? parentApp.prGiveUniqueId(this);
 		isHidden = false;
 		//argCanvasXY.class.postln;
+
+		// name and ident should be set before drawing canvas item
+		name = argName;
+		ident = argIdent; //ident is to identify an instance when there is more than one instance.
 		boundCanvasItem = HadronCanvasItem(parentApp.canvasObj, this, argCanvasXY.x, argCanvasXY.y);
 
 		if(this.shouldCheckBad) {
@@ -117,9 +121,6 @@ HadronPlugin
 				).add;
 			};
 		};
-
-		name = argName;
-		ident = argIdent; //ident is to identify an instance when there is more than one instance.
 
 		conWindow = Window.new.close; //hacky but it should respond to .isClosed true by default...
 
