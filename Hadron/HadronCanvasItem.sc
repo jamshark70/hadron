@@ -252,10 +252,6 @@ HadronCanvasItem
 		^result
 	}
 
-	extent {
-		^Point
-	}
-
 	resize {
 		var doIt = {
 			objView.bounds = objView.bounds.resizeTo(
