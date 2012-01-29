@@ -1,7 +1,7 @@
 HadronPlugin
 {
 	var <inBusses, <mainOutBusses, <outBusses, <group, <uniqueID, <parentApp,
-	<outerWindow, window, <>oldWinBounds, <>isHidden, <name, <ident,
+	<outerWindow, window, <>oldWinBounds, <isHidden, <name, <ident,
 	<>inConnections, <>outConnections, <dummyInBusses, <conWindow,
 	<>saveGets, <>saveSets, <extraArgs, <boundCanvasItem, <helpString,
 	<modSets, <modGets, <modMapSets, <mappedMods;
@@ -624,6 +624,11 @@ HadronPlugin
 			};
 		}.defer;
 		boundCanvasItem.resize;  // will defer/fork itself
+	}
+
+	isHidden_ { |bool(false)|
+		isHidden = bool;
+		if(bool) { this.prHideWindow } { this.showWindow };
 	}
 
 	// one plugin might use another plugin's 'ident' in a gui

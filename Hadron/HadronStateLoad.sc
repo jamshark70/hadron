@@ -53,14 +53,15 @@ HadronStateLoad
 				item = item.split(31.asAscii);
 				parentApp.prAddPlugin(item[0].interpret, item[1], item[2].asInteger, item[3].interpret, item[4].interpret);
 				
+				0.01.wait;
 				parentApp.idPlugDict.at(item[2].asInteger)
 					.outerWindow.bounds = item[5].interpret;
 				
 				parentApp.idPlugDict.at(item[2].asInteger)
 					.oldWinBounds = item[6].interpret;
 				
+				0.01.wait;
 				parentApp.idPlugDict.at(item[2].asInteger).isHidden = item[7].interpret;
-				
 			});
 			
 			if(loadStage == 4,
