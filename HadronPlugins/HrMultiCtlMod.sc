@@ -1,5 +1,5 @@
 HrMultiCtlMod : HrCtlMod {
-	var modCtlsScroll;
+	var modCtlsScroll, inChannels;
 	var loadSemaphore;
 
 	*initClass
@@ -26,6 +26,7 @@ HrMultiCtlMod : HrCtlMod {
 		StaticText(window, Rect(10, 20, 150, 20)).string_("Modulation function");
 
 		numChannels = 0; // will change when synth is made
+		inChannels = 0;
 		isMapped = [];
 		modControl = [];
 
@@ -149,27 +150,62 @@ HrMultiCtlMod : HrCtlMod {
 	// change here: we're not checking numchannels
 	// now, numchannels of the func determines number of modtargets
 	makeSynthDef {
-		var numch;
+		var outch, inch;
+		inch = max(1, postOpFunc.def.argNames.size);
 		replyID = UniqueID.next;
 		SynthDef("HrMultiCtlMod"++uniqueID, { |prOutBus, inBus0, outBus0, pollRate = 0|
-			var input = A2K.kr(InFeedback.ar(inBus0));
-			input = postOpFunc.value(input).asArray;
+			var input = A2K.kr(InFeedback.ar(inBus0, inch)).asArray;
+			input = postOpFunc.valueArray(input).asArray;
 			if(input.any { |unit| unit.rate != \control }) {
 				// throw prevents the synthdef from being replaced
 				Exception("HrMultiCtlMod: all channels must be control rate").throw;
 			};
-			numch = input.size;
+			outch = input.size;
 			SendReply.kr(Impulse.kr(pollRate), '/modValue', input, replyID);
 			Out.kr(prOutBus, input);
 			Out.ar(outBus0, K2A.ar(input));
 		}).add;
-		this.rebuildBus(numch).rebuildTargets(numch);
-		numChannels = numch;
+		this.rebuildBus(outch, inch).rebuildTargets(outch);
+		numChannels = outch;
 		isMapped = isMapped.extend(numChannels, false);
 	}
 
-	rebuildBus { |newChannels|
-		var oldKrBus, oldArBus, endWatcher, tempBusIndex;
+	rebuildBus { |newChannels, newInChan|
+		var oldKrBus, oldArBus, oldInBus, endWatcher, tempBusIndex, didChange = false;
+
+		if(newInChan != inChannels) {
+			oldInBus = inBusses[0];
+			tempBusIndex = Server.default.audioBusAllocator.alloc(newInChan);
+			inBusses = Array.fill(newInChan, { |i|
+				Bus(\audio, tempBusIndex + i, 1, Server.default);
+			});
+			if(newInChan > inConnections.size) {
+				inConnections = inConnections.grow(newInChan - inConnections.size);
+				(newInChan - inConnections.size).do {
+					inConnections.add([nil, nil]);
+				};
+			};
+			if(newInChan > inChannels) {
+				// make sure there are enough blobs, but don't take away yet
+				boundCanvasItem.setBlobs(newInChan);
+			};
+			inConnections.copy.do { |conn, i|
+				if(conn[0].notNil) {
+					if(i < newInChan) {
+						conn[0].setOutBus(this, i, conn[1])
+					} {
+						conn[0].setOutBus(nil, nil, conn[1])
+					};
+				};
+			};
+			if(newInChan < inChannels) {
+				// *now* take away
+				boundCanvasItem.setBlobs(newInChan);
+			};
+			inChannels = newInChan;
+			didChange = true;
+		};
+
 		if(newChannels != numChannels) {
 			oldKrBus = prOutBus;
 			oldArBus = outBusses[0];
@@ -204,17 +240,23 @@ HrMultiCtlMod : HrCtlMod {
 				this.setOutBus(outConnections[i][0], outConnections[i][1], i);
 			};
 			outBusses = outBusses.keep(newChannels);
+			didChange = true;
+		};
+		if(didChange) {
 			if(synthInstance.notNil) {
 				synthInstance.register;
 				endWatcher = SimpleController(synthInstance).put(\n_end, {
 					endWatcher.remove;
+					// if any of these didn't change, the "old*" vars will be nil
 					oldKrBus.free;
 					oldArBus.free;
+					oldInBus.free;
 				});
 			} {
 				oldKrBus.free;
 				oldArBus.free;
-			}
+				oldInBus.free;
+			};
 		};
 	}
 
