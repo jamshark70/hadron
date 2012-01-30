@@ -1,5 +1,6 @@
 HrKlangEditor : SCViewHolder {
 	var <value, <>action, ampView, ampText, waveView, waveformButtons, numPartialSlider;
+	var <>slowAction = true;
 	var lastWaveDrawTime = 0, <>waveDrawInterval = 0.1;
 
 	*new { |parent, bounds, numPartials = 10|
@@ -27,7 +28,7 @@ HrKlangEditor : SCViewHolder {
 		.valueThumbSize_(20)
 		.action_({ |view|
 			this.value = view.value * 2 - 1;
-			this.doAction;
+			if(slowAction.not) { this.doAction };
 		});
 
 		ampText = TextField(parent, Rect(0, bounds.height - 70, width, 20))
@@ -35,8 +36,9 @@ HrKlangEditor : SCViewHolder {
 
 		numPartialSlider = EZSlider(parent, Rect(0, bounds.height - 45, width, 20), "num partials", [4, 45, \lin, 1, 10], { |view| this.numPartials = view.value }, numPartials);
 
-		width = bounds.width - 30 / 3;
+		width = bounds.width - 40 / 4;
 		waveformButtons = [
+			[sine: { |topPartial = 20| (0 ! topPartial).put(0, 1) }],
 			[sawtooth: { |topPartial = 20| (1..topPartial).reciprocal }],
 			[square: { |topPartial = 20| [(1, 3 .. topPartial).reciprocal, 0].lace(topPartial) }],
 			[triangle: { |topPartial = 20| [(1, 3 .. topPartial).reciprocal.squared * #[1, -1], 0].lace(topPartial) }]
@@ -94,6 +96,7 @@ HrKlangEditor : SCViewHolder {
 			var signal = Signal.sineFill((view.bounds.width / 4).nextPowerOfTwo, array);
 			waveView.value = signal.collectAs({ |y| y * 0.5 + 0.5 }, Array);
 			lastWaveDrawTime = AppClock.beats;
+			if(slowAction) { this.doAction };
 		};
 		if(AppClock.beats - lastWaveDrawTime < waveDrawInterval) {
 			// if !=, then the value has changed since this request was scheduled
