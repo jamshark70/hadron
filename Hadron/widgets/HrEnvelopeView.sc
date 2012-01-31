@@ -191,7 +191,7 @@ HrEnvelopeView : SCViewHolder {
 
 	curves_ { |newCurves|
 		// really this should be 'size - 1' but there's a bug in qt
-		if(newCurves.isNumber) {
+		if(newCurves.isArray.not) {
 			curves = newCurves.dup(viewCoords[0].size);
 		} {
 			curves = newCurves.extend(viewCoords[0].size, 0);
