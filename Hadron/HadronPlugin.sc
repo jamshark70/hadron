@@ -730,9 +730,28 @@ HadronPlugin
 
 	releaseSynth {
 		if(synthInstance.notNil) {
-			synthInstance.free;
+			if(this.hasGate) { synthInstance.release }
+			{ synthInstance.free };
 			synthInstance = nil;
 		};
 	}
 
+	hasGate { ^false }
+	polySupport { ^false }
+
+	// you should 'try' this method -- the error is really just an exception
+	polyMode_ { |bool(false)|
+		if(bool) {
+			if(this.polySupport) {
+				this.releaseSynth;
+			} {
+				Error(
+					"Plugin %% does not support polyphonic use".format(
+						name, if(ident != "unnamed") { ":" ++ ident } { "" })
+				).throw
+			}
+		} {
+			if(synthInstance.isNil) { this.makeSynth }
+		};
+	}
 }
