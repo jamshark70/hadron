@@ -36,7 +36,12 @@ HrCtlEnv : HrCtlMod {
 		helpString = "Envelope editor, to map to a modulatable control.";
 
 		// wrongly named vars, to avoid tacking new vars onto a bunch of unused ones
-		postOpText = HrEnvelopeView(window, Rect(10, 10, 430, 200))
+		// postOpText = HrEnvelopeView(window, Rect(10, 10, 430, 200))
+		postOpText = HrEnvelopeNodeEditor(window,
+			envBounds: Rect(10, 10, 430, 200),
+			loopBounds: Rect(190, 220, 110, 20),
+			releaseBounds: Rect(310, 220, 110, 20)
+		)
 		.env_(Env.adsr)
 		.action_({ |view|
 			// release and loop nodes didn't change here
@@ -51,10 +56,6 @@ HrCtlEnv : HrCtlMod {
 			};
 		})
 		.insertAction_({ |view|
-			loopNode.items = ["None"] ++ Array.fill(view.curves.size - 1, _.asString);
-			releaseNode.items = loopNode.items;
-			loopNode.value = (view.loopNode ? -1) + 1;
-			releaseNode.value = (view.releaseNode ? -1) + 1;
 			if(synthInstance.notNil) {
 				// release and loop nodes are not modulatable in the same synth
 				// so we have to kill and restart the synth
@@ -63,6 +64,7 @@ HrCtlEnv : HrCtlMod {
 			};
 		});
 		postOpText.deleteAction = postOpText.insertAction;
+		postOpText.nodeAction = postOpText.insertAction;
 
 		evalButton = Button(window, Rect(10, 220 - adjustY, 80, 20)).states_([["Trigger"]])
 		.action_({
@@ -92,32 +94,6 @@ HrCtlEnv : HrCtlMod {
 		} {
 			adjustY = 25;
 		};
-
-		StaticText(window, Rect(190, 220, 35, 20)).string_("loop");
-		loopNode = PopUpMenu(window, Rect(235, 220, 65, 20))
-		.items_(["None", "0", "1", "2"])
-		.action_({ |view|
-			if(view.value == 0) {
-				postOpText.loopNode = nil
-			} {
-				postOpText.loopNode = view.value - 1;
-			};
-			postOpText.updateEnvView;
-			this.makeSynth(false);
-		});
-		StaticText(window, Rect(310, 220, 35, 20)).string_("rel");
-		releaseNode = PopUpMenu(window, Rect(345, 220, 65, 20))
-		.items_(loopNode.items)
-		.value_(3)  // per Env.adsr, default node is 2 or item index 3
-		.action_({ |view|
-			if(view.value == 0) {
-				postOpText.releaseNode = nil
-			} {
-				postOpText.releaseNode = view.value - 1;
-			};
-			postOpText.updateEnvView;
-			this.makeSynth(false);
-		});
 
 		spec = HrControlSpec.new;
 
@@ -173,17 +149,9 @@ HrCtlEnv : HrCtlMod {
 				{|argg|
 					spec = argg.interpret;
 					specView.value = spec;
-					// specMin.value = spec.minval;
-					// specMax.value = spec.maxval;
-					// specWarp.string = spec.warp.asSpecifier.asString;
-					// specStep.value = spec.step;
 				},
 				{|argg|
 					var env = argg.interpret;
-					loopNode.items = ["None"] ++ Array.fill(env.curves.size, _.asString);
-					releaseNode.items = loopNode.items;
-					loopNode.value = (env.loopNode ? -1) + 1;
-					releaseNode.value = (env.releaseNode ? -1) + 1;
 					postOpText.env = env;
 					this.makeSynth(false);
 				},
@@ -254,10 +222,6 @@ HrCtlEnv : HrCtlMod {
 			Out.ar(outBus0, [K2A.ar(eg), audioTrig + K2A.ar(t_trig)]);
 		}).add;
 	}
-
-	// cleanUp {
-	// 	super.cleanUp;
-	// }
 }
 
 HrAudioEnv : HrCtlEnv {
