@@ -1,6 +1,6 @@
 HrFMOscil : HadronPlugin {
 	var wavetables, waveformBts, waveAmps, waveEditors;
-	var freqSl, detuneSl, keyscaleSl, ampSl, modGuis;
+	var freqSl, detuneSl, keyscaleSl, ampSl, timescaleSl, envBtn, envGui, carEnv, modGuis;
 
 	*initClass {
 		this.addHadronPlugin;
@@ -8,11 +8,14 @@ HrFMOscil : HadronPlugin {
 			SynthDef('HrFMOscil', { |freq = 440, detune, amp = 0.1, keyscale,
 				m0_coarse = 1, m0_fine = 0, m0_level, m0_mul = 1, m0_pan,
 				m1_coarse = 1, m1_fine = 0, m1_level, m1_mul = 1, m1_pan,
-				bufs = #[0, 0, 0], outBus0|
+				bufs = #[0, 0, 0], outBus0, gate = 1, timescale = 1, doneAction = 2|
 
-				var basefreq = 220, freqs, mods, cars;
+				var basefreq = 220, freqs, mods, cars, env, eg;
 				m0_level = m0_level * basefreq / ((keyscale * freq) + (basefreq * (1 - keyscale)));
 				m1_level = m1_level * basefreq / ((keyscale * freq) + (basefreq * (1 - keyscale)));
+
+				env = NamedControl.kr(\env, (0 ! 40).overWrite(Env.adsr.asArray));
+				eg = EnvGen.kr(env, gate, timeScale: timescale, doneAction: doneAction);
 
 				freqs = freq * [1, (detune * 0.01).midiratio];
 				mods = [
@@ -23,14 +26,14 @@ HrFMOscil : HadronPlugin {
 					Osc.ar(bufs[i+1], freqs[i] * ratio, 0, row[2] * row[3], 1)
 				};
 				cars = Osc.ar(bufs[0], freqs * mods, 0);
-				Out.ar(outBus0, Pan2.ar(cars, [m0_pan, m1_pan], amp).sum)
+				Out.ar(outBus0, Pan2.ar(cars, [m0_pan, m1_pan], amp * eg).sum)
 			}).add;
 		}
 	}
 
 	*new { |argParentApp, argIdent, argUniqueID, argExtraArgs, argCanvasXY|
 		var width = 554,
-		height = 208;
+		height = 230;
 		^super.new(argParentApp, "HrFMOscil", argIdent, argUniqueID, argExtraArgs, Rect((Window.screenBounds.width - width).rand, (Window.screenBounds.height - height).rand, width, height), 0, 2, argCanvasXY).init
 	}
 
@@ -42,6 +45,7 @@ HrFMOscil : HadronPlugin {
 				buf.sine1Msg(#[1]);
 			});
 		});
+		carEnv = Env(#[0, 1, 1, 0], #[0.05, 0.9, 0.05], 0, 2);
 
 		freqSl = HrEZSlider(window, Rect(2, 2, 270, 20), "freq", \freq, { |view|
 			synthInstance.set(\freq, view.value);
@@ -58,6 +62,47 @@ HrFMOscil : HadronPlugin {
 		ampSl = HrEZSlider(window, Rect(282, 2, 270, 20), "amp", \amp, { |view|
 			synthInstance.set(\amp, view.value);
 		}, initVal: 0.1, initAction: true);
+
+		envBtn = Button(window, Rect(282, 46, 270, 20))
+		.states_([
+			["show carrier envelope", Color.black, Color.gray(0.9)],
+			["hide carrier envelope", Color.black, Color(0.8, 1, 0.8)]
+		])
+		.action_({ |view|
+			var win, gui;
+			if(view.value > 0 and: { envGui.isNil }) {
+				win = Window("carrier envelope", Rect(
+					Window.screenBounds.width - 405,
+					max(0, Window.screenBounds.height - 350),
+					400, 301
+				))
+				.onClose_({
+					envGui = nil;
+					view.value = 0;
+				});
+				gui = HrEnvelopeNodeEditor(win, Rect(2, 2, 396, 270))
+				.env_(carEnv)
+				.action_({ |view|
+					carEnv = view.value;
+					synthInstance.set(\env, carEnv);
+				})
+				.insertAction_({ |view|
+					carEnv = view.value;
+					// changes to release/loop/num of nodes require new synth
+					if(synthInstance.notNil) { this.makeSynth(false) };
+				});
+				gui.curveAction = gui.action;
+				gui.deleteAction = gui.insertAction;
+				gui.nodeAction = gui.insertAction;
+				win.front;
+
+				envGui = [win, gui];
+			} {
+				envGui[0].onClose_(nil).close;
+				envGui = nil;
+				view.value = 0
+			};
+		});
 
 		modGuis = Array.fill(2, { |i|
 			var comp = CompositeView(window, Rect(2 + (280*i), 70, 270, 134))
@@ -144,19 +189,26 @@ HrFMOscil : HadronPlugin {
 			});
 		};
 
+		timescaleSl = HrEZSlider(window, Rect(2, 206, 550, 20), "env time scale",
+			#[0.01, 20, \exp], { |view|
+				synthInstance.set(\timescale, view.value);
+			}, 1
+		);
+
 		saveGets = [
-			{ [freqSl.value, detuneSl.value, keyscaleSl.value, ampSl.value] },
+			{ [freqSl.value, detuneSl.value, keyscaleSl.value, ampSl.value, timescaleSl.value] },
 			{
 				modGuis.collect { |env|
 					#[coarse, fine, level, mul, pan].collect { |name| env[name].value }
 				}
 			},
-			{ waveAmps }
+			{ waveAmps },
+			{ carEnv }
 		];
 		saveSets = [
 			{ |argg|
-				[freqSl, detuneSl, keyscaleSl, ampSl].do { |sl, i|
-					sl.valueAction = argg[i]
+				[freqSl, detuneSl, keyscaleSl, ampSl, timescaleSl].do { |sl, i|
+					if(argg[i].notNil) { sl.valueAction = argg[i] }
 				};
 			},
 			{ |argg|
@@ -169,26 +221,30 @@ HrFMOscil : HadronPlugin {
 			{ |argg|
 				waveAmps = argg;
 				waveAmps.do { |amps, i| wavetables[i].sine1(amps) };
-			}
+			},
+			{ |argg| if(argg.notNil) { carEnv = argg } }
 		];
 
 		modGets.putAll((
 			freq: { freqSl.value },
 			detune: { detuneSl.value },
 			keyscale: { keyscaleSl.value },
-			amp: { ampSl.value }
+			amp: { ampSl.value },
+			timescale: { timescaleSl.value }
 		));
 		modSets.putAll((
 			freq: { |argg| defer { freqSl.valueAction = argg } },
 			detune: { |argg| defer { detuneSl.valueAction = argg } },
 			keyscale: { |argg| defer { keyscaleSl.valueAction = argg } },
-			amp: { |argg| defer { ampSl.valueAction = argg } }
+			amp: { |argg| defer { ampSl.valueAction = argg } },
+			timescale: { |argg| defer { timescaleSl.valueAction = argg } }
 		));
 		modMapSets.putAll((
 			freq: { |argg| defer { freqSl.value = argg } },
 			detune: { |argg| defer { detuneSl.value = argg } },
 			keyscale: { |argg| defer { keyscaleSl.value = argg } },
-			amp: { |argg| defer { ampSl.value = argg } }
+			amp: { |argg| defer { ampSl.value = argg } },
+			timescale: { |argg| defer { timescaleSl.valueAction = argg } }
 		));
 		modGuis.do { |env, i|
 			#[coarse, fine, level, mul, pan].do { |name|
@@ -211,7 +267,8 @@ HrFMOscil : HadronPlugin {
 		};
 		^[
 			freq: freqSl.value, detune: detuneSl.value, amp: ampSl.value,
-			keyscale: keyscaleSl.value, bufs: wavetables, outBus0: outBusses[0]
+			keyscale: keyscaleSl.value, bufs: wavetables, outBus0: outBusses[0],
+			env: carEnv, timescale: timescaleSl.value
 		] ++ mods
 	}
 
@@ -256,6 +313,10 @@ HrFMOscil : HadronPlugin {
 			waveEditors.do { |pair|
 				if(pair.notNil) { pair[0].onClose_(nil).close };
 			};
+			if(envGui.notNil) { envGui[0].onClose_(nil).close };
 		};
 	}
+
+	hasGate { ^carEnv.releaseNode.notNil }
+	polySupport { ^true }
 }

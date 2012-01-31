@@ -10,6 +10,7 @@ HrWrapSynth : HadronPlugin
 		var numIns, numOuts, bounds, name = "HrWrapSynth", numControls;
 		var synthDesc, ctlNameStrings;  // class method: instance vars are not accessible here
 		var err, continue = true;
+		var specTemp;
 		
 		if(argExtraArgs.size == 0, 
 		{
@@ -36,16 +37,23 @@ HrWrapSynth : HadronPlugin
 		if(continue) {
 			// no, fix this...
 			ctlNameStrings = Array(synthDesc.controlNames.size);
+			specTemp = synthDesc.metadata[\specs] ?? { IdentityDictionary.new };
 			synthDesc.controls.do { |cn, i|
 				var name = cn.name.asSymbol;
-				if(name != '?' and: { synthDesc.symIsArrayArg(name).not }) {
+				if(specTemp[name].notNil and: {
+					name != '?' and: { synthDesc.symIsArrayArg(name).not }
+				}) {
 					ctlNameStrings.add(cn.name.asString);
 				};
 			};
 			numControls = ctlNameStrings.size; // synthDesc.metadata.at(\specs).size;
 			
-			numIns = ctlNameStrings.count({|item| item.asString.find("inBus", true, 0) == 0; });
-			numOuts = ctlNameStrings.count({|item| item.asString.find("outBus", true, 0) == 0; });
+			numIns = synthDesc.controlNames.count({ |item|
+				item.asString.find("inBus", true, 0) == 0
+			});
+			numOuts = synthDesc.controlNames.count({ |item|
+				item.asString.find("outBus", true, 0) == 0
+			});
 			
 			bounds = Rect(400, 400, 350, 50 + (numControls * 30));
 			
@@ -68,7 +76,7 @@ HrWrapSynth : HadronPlugin
 		synthBusArgs = 
 		{
 			inBusses.collect({|item, cnt| [("inBus"++cnt).asSymbol, inBusses[cnt]] }).flatten ++
-			outBusses.collect({|item, cnt| [("outBus"++cnt).asSymbol, outBusses[cnt]] }).flatten;
+			outBusses.collect({|item, cnt| [("outBus"++cnt).asSymbol, outBusses[cnt]] }).flatten
 		};
 		
 		sName = extraArgs[0].asSymbol;
@@ -170,19 +178,18 @@ HrWrapSynth : HadronPlugin
 		this.makeSynth;
 	}
 
-	releaseSynth {
-		if(synthInstance.notNil) {
-			if(synthDesc.tryPerform(\hasGate) ? false) { synthInstance.release }
-			{ synthInstance.free };
-			synthInstance = nil;
-		};
+	makeSynth {
+		this.releaseSynth;
+		synthInstance = Synth(sName, this.synthArgs, target: group);
 	}
 
-	makeSynth {
-		var tempArgs;
-		this.releaseSynth;
-		tempArgs = (synthBusArgs.value ++ storeArgs.keys.collect({|item| [item, specs.at(item.asSymbol).map(storeArgs.at(item))]; }).asArray).flatten(1);
-		synthInstance = Synth(sName, tempArgs, target: group);
+	synthArgs {
+		^(
+			synthBusArgs.value
+			++ storeArgs.keys.collect({ |item|
+				[item, specs.at(item.asSymbol).map(storeArgs.at(item))]
+			}).asArray
+		).flatten(1) ++ this.getMapModArgs;
 	}
 
 	updateBusConnections
@@ -194,4 +201,7 @@ HrWrapSynth : HadronPlugin
 	{
 		this.releaseSynth;
 	}
+
+	hasGate { ^(synthDesc.tryPerform(\hasGate) ? false) }
+	polySupport { ^true }
 }

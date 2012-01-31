@@ -267,7 +267,8 @@ HrFilter : HadronPlugin {
 
 
 HrOscil : HadronPlugin {
-	var oscilGuis, freqSl, ampSl, noiseFreqSl, noiseAmpSl, noiseRqSl, noisePanSl;
+	var oscilGuis, freqSl, ampSl, noiseFreqSl, noiseAmpSl, noiseRqSl, noisePanSl,
+	ampEnv, envBtn, envGui, timescaleSl;
 
 	*new { |argParentApp, argIdent, argUniqueID, argExtraArgs, argCanvasXY|
 
@@ -287,6 +288,8 @@ HrOscil : HadronPlugin {
 				}
 			));
 		};
+
+		ampEnv = Env(#[0, 1, 1, 0], #[0.05, 0.9, 0.05], 0, 2);
 
 		2.do { |i|
 			StaticText(window, Rect(2 + (280*i), 2, 270, 20))
@@ -323,12 +326,58 @@ HrOscil : HadronPlugin {
 			synthInstance.set(\noisePan, view.value);
 		}, 0);
 
-		freqSl = HrEZSlider(window, Rect(130, 328, 300, 20), "freq", \freq, { |view|
+		freqSl = HrEZSlider(window, Rect(4, 328, 270, 20), "freq", \freq, { |view|
 			synthInstance.set(\freq, view.value);
 		}, 440);
-		ampSl = HrEZSlider(window, Rect(130, 350, 300, 20), "amp", \amp, { |view|
+		ampSl = HrEZSlider(window, Rect(4, 350, 270, 20), "amp", \amp, { |view|
 			synthInstance.set(\amp, view.value);
 		}, 0.1);
+
+		timescaleSl = HrEZSlider(window, Rect(288, 350, 270, 20), "env time scale",
+			#[0.01, 20, \exp], { |view|
+				synthInstance.set(\timescale, view.value);
+			}, 1
+		);
+		envBtn = Button(window, Rect(288, 328, 270, 20))
+		.states_([
+			["show amp envelope", Color.black, Color.gray(0.9)],
+			["hide amp envelope", Color.black, Color(0.8, 1, 0.8)]
+		])
+		.action_({ |view|
+			var win, gui;
+			if(view.value > 0 and: { envGui.isNil }) {
+				win = Window("carrier envelope", Rect(
+					Window.screenBounds.width - 405,
+					max(0, Window.screenBounds.height - 350),
+					400, 301
+				))
+				.onClose_({
+					envGui = nil;
+					view.value = 0;
+				});
+				gui = HrEnvelopeNodeEditor(win, Rect(2, 2, 396, 270))
+				.env_(ampEnv)
+				.action_({ |view|
+					ampEnv = view.value;
+					synthInstance.set(\env, ampEnv);
+				})
+				.insertAction_({ |view|
+					ampEnv = view.value;
+					// changes to release/loop/num of nodes require new synth
+					if(synthInstance.notNil) { this.makeSynth(false) };
+				});
+				gui.curveAction = gui.action;
+				gui.deleteAction = gui.insertAction;
+				gui.nodeAction = gui.insertAction;
+				win.front;
+
+				envGui = [win, gui];
+			} {
+				envGui[0].onClose_(nil).close;
+				envGui = nil;
+				view.value = 0
+			};
+		});
 		
 		saveGets = [
 			{ ampSl.value },
@@ -346,7 +395,9 @@ HrOscil : HadronPlugin {
 			{ noiseFreqSl.value },
 			{ noiseAmpSl.value },
 			{ noiseRqSl.value },
-			{ noisePanSl.value }
+			{ noisePanSl.value },
+			{ timescaleSl.value },
+			{ ampEnv }
 		];
 
 		saveSets = [
@@ -375,12 +426,15 @@ HrOscil : HadronPlugin {
 			{ |argg| noiseFreqSl.valueAction = argg },
 			{ |argg| noiseAmpSl.valueAction = argg },
 			{ |argg| noiseRqSl.valueAction = argg },
-			{ |argg| noisePanSl.valueAction = argg }			
+			{ |argg| noisePanSl.valueAction = argg },
+			{ |argg| timescaleSl.valueAction = argg },
+			{ |argg| ampEnv = argg }
 		];
 
 		modGets = (
 			freq: { freqSl.value },
-			amp: { ampSl.value }
+			amp: { ampSl.value },
+			timescale: { timescaleSl.value }
 		);
 		modSets = (
 			freq: { |argg| defer { freqSl.valueAction = argg } },
@@ -388,7 +442,8 @@ HrOscil : HadronPlugin {
 			noiseDetune: { |argg| defer { noiseFreqSl.valueAction = argg } },
 			noiseAmp: { |argg| defer { noiseAmpSl.valueAction = argg } },
 			noiseRq: { |argg| defer { noiseRqSl.valueAction = argg } },
-			noisePan: { |argg| defer { noisePanSl.valueAction = argg } }
+			noisePan: { |argg| defer { noisePanSl.valueAction = argg } },
+			timescale: { |argg| defer { timescaleSl.valueAction = argg } }
 		);
 		modMapSets = (
 			freq: { |argg| defer { freqSl.value = argg } },
@@ -396,7 +451,8 @@ HrOscil : HadronPlugin {
 			noiseDetune: { |argg| defer { noiseFreqSl.value = argg } },
 			noiseAmp: { |argg| defer { noiseAmpSl.value = argg } },
 			noiseRq: { |argg| defer { noiseRqSl.value = argg } },
-			noisePan: { |argg| defer { noisePanSl.value = argg } }
+			noisePan: { |argg| defer { noisePanSl.value = argg } },
+			timescale: { |argg| defer { timescaleSl.value = argg } }
 		);
 		2.do { |i|
 			#[\coarse, \fine, \amp, \pwidth, \pan].do { |key|
@@ -417,7 +473,8 @@ HrOscil : HadronPlugin {
 		^[
 			freq: freqSl.value, amp: ampSl.value, outBus0: outBusses[0],
 			noiseDetune: noiseFreqSl.value, noiseAmp: noiseAmpSl.value,
-			noiseRq: noiseRqSl.value, noisePan: noisePanSl.value
+			noiseRq: noiseRqSl.value, noisePan: noisePanSl.value,
+			env: ampEnv, timescale: timescaleSl.value
 		]
 		++ oscilGuis.collect { |env, i|
 			[
@@ -441,7 +498,10 @@ HrOscil : HadronPlugin {
 			o0_coarse = 0, o0_fine = 0, o0_amp = 1, o0_wavebuf, o0_pwidth, o0_pan,
 			o1_coarse = 0, o1_fine = 0, o1_amp = 1, o1_wavebuf, o1_pwidth, o1_pan,
 			noiseDetune = 0, noiseAmp = 0, noiseRq = 1, noisePan,
-			outBus0|
+			outBus0, timescale = 1, gate = 1, doneAction = 2|
+
+			var env = NamedControl.kr(\env, (0 ! 40).overWrite(Env.adsr.asArray)),
+			eg = EnvGen.kr(env, gate, timeScale: timescale, doneAction: doneAction);
 
 			// assuming 8 buffers
 			var basefreq = 48.midicps,
@@ -465,12 +525,16 @@ HrOscil : HadronPlugin {
 			oscs = oscs + Pan2.ar(BPF.ar(
 				PinkNoise.ar(noiseAmp),
 				freq * noiseDetune.midiratio, noiseRq
-			), noisePan, amp);
+			), noisePan, amp * eg);
 			Out.ar(outBus0, oscs);
 		}, (0.05 ! 19).putEach(#[5, 11, 18], nil)).add;
 	}
 
-	cleanUp {}
+	cleanUp {
+		if(envGui.notNil) {
+			envGui[0].onClose_(nil).close
+		};
+	}
 
 	*initClass {
 		this.addHadronPlugin;
@@ -546,4 +610,7 @@ HrOscil : HadronPlugin {
 			});
 		}
 	}
+
+	hasGate { ^true }
+	polySupport { ^true }
 }
