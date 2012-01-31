@@ -1,0 +1,14 @@
+?Hadron 1
+?StartPlugs
+HrDIYSynthunnamed190173548nilPoint( 100, 100 )Rect(1, 303, 450, 440)Rect(48, 45, 450, 440)true
+HrMultiCtlModunnamed1392703319nilPoint( 100, 172 )Rect(881, 344, 450, 375)Rect(140.06970405579, 187.19703710079, 450, 375)false
+?EndPlugs
+?StartConnections
+190173548[ [ nil, nil ], [ nil, nil ] ][ [ 1392703319, 0 ], [ 1392703319, 1 ] ]
+1392703319[ [ 190173548, 0 ], [ 190173548, 1 ] ][ [ nil, nil ] ]
+?EndConnections
+?StartPlugParams
+190173548"{ arg input; input; }"
+1392703319"{ |sig, b| SinOsc.kr(1, 0, 0.5, 0.5) }"[ [ 0, 0 ] ]04
+?EndPlugParams
+?EndSave

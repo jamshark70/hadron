@@ -21,10 +21,10 @@ Error.debug = false;
 
 s.boot;
 
-SynthDef(\analog, { |outBus0, outBus1, freq = 440, dtune = 1.003, ffreq = 2000, rq = 0.1, amp = 0.1|
+SynthDef(\analog, { |outBus0, outBus1, freq = 440, dtune = 1.003, ffreq = 2000, rq = 0.1, amp = 0.1, gate = 1|
 	var sig = Saw.ar(freq * [1, dtune], amp).sum;
 	sig = RLPF.ar(sig, ffreq, rq);
-	Out.ar([outBus0, outBus1], sig);
+	Out.ar([outBus0, outBus1], sig * EnvGen.kr(Env.adsr, gate, doneAction:2));
 }, metadata: (
 	specs: (
 		freq: \freq.asSpec,
@@ -292,3 +292,51 @@ f.slotAt(\badValueSynth).trace
 h.alivePlugs;  // List[ a HrMultiCtlMod, a HrDIYSynth, a HrDIYSynth, a HrStereoMixer, a HrDAC ]
 
 h.alivePlugs[1].slotAt(\synthInstance).trace
+
+
+
+// POC for poly pattern player - good!
+// load "analog1.hadron"
+p = h.alivePlugs.detect({ |plug| plug.isMemberOf(HrWrapSynth) });
+h.alivePlugs[0].polyMode = false; // should be no op
+h.alivePlugs[0].polyMode = true;  // should be error
+
+p.polyMode = true;
+p.polyMode = false;  // test...
+
+p.releaseSynth;
+
+q = Pchain(
+	Pbindef(\x, \dur, Pexprand(0.08, 0.3, inf), \freq, Pexprand(140, 900, inf)),
+	Pfunc({ |ev|
+		ev.put(\group, p.group).put(\instrument, p.slotAt(\synthDesc).name)
+		.putPairs(p.synthArgs)
+	})
+).play;
+
+q.stop
+
+
+p.polyMode = false;
+
+p = h.alivePlugs.detect({ |plug| plug.isMemberOf(HrFMOscil) });
+p = h.alivePlugs.detect({ |plug| plug.isMemberOf(HrOscil) });
+p.polyMode = true;
+
+n = if(p.isMemberOf(HrFMOscil)) {
+	p.class.name
+} {
+	p.class.name ++ p.uniqueID
+};
+
+q = Pchain(
+	Pbindef(\x, \dur, Pexprand(0.08, 0.3, inf), \freq, Pexprand(140, 900, inf)),
+	Pfunc({ |ev|
+		ev.put(\group, p.group).put(\instrument, n)
+		.putPairs(p.synthArgs)
+	})
+).play;
+
+q.stop;
+
+p.synthArgs

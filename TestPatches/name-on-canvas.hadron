@@ -1,0 +1,11 @@
+?Hadron 1
+?StartPlugs
+HrMultiCtlModtesting_with_a_rather_long_name1835908288nilPoint( 106, 84 )Rect(756, 127, 450, 375)Rect(756, 127, 450, 375)false
+?EndPlugs
+?StartConnections
+1835908288[ [ nil, nil ] ][ [ nil, nil ] ]
+?EndConnections
+?StartPlugParams
+1835908288"{ |sig| SinOsc.kr(1, 0, 0.5, 0.5) }"[ [ 0, 0 ] ]04
+?EndPlugParams
+?EndSave
