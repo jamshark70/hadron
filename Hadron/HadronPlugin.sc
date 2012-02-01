@@ -25,7 +25,7 @@ HadronPlugin
 		(1..8).do { |numChan|
 			SynthDef("hrCheckBad" ++ numChan, { |uniqueID, inBus0, pr_outBus0|
 				var indices = (0..numChan-1),
-				outBusses = ['outBus', indices].flop.collect { |row|
+				outBusses = ['cb_outBus', indices].flop.collect { |row|
 					NamedControl.kr(row.join.asSymbol, 0)
 				},
 				sig = In.ar(inBus0, numChan).asArray,
@@ -502,7 +502,7 @@ HadronPlugin
 		if(badValueSynth.notNil) {
 			badValueSynth.set(*(
 				[
-					["outBus", (0 .. mainOutBusses.size-1)]
+					["cb_outBus", (0 .. mainOutBusses.size-1)]
 					.flop.collect({ |row| row.join.asSymbol }),
 					mainOutBusses
 				].flop.flat
@@ -681,7 +681,7 @@ HadronPlugin
 			})
 			++ (if(mainOutBusses.size > 0) {
 				Array.fill(outBusses.size, { |i|
-					[("outBus" ++ i).asSymbol, mainOutBusses[0] ?? { parentApp.blackholeBus }]
+					[("cb_outBus" ++ i).asSymbol, mainOutBusses[0] ?? { parentApp.blackholeBus }]
 				}).flat
 			}),
 			target, addAction
