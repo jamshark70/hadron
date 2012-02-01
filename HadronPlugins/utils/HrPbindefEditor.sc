@@ -118,7 +118,6 @@ Use an interactive code window to edit this pattern.
 			this.makeView;
 		} { |err|
 			"Key % provided to Pbindef editor is of a wrong type:\n".postf(obj.asCompileString);
-			err.reportError;
 			err.errorString.postln;
 		};
 	}
@@ -158,7 +157,9 @@ Use an interactive code window to edit this pattern.
 		if(rebuildPairs) {
 			pairs = Array(subpats.size * 2);
 			subpats.do { |subpat|
-				pairs.add(subpat.key).add(subpat.model);
+				if(subpat.text != "") {
+					pairs.add(subpat.key).add(subpat.model);
+				};
 			};
 			model.source.pairs = pairs;
 		};
@@ -168,7 +169,6 @@ Use an interactive code window to edit this pattern.
 
 	update { |obj, what ... more|
 		var i, new;
-[obj, what, more].debug("editor update");
 		if(obj === model) {
 			if(obj.isKindOf(HrPbindef)) {
 				this.key = obj.key;
@@ -211,8 +211,30 @@ Use an interactive code window to edit this pattern.
 			{ \reorder } {
 				// more[0] is new index, more[1] is old
 				// obj is nil if moving to first place
-				
-				[obj, obj.index, what, more].postln;
+				[obj, what, more].postln;
+
+				// using 'new' as a temp val
+				new = subpats[more[1]];
+				if(more[0] > more[1]) {
+					// moving down
+					(more[1] .. more[0]-1).do { |j|
+						subpats[j] = subpats[j+1];
+						subpats[j].index = j;
+						subpats[j].bounds = Rect(2, 14 + (24*j), mainView.bounds.width-4, 24);
+					};
+				} {
+					// moving up -- must go in reverse order
+					(more[1], more[1]-1 .. more[0]+2).do { |j|
+						subpats[j] = subpats[j-1];
+						subpats[j].index = j;
+						subpats[j].bounds = Rect(2, 14 + (24*j), mainView.bounds.width-4, 24);
+					};
+					more[0] = more[0] + 1;
+				};
+				subpats[more[0]] = new;
+				new.index = more[0];
+				new.bounds = Rect(2, 14 + (24*(more[0])), mainView.bounds.width-4, 24);
+				this.rebuildModel;
 			}
 			{ \key } {
 				if(obj.text != "") {
