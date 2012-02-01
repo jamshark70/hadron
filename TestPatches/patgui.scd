@@ -54,13 +54,13 @@ HrPbindef.all
 
 
 (
-w = Window(\test, Rect(700, 100, 600, 400));
+w = Window(\test, Rect(750, 100, 600, 400));
 z = HrPbindefEditor(w, w.view.bounds.insetBy(2, 2));
 w.front;
-)
 
 z.key = \x;
 HrPdef(\x, Pbind(\degree, Pwhite(0, 7, inf), \dur, 0.1));
+)
 
 HrPbindef(\x, \dur, Pexprand(0.05, 0.25, inf));
 HrPbindef(\x, \amp, Pexprand(0.1, 0.5, inf));
