@@ -54,13 +54,38 @@ HrPbindef.all
 
 
 (
-w = Window(\test, Rect(750, 100, 600, 400));
+w = Window(\test, Rect(750, 100, 600, 120));
 z = HrPbindefEditor(w, w.view.bounds.insetBy(2, 2));
 w.front;
 
-z.key = \x;
 HrPdef(\x, Pbind(\degree, Pwhite(0, 7, inf), \dur, 0.1));
+z.key = \x;
 )
+
+f = { |...args| args.debug("dependant") };
+
+z.addDependant(f);
+z.removeDependant(f);
+
+Error.debug = true;
+Error.debug = false;
+
+z.focusedRow
+z[0].hasFocus
+
+z.view.children
+z.resize = 5;
+
+z.view.children[0].bounds
+
+z.view.children[0].resize
+
+z.view.children[0].children[1].bounds
+.resize
+
+z.view.children[0].children[1].children.last.resize
+
+z.view.children[0].children[1].children.last.parents.do { |view| [view, view.resize].postln };
 
 HrPbindef(\x, \dur, Pexprand(0.05, 0.25, inf));
 HrPbindef(\x, \amp, Pexprand(0.1, 0.5, inf));
@@ -96,3 +121,42 @@ HrPbindef(\x, \a, 1);
 
 HrPdef(\x).source.postcs
 HrPdef(\x).source.insp
+
+
+
+h = Hadron.new;
+
+HrPbindef(\test, \dur, 1).inspect
+
+Object.dependantsDictionary.keys
+
+p = h.alivePlugs[0];
+p.key.dump
+p.slotAt(\pdefMenu).items.postcs
+
+p.insp
+
+p.slotAt(\pdefMenu).items.detectIndex { |name| name.asSymbol == p.key } ? 0;
+
+HrPbindef(\a, \dur, 2);
+HrPbindef(\a)
+
+HrPbindef.all.insp
+
+HrPbindef.all[\a]
+
+e = p.slotAt(\subpatEdit);
+e.focusedRow
+e[0].view.background
+
+e[0].view.background = Color(0.8, 1, 0.8);
+
+HrPbindef(\b).remove;
+HrPbindef.keys
+
+HrPbindef(\test)
+
+HrPbindef.exists(\a)
+HrPbindef(\a)
+
+Meta_HrPbindef.findRespondingMethodFor(\exists)
