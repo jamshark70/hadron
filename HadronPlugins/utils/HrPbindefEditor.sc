@@ -32,6 +32,7 @@ HrPbindefEditor : SCViewHolder {
 				this.clearView;
 				mainView.remove;
 				mainView = TextView(view, view.bounds)
+				.resize_(5)
 				.background_(Color.gray(0.9))
 				.editable_(false);
 			};
@@ -44,6 +45,7 @@ HrPbindefEditor : SCViewHolder {
 				mainView.remove;
 				mainView = TextView(view, view.bounds)
 				.background_(Color.gray(0.9))
+				.resize_(5)
 				.editable_(false);
 			};
 			mainView.string_("Only Pbind-style patterns can be edited by GUI.
@@ -63,12 +65,12 @@ Use an interactive code window to edit this pattern.
 				this.clearView;  // which sets subpats to List.new - see below
 
 				mainView = ScrollView(view, view.bounds)
+				.resize_(5)
 				.autohidesScrollers_(true)
 				.hasVerticalScroller_(true)
 				.hasHorizontalScroller_(false);
 
-				moveFirstView = DragSink(mainView, Rect(2, 2, buttonSize, buttonSize))
-				.string_("O").align_(\center)
+				moveFirstView = HrReorderSinkView(mainView, Rect(2, 2, buttonSize, buttonSize))
 				.canReceiveDragHandler_({
 					var str = View.currentDrag;
 					str.isString and: {
@@ -77,7 +79,6 @@ Use an interactive code window to edit this pattern.
 				})
 				.receiveDragHandler_({ |view|
 					var i = View.currentDrag[1..].asInteger;
-					view.string = "O";
 					if(i != 0) {
 						this.update(nil, \reorder, -1, i);
 					};
@@ -267,22 +268,20 @@ HrPatternLine : SCViewHolder {
 	init { |parent, bounds, argKey, argModel, argText, argIndex|
 		var buttonSize = Library.at(HrPatternLine, \buttonSize) ? 20,
 		buttonPoint = buttonSize @ buttonSize,
-		height = bounds.height - 4;
+		height = bounds.height - 4, editorBounds;
 
 		// note, the reorderSink will be drawn outside this
 		this.view = FlowView(parent,
 			bounds.copy.left_(bounds.left + buttonSize + 2)
 			.width_(bounds.width - buttonSize - 2),
 			Point(2, 2), Point(2, 2)
-		);
+		)
+		.resize_(2);  // horiz. elastic, fixed to top
 		background = view.background;
 
 		index = argIndex ? 0;
-		reorderDrag = DragSource(view, buttonPoint)
-		.object_("p" ++ index).string_(String[164.asAscii]).align_(\center);
-		if(GUI.id != \swing) {
-			reorderDrag.dragLabel_("Drag to reorder");
-		};
+		reorderDrag = HrReorderSourceView(view, buttonPoint)
+		.object_("p" ++ index);
 
 		plusBtn = Button(view, buttonPoint)
 		.states_([["+"]])
@@ -324,7 +323,11 @@ HrPatternLine : SCViewHolder {
 		};
 		model.addDependant(this);
 
-		editor = TextField(view, view.indentedRemaining.height_(height)).string_(text.asString)
+		editorBounds = view.indentedRemaining;
+		// width - 22: allow room for the scroller
+		editorBounds = editorBounds.resizeTo(editorBounds.width - 22, height);
+		editor = TextField(view, editorBounds).string_(text.asString)
+		.resize_(2)  // horiz. elastic, fixed to top
 		.action_({ |eview|
 			try {
 				setPattern = eview.string.interpret;
@@ -345,12 +348,11 @@ HrPatternLine : SCViewHolder {
 		editor.focusLostAction = editor.action;
 
 		// here's the outlier
-		reorderSink = DragSink(parent, Rect(
+		reorderSink = HrReorderSinkView(parent, Rect(
 			bounds.left,
 			bounds.top + (bounds.height * 0.5),
 			buttonSize, buttonSize
 		))
-		.string_("O").align_(\center)
 		.canReceiveDragHandler_({
 			var str = View.currentDrag;
 			str.isString and: {
@@ -359,7 +361,6 @@ HrPatternLine : SCViewHolder {
 		})
 		.receiveDragHandler_({ |view|
 			var i = View.currentDrag[1..].asInteger;
-			view.string = "O";
 			if(i != index and: { i != (index + 1) }) {
 				this.changed(\reorder, index, i);
 			};
@@ -368,7 +369,7 @@ HrPatternLine : SCViewHolder {
 
 	index_ { |i|
 		index = i;
-		reorderDrag.object_("p" ++ i).string_(String[164.asAscii]);
+		reorderDrag.object_("p" ++ i);
 	}
 
 	isLast_ { |bool(false)|
@@ -420,5 +421,92 @@ HrPatternLine : SCViewHolder {
 		model.removeDependant(this);
 		view = nil;
 		this.changed(\viewDidClose);
+	}
+}
+
+HrReorderSourceView : SCViewHolder {
+	var userview, dragview, <color;
+
+	*new { |parent, bounds|
+		^super.new.init(parent, bounds)
+	}
+
+	init { |parent, bounds|
+		var zeroBounds = bounds.asRect.moveTo(0, 0);
+		color = Color.black;
+		this.view = CompositeView(parent, bounds);
+		userview = UserView(view, zeroBounds)
+		.background_(this.defaultBackground)
+		.drawFunc_({ this.prDraw });
+		this.makeView;
+	}
+
+	makeView {
+		dragview = DragSource(view, userview.bounds).background_(Color.clear);
+		if(GUI.id != \swing) {
+			dragview.dragLabel_("Drag to reorder");
+		};
+	}
+
+	object { ^dragview.object }
+	object_ { |obj|
+		dragview.object_(obj).string_("");
+	}
+
+	defaultBackground { ^Color(1, 0.92, 0.92) }
+	background { ^userview.background }
+	background_ { |color| userview.background = color }
+	color_ { |newColor|
+		color = newColor;
+		userview.refresh;
+	}
+
+	beginDragAction { ^dragview.beginDragAction }
+	beginDragAction_ { |func| dragview.beginDragAction = func }
+
+	prDraw {
+		var xs = userview.bounds.width * #[0.3, 0.5, 0.7],
+		ys = userview.bounds.height * #[0.1, 0.45, 0.55, 0.9];
+		Pen.color_(color)
+		.moveTo(Point(xs[0], ys[1]))
+		.lineTo(Point(xs[1], ys[0]))
+		.lineTo(Point(xs[2], ys[1]))
+		.lineTo(Point(xs[0], ys[1]))
+		.fill
+
+		.moveTo(Point(xs[0], ys[2]))
+		.lineTo(Point(xs[1], ys[3]))
+		.lineTo(Point(xs[2], ys[2]))
+		.lineTo(Point(xs[0], ys[2]))
+		.fill;		
+	}
+}
+
+HrReorderSinkView : HrReorderSourceView {
+	makeView {
+		dragview = DragSource(view, userview.bounds).background_(Color.clear);
+	}
+
+	canReceiveDragHandler { ^dragview.canReceiveDragHandler }
+	receiveDragHandler { ^dragview.receiveDragHandler }
+
+	canReceiveDragHandler_ { |func| dragview.canReceiveDragHandler = func }
+	receiveDragHandler_ { |func| dragview.receiveDragHandler = func }
+
+	defaultBackground { ^Color(0.92, 1, 0.92) }
+
+	prDraw {
+		var xs = userview.bounds.width * #[0.1, 0.55, 0.9],
+		ys = userview.bounds.height * #[0.3, 0.5, 0.7];
+		Pen.color_(color)
+		.moveTo(Point(xs[0], ys[1]))
+		.lineTo(Point(xs[2], ys[1]))
+		.stroke
+
+		.moveTo(Point(xs[2], ys[1]))  // swing requires this
+		.lineTo(Point(xs[1], ys[0]))
+		.lineTo(Point(xs[1], ys[2]))
+		.lineTo(Point(xs[2], ys[1]))
+		.fill;		
 	}
 }
