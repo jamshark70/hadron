@@ -204,4 +204,5 @@ HrWrapSynth : HadronPlugin
 
 	hasGate { ^(synthDesc.tryPerform(\hasGate) ? false) }
 	polySupport { ^true }
+	defName { ^synthDesc.name }
 }

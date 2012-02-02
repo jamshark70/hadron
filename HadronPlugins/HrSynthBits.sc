@@ -613,4 +613,5 @@ HrOscil : HadronPlugin {
 
 	hasGate { ^true }
 	polySupport { ^true }
+	defName { ^("HrOscil" ++ uniqueID) }
 }

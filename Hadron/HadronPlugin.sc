@@ -754,4 +754,6 @@ HadronPlugin
 			if(synthInstance.isNil) { this.makeSynth }
 		};
 	}
+
+	defName { ^"" }  // really only for poly stuff, may fill in for others later
 }

@@ -319,4 +319,5 @@ HrFMOscil : HadronPlugin {
 
 	hasGate { ^carEnv.releaseNode.notNil }
 	polySupport { ^true }
+	defName { ^"HrFMOscil" }
 }
