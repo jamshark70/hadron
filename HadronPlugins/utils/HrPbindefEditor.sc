@@ -2,13 +2,13 @@
 // no passing in an arbitrary pattern
 
 HrPbindefEditor : SCViewHolder {
-	var <model, <key;
+	var <model, <key, <focusedRow = nil;
 
 	// 'view' is the wrapper, CompositeView
 	// this is the main thing inside, which may contain other things
 	var mainView, <status;
 	var subpats;
-	var moveFirstView, addLastView;
+	var moveFirstView;
 
 	*new { |parent, bounds, key|
 		^super.new.init(parent, bounds, key)
@@ -23,9 +23,9 @@ HrPbindefEditor : SCViewHolder {
 	//// non-pbind pattern: post code, instruct user to use code editor
 	//// pbind pattern: turn into HrPbindef, present line views
 	//// nil: message saying to choose a valid key
-	makeView {
+	makeView { |keyChanged(false)|
 		var patTemp = this.convertPattern(model.source);
-		var buttonSize = Library.at(HrPatternLine, \buttonSize) ? 20;
+		var buttonSize = HrPatternLine.buttonSize;
 		case
 		{ model.isNil } {
 			if(status == \editing or: { mainView.isNil }) {
@@ -38,6 +38,7 @@ HrPbindefEditor : SCViewHolder {
 			};
 			mainView.string_("Set a valid pattern name to begin editing.");
 			status = \empty;
+			this.changed(\status, status);
 		}
 		{ patTemp.isNil } {
 			if(status == \editing or: { mainView.isNil }) {
@@ -54,11 +55,14 @@ Use an interactive code window to edit this pattern.
 
 %".format(model.source.asCompileString));
 			status = \idle;
+			this.changed(\status, status);
 		}
 		{ patTemp.notNil } {
 			if(status != \editing
-				or: { mainView.isNil
-					or: { subpats.size != (model.source.pairs.size div: 2) }
+				or: { keyChanged
+					or: { mainView.isNil
+						or: { subpats.size != (model.source.pairs.size div: 2) }
+					}
 				}
 			) {
 				mainView.remove;
@@ -82,6 +86,9 @@ Use an interactive code window to edit this pattern.
 					if(i != 0) {
 						this.update(nil, \reorder, -1, i);
 					};
+				})
+				.buttonAction_({ |view|
+					this.update(subpats.first, \addRow, 0);
 				});
 
 				patTemp.pairs.pairsDo { |key, value, i|
@@ -93,12 +100,16 @@ Use an interactive code window to edit this pattern.
 					subpats.last.addDependant(this);
 				};
 
-				addLastView = Button(mainView,
-					Rect(48, 16 + (24*subpats.size), buttonSize, buttonSize))
-				.states_([["+"]])
-				.action_({ this.update(nil, \addRow, subpats.size) });
+				case
+				{ focusedRow.isNil and: { subpats.size > 0 } } {
+					this.update(subpats[0], \gotFocus, 0)
+				}
+				{ (focusedRow ? 0) >= subpats.size } {
+					this.update(subpats.last, \gotFocus, subpats.size-1);
+				};
 			};
 			status = \editing;
+			this.changed(\status, status);
 		};
 	}
 
@@ -107,7 +118,7 @@ Use an interactive code window to edit this pattern.
 			key = nil;
 			model.removeDependant(this);
 			model = nil;
-			^this.makeView
+			^this.makeView(true)
 		};
 		try {
 			model.removeDependant(this);
@@ -116,11 +127,19 @@ Use an interactive code window to edit this pattern.
 			model = HrPbindef(obj);
 			key = obj;
 			model.addDependant(this);
-			this.makeView;
+			this.makeView(true);
 		} { |err|
 			"Key % provided to Pbindef editor is of a wrong type:\n".postf(obj.asCompileString);
+			err.reportError;
 			err.errorString.postln;
 		};
+	}
+
+	focusedRow_ { |index|
+		if(index.exclusivelyBetween(-1, subpats.size)) {
+			focusedRow = index;
+			defer { subpats[index].focus };
+		}
 	}
 
 	convertPattern { |pat|
@@ -136,7 +155,6 @@ Use an interactive code window to edit this pattern.
 
 	clearView {
 		moveFirstView.remove;
-		addLastView.remove;
 		subpats.reverseDo { |line|
 			line.removeDependant(this);
 			line.remove;
@@ -177,7 +195,7 @@ Use an interactive code window to edit this pattern.
 				this.makeView;  // if we get here, it probably won't work
 			};
 		} {
-			i = subpats.indexOf(obj) ?? { more.tryPerform(\at, 0) };
+			i = more.tryPerform(\at, 0);
 			switch(what)
 			{ \addRow } {
 				if(i < subpats.size) {
@@ -190,9 +208,9 @@ Use an interactive code window to edit this pattern.
 					Rect(2, 14 + (24*i), mainView.bounds.width-4, 24),
 					"(new)", nil, nil, i
 				);
-				addLastView.bounds = addLastView.bounds.moveBy(0, 24);
 				subpats.insert(i, new);  // adds if i >= size
 				new.addDependant(this);
+				this.changed(\addRow, i);
 				// actually, no... don't do this until you fill in a key and value
 				// this.rebuildModel;
 			}
@@ -206,15 +224,13 @@ Use an interactive code window to edit this pattern.
 						subpats[i].bounds = Rect(2, 14 + (24*i), mainView.bounds.width-4, 24);
 					};
 				};
-				addLastView.bounds = addLastView.bounds.moveBy(0, -24);
 				this.rebuildModel;
+				this.changed(\deleteRow, i);
 			}
 			{ \reorder } {
 				// more[0] is new index, more[1] is old
 				// obj is nil if moving to first place
-				[obj, what, more].postln;
-
-				// using 'new' as a temp val
+				// using 'new' as a temp var
 				new = subpats[more[1]];
 				if(more[0] > more[1]) {
 					// moving down
@@ -236,6 +252,7 @@ Use an interactive code window to edit this pattern.
 				new.index = more[0];
 				new.bounds = Rect(2, 14 + (24*(more[0])), mainView.bounds.width-4, 24);
 				this.rebuildModel;
+				this.changed(\reorder, *more);
 			}
 			{ \key } {
 				if(obj.text != "") {
@@ -247,26 +264,43 @@ Use an interactive code window to edit this pattern.
 					this.rebuildModel;
 				};
 			}
+			{ \gotFocus } {
+				if(i != focusedRow) {
+					try { subpats[focusedRow].focus(false) };
+					focusedRow = i;
+					try { subpats[focusedRow].focus(true) };
+					this.changed(\focusedRow, i);
+				};
+			}
+			// { \lostFocus } {
+			// 	if(i == focusedRow) {
+			// 		focusedRow = nil;
+			// 		this.changed(\focusedRow, nil);
+			// 	};
+			// }
 			{ \viewDidClose } {
 				obj.removeDependant(this);
 			};
 		}
 	}
+
+	at { |i| ^subpats[i] }
+	size { ^subpats.size }
 }
 
 HrPatternLine : SCViewHolder {
 	var <key, <text, <model, <index, <isLast = false;
 	var label, editor;
-	var reorderSink, reorderDrag, plusBtn, minusBtn;
+	var reorderSink, reorderDrag, minusBtn;
 	var setPattern;  // used to know if we should respond to proxy notification
-	var <background, <errorState = false;
+	var <background, saveBackground, <errorState = false, <hasFocus = false;
 
 	*new { |parent, bounds, key, model, text, index|
 		^super.new.init(parent, bounds, key, model, text, index)
 	}
 
 	init { |parent, bounds, argKey, argModel, argText, argIndex|
-		var buttonSize = Library.at(HrPatternLine, \buttonSize) ? 20,
+		var buttonSize = this.class.buttonSize,
 		buttonPoint = buttonSize @ buttonSize,
 		height = bounds.height - 4, editorBounds;
 
@@ -277,17 +311,14 @@ HrPatternLine : SCViewHolder {
 			Point(2, 2), Point(2, 2)
 		)
 		.resize_(2);  // horiz. elastic, fixed to top
-		background = view.background;
+		saveBackground = background = view.background;
 
 		index = argIndex ? 0;
 		reorderDrag = HrReorderSourceView(view, buttonPoint)
 		.object_("p" ++ index);
 
-		plusBtn = Button(view, buttonPoint)
-		.states_([["+"]])
-		.action_({ this.changed(\addRow, index) });
-
 		minusBtn = Button(view, buttonPoint)
+		.canFocus_(false)
 		.states_([["-"]])
 		.action_({ this.changed(\deleteRow, index) });
 
@@ -297,8 +328,14 @@ HrPatternLine : SCViewHolder {
 		.action_({ |view|
 			key = view.string.asSymbol;
 			this.changed(\key, key);
+		})
+		.focusGainedAction_({ this.changed(\gotFocus, index) })
+		.focusLostAction_({ |view|
+			if(view.notClosed) {
+				view.doAction;
+				// this.changed(\lostFocus, index);
+			}
 		});
-		label.focusLostAction = label.action;
 
 		model = argModel;
 		text = argText;
@@ -344,8 +381,14 @@ HrPatternLine : SCViewHolder {
 				view.background = Color(1, 0.8, 0.8);
 				errorState = true;
 			};
+		})
+		.focusGainedAction_({ this.changed(\gotFocus, index) })
+		.focusLostAction_({ |view|
+			if(view.notClosed) {
+				view.doAction;
+				// this.changed(\lostFocus, index);
+			}
 		});
-		editor.focusLostAction = editor.action;
 
 		// here's the outlier
 		reorderSink = HrReorderSinkView(parent, Rect(
@@ -364,12 +407,33 @@ HrPatternLine : SCViewHolder {
 			if(i != index and: { i != (index + 1) }) {
 				this.changed(\reorder, index, i);
 			};
-		});
+		})
+		.buttonAction_({ this.changed(\addRow, index + 1) });
+	}
+
+	focus { |flag(true)|
+		flag.debug("focus");
+		if(flag and: { hasFocus.not }) {
+			if(label.hasFocus or: { label.string == "(new)" }) {
+				label.focus(true);
+			} {
+				editor.focus(true);
+			};
+		};
+		background = if(flag) { Color(0.8, 1, 0.8) } { saveBackground };
+		view.background = background;
+		hasFocus = flag;
 	}
 
 	index_ { |i|
 		index = i;
 		reorderDrag.object_("p" ++ i);
+	}
+
+	key_ { |name|
+		key = name.asSymbol;
+		label.string = name.asString;
+		this.changed(\key, key);
 	}
 
 	isLast_ { |bool(false)|
@@ -393,7 +457,7 @@ HrPatternLine : SCViewHolder {
 	}
 
 	bounds_ { |rect|
-		var buttonSize = Library.at(HrPatternLine, \buttonSize) ? 20;
+		var buttonSize = this.class.buttonSize;
 		view.bounds = rect.copy.left_(rect.left + buttonSize + 2)
 			.width_(rect.width - buttonSize - 2);
 		reorderSink.bounds = Rect(
@@ -422,6 +486,11 @@ HrPatternLine : SCViewHolder {
 		view = nil;
 		this.changed(\viewDidClose);
 	}
+
+	*buttonSize { ^(Library.at(HrPatternLine, \buttonSize) ? 20) }
+	*buttonSize_ { |size = 20|
+		Library.put(HrPatternLine, \buttonSize, size);
+	}
 }
 
 HrReorderSourceView : SCViewHolder {
@@ -436,13 +505,15 @@ HrReorderSourceView : SCViewHolder {
 		color = Color.black;
 		this.view = CompositeView(parent, bounds);
 		userview = UserView(view, zeroBounds)
+		.canFocus_(false)
 		.background_(this.defaultBackground)
 		.drawFunc_({ this.prDraw });
 		this.makeView;
 	}
 
 	makeView {
-		dragview = DragSource(view, userview.bounds).background_(Color.clear);
+		dragview = DragSource(view, userview.bounds).background_(Color.clear)
+		.canFocus_(false);
 		if(GUI.id != \swing) {
 			dragview.dragLabel_("Drag to reorder");
 		};
@@ -483,8 +554,20 @@ HrReorderSourceView : SCViewHolder {
 }
 
 HrReorderSinkView : HrReorderSourceView {
+	var <>buttonAction, clickedInside = false;
+
 	makeView {
-		dragview = DragSource(view, userview.bounds).background_(Color.clear);
+		dragview = DragSource(view, userview.bounds).background_(Color.clear)
+		.canFocus_(false)
+		.mouseDownAction_({ |view, x, y|
+			clickedInside = true
+		})
+		.mouseUpAction_({ |view, x, y|
+			if(clickedInside and: {
+				x < view.bounds.width and: { y < view.bounds.height }
+			}) { buttonAction.value(this) };
+			clickedInside = false;
+		});
 	}
 
 	canReceiveDragHandler { ^dragview.canReceiveDragHandler }
