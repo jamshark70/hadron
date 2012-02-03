@@ -23,7 +23,7 @@ HrPbindefEditor : SCViewHolder {
 	//// non-pbind pattern: post code, instruct user to use code editor
 	//// pbind pattern: turn into HrPbindef, present line views
 	//// nil: message saying to choose a valid key
-	makeView { |keyChanged(false)|
+	makeView { |keyChanged(false), savedTexts|
 		var patTemp = this.convertPattern(model.source);
 		var buttonSize = HrPatternLine.buttonSize;
 		var zeroBounds = view.bounds.moveTo(0, 0);
@@ -92,11 +92,12 @@ Use an interactive code window to edit this pattern.
 					this.update(subpats.first, \addRow, 0);
 				});
 
+				if(savedTexts.isNil) { savedTexts = [] };
 				patTemp.pairs.pairsDo { |key, value, i|
 					i = i >> 1;
 					subpats.add(HrPatternLine(mainView,
 						Rect(2, 14 + (24*i), mainView.bounds.width-4, 24),
-						key, value, nil, i
+						key, value, savedTexts[i], i
 					));
 					subpats.last.addDependant(this);
 				};
@@ -114,12 +115,14 @@ Use an interactive code window to edit this pattern.
 		};
 	}
 
-	key_ { |obj|
+	// savedTexts is an array of strings - should be same size as key/value pairs
+	// a nil in this array will fall back to the subpattern's compilestring
+	key_ { |obj, savedTexts|
 		if(obj.isNil) {
 			key = nil;
 			model.removeDependant(this);
 			model = nil;
-			^this.makeView(true)
+			^this.makeView(true);
 		};
 		try {
 			model.removeDependant(this);
@@ -128,7 +131,7 @@ Use an interactive code window to edit this pattern.
 			model = HrPbindef(obj);
 			key = obj;
 			model.addDependant(this);
-			this.makeView(true);
+			this.makeView(true, savedTexts);
 		} { |err|
 			"Key % provided to Pbindef editor is of a wrong type:\n".postf(obj.asCompileString);
 			err.reportError;
@@ -413,7 +416,6 @@ HrPatternLine : SCViewHolder {
 	}
 
 	focus { |flag(true)|
-		flag.debug("focus");
 		if(flag and: { hasFocus.not }) {
 			if(label.hasFocus or: { label.string == "(new)" }) {
 				label.focus(true);
