@@ -26,12 +26,13 @@ HrPbindefEditor : SCViewHolder {
 	makeView { |keyChanged(false)|
 		var patTemp = this.convertPattern(model.source);
 		var buttonSize = HrPatternLine.buttonSize;
+		var zeroBounds = view.bounds.moveTo(0, 0);
 		case
 		{ model.isNil } {
 			if(status == \editing or: { mainView.isNil }) {
 				this.clearView;
 				mainView.remove;
-				mainView = TextView(view, view.bounds)
+				mainView = TextView(view, zeroBounds)
 				.resize_(5)
 				.background_(Color.gray(0.9))
 				.editable_(false);
@@ -44,7 +45,7 @@ HrPbindefEditor : SCViewHolder {
 			if(status == \editing or: { mainView.isNil }) {
 				this.clearView;
 				mainView.remove;
-				mainView = TextView(view, view.bounds)
+				mainView = TextView(view, zeroBounds)
 				.background_(Color.gray(0.9))
 				.resize_(5)
 				.editable_(false);
@@ -68,7 +69,7 @@ Use an interactive code window to edit this pattern.
 				mainView.remove;
 				this.clearView;  // which sets subpats to List.new - see below
 
-				mainView = ScrollView(view, view.bounds)
+				mainView = ScrollView(view, zeroBounds)
 				.resize_(5)
 				.autohidesScrollers_(true)
 				.hasVerticalScroller_(true)
