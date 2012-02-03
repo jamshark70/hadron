@@ -233,8 +233,7 @@ Hadron
 	displayStatus
 	{|argString, statusMood| //statusMood is -1: error, 0: neutral, 1: success
 
-		statusStString.remove;
-		statusStString = StaticText(statusView, Rect(10, 2, win.view.bounds.width, 15)).string_(argString);
+		statusStString.string_(argString);
 		statusMood.switch
 		(
 			-1,
@@ -252,8 +251,8 @@ Hadron
 				});
 			},
 			0,
-			{//neutral
-				//nothing
+			{
+				statusView.background_(Color.gray(0.8));
 			},
 			1,
 			{//success text
