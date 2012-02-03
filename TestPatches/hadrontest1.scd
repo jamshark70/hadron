@@ -21,6 +21,7 @@ Error.debug = false;
 
 s.boot;
 
+(
 SynthDef(\analog, { |outBus0, outBus1, freq = 440, dtune = 1.003, ffreq = 2000, rq = 0.1, amp = 0.1, gate = 1|
 	var sig = Saw.ar(freq * [1, dtune], amp).sum;
 	sig = RLPF.ar(sig, ffreq, rq);
@@ -34,6 +35,7 @@ SynthDef(\analog, { |outBus0, outBus1, freq = 440, dtune = 1.003, ffreq = 2000, 
 		amp: \amp.asSpec
 	)
 )).add;
+)
 
 ~debugAddr = DebugNetAddr("127.0.0.1", 57110);
 ~saveAddr = NetAddr("127.0.0.1", 57110);

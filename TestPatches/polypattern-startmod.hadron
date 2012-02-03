@@ -1,0 +1,20 @@
+?Hadron 1
+?StartPlugs
+HrDACunnamed64834nilPoint( 191, 399 )Rect(1040, 59, 250, 130)Rect(116.61793756485, 956.05097913742, 250, 130)false
+HrWrapSynthunnamed63799[ "analog" ]Point( 199, 277 )Rect(870, 186, 350, 240)Rect(400, 400, 350, 240)false
+HrPolyPatternunnamed1610172973nilPoint( 200, 179 )Rect(765, 204, 600, 490)Rect(263.80240130424, 77.637057304382, 600, 490)false
+HrCtlModunnamed842296637nilPoint( 205, 78 )Rect(611, 129, 450, 240)Rect(782.18688249588, 157.26203155518, 450, 240)false
+?EndPlugs
+?StartConnections
+64834[ [ 63799, 0 ], [ 63799, 1 ] ][  ]
+63799[  ][ [ 64834, 0 ], [ 64834, 1 ] ]
+1610172973[  ][ [ nil, nil ], [ nil, nil ] ]
+842296637[ [ nil, nil ] ][ [ nil, nil ] ]
+?EndConnections
+?StartPlugParams
+648340.000000nil0
+637990.447400nilList[  ]0.529200nilList[  ]0.666600nilList[  ]0.768600nilList[  ]0.316200nilList[  ]1
+1610172973'analog1'[ [ 'dur', "Pwhite(1, 4, inf) * 0.125" ], [ 'degree', "Pwhite(-7, 7, inf)" ], [ 'ffreq', "Pexprand(600, 12000, inf)" ] ]637990
+842296637"{ ToggleFF.kr(TDuty.kr(Dwhite(1.5, 6.49999).round)) }"[ 3, 1 ]14
+?EndPlugParams
+?EndSave
