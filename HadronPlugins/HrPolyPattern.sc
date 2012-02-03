@@ -80,7 +80,7 @@ HrPolyPattern : HadronPlugin {
 		});
 
 		modsMenu = PopUpMenu(window, boundFunc.(4))
-		.items_([])
+		.items_(["None"])
 		.action_({ |view|
 			if(subpatEdit.focusedRow.notNil) {
 				subpatEdit[subpatEdit.focusedRow].key = view.item.asSymbol;
