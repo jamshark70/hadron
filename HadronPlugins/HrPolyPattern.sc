@@ -259,6 +259,7 @@ HrPolyPattern : HadronPlugin {
 				playError = nil;
 				player = this.asPattern.play(protoEvent: baseEvent, quant: HrPbindef(key).quant);
 				playWatcher = SimpleController(player).put(\stopped, {
+					playWatcher.remove;
 					player = nil;
 					defer { startButton.value = 0 };
 				});
