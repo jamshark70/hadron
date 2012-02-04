@@ -207,7 +207,7 @@ HrPdefn : HrPatternProxy {
 		all = IdentityDictionary.new;
 	}
 
-	*keys { ^all.keys }
+	*keys { ^this.all.keys }
 
 	*new { arg key, item;
 		var res = this.at(key);
@@ -229,13 +229,14 @@ HrPdefn : HrPatternProxy {
 
 	prAdd { arg argKey;
 		key = argKey;
-		all.put(argKey, this);
-		this.class.changed(\added);
+		this.class.all.put(argKey, this);
+		this.class.changed(\added, key);
 	}
 
 	remove {
-		this.class.all.removeAt(this.key);
+		var saveKey = this.key;
+		this.class.all.removeAt(saveKey);
 		this.clear;
-		this.class.changed(\removed);
+		this.class.changed(\removed, saveKey);
 	}
 }
