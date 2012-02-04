@@ -322,6 +322,8 @@ HrMultiCtlMod : HrCtlMod {
 	notifyPlugAdd { |argPlug|
 		modControl.do(_.plugAdded);
 	}
+
+	updateModTargets { modControl.do(_.getParams) }
 	
 	wakeFromLoad {
 		modControl.do(_.doWakeFromLoad);

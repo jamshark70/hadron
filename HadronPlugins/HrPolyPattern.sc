@@ -32,6 +32,7 @@ HrPolyPattern : HadronPlugin {
 			Rect(2 + (i * (4 + width)), 2, width, 20)
 		};
 
+		HrPMod.addDependant(this);  // track +/- mod targets
 		baseEvent = Event(proto: (group: group));  // will use proto for play parameters
 
 		if(extraArgs.size >= 1) {
@@ -102,7 +103,13 @@ HrPolyPattern : HadronPlugin {
 				})
 			},
 			{ targetPlugin.uniqueID },
-			{ startButton.value }
+			{ startButton.value },
+			{	var pmod;
+				mappedMods.keys.collect { |pmodname|
+					pmod = HrPMod(pmodname);
+					[pmodname, pmod.value, pmod.spec]
+				}
+			}
 		];
 		saveSets = [
 			{ |argg| key = argg },   // do not try to change gui here!
@@ -122,13 +129,21 @@ HrPolyPattern : HadronPlugin {
 					plug.uniqueID == argg
 				}
 			},
-			{ |argg| startButton.valueAction = argg }
+			{ |argg| startButton.valueAction = argg },
+			{ |argg|
+				// need to ensure all HrPMods exist
+				argg.do { |row| HrPMod(*row) }
+			}
 		];
 
 		modGets.put(\run, { startButton.value });
 		modSets.put(\run, { |argg| defer { startButton.valueAction = binaryValue(argg > 0) } });
 		// normally just "value = " but here we need a client action
 		modMapSets.put(\run, { |argg| defer { startButton.valueAction = binaryValue(argg > 0) } });
+
+		modGets.putAll(HrPMod.modGets);
+		modSets.putAll(HrPMod.modSets);
+		modMapSets.putAll(HrPMod.modMapSets);
 	}
 
 	key_ { |newKey, savedTexts|
@@ -218,11 +233,26 @@ HrPolyPattern : HadronPlugin {
 			}
 		} {
 			case
-			{ #[added, removed].includes(what) } {
+			{ obj === HrPbindef and: { #[added, removed].includes(what) } } {
 				defer {
 					pdefMenu.items = (if(key.isNil) { ["empty"] } { [] })
-						++ HrPbindef.keys.asArray.sort;
+					++ HrPbindef.keys.asArray.sort;
 					pdefMenu.value = pdefMenu.items.detectIndex { |name| (name.asSymbol == key) } ? 0;
+				}
+			}
+			{ obj === HrPMod } {
+				switch(what)
+				{ \added } {
+					modGets.put(more[0], HrPMod.modGets[more[0]]);
+					modSets.put(more[0], HrPMod.modSets[more[0]]);
+					modMapSets.put(more[0], HrPMod.modMapSets[more[0]]);
+					parentApp.alivePlugs.do(_.updateModTargets);
+				}
+				{ \removed } {
+					modGets.removeAt(more[0]);
+					modSets.removeAt(more[0]);
+					modMapSets.removeAt(more[0]);
+					parentApp.alivePlugs.do(_.updateModTargets);
 				}
 			}
 		}
@@ -301,6 +331,7 @@ HrPolyPattern : HadronPlugin {
 	updateBusConnections { group.set(\outBus0, outBusses[0]) }
 	cleanUp {
 		HrPbindef.removeDependant(this);
+		HrPMod.removeDependant(this);
 		subpatEdit.removeDependant(this);
 		playWatcher.remove;
 		player.stop;
@@ -310,8 +341,9 @@ HrPolyPattern : HadronPlugin {
 	mapModCtl { |paramName, ctlBus|
 		var node;
 		if(paramName != \start) {
-			nil
-			// later: connect to HrPdefn
+			// adds/removes from mappedMods
+			// not needed for synth, but needed for save/load
+			super.mapModCtl(paramName, ctlBus);
 		};
 	}
 	getMapModArgs { ^[] }

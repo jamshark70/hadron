@@ -755,5 +755,8 @@ HadronPlugin
 		};
 	}
 
+	// plugs that own HadronModTargetControls should override this
+	updateModTargets {}
+
 	defName { ^"" }  // really only for poly stuff, may fill in for others later
 }

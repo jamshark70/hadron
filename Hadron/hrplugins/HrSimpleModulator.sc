@@ -87,7 +87,6 @@ HrSimpleModulator : HadronPlugin
 	
 	notifyPlugKill
 	{|argPlug|
-		
 		modControl.plugRemoved(argPlug);
 	}
 	
@@ -95,6 +94,8 @@ HrSimpleModulator : HadronPlugin
 	{|argPlug|
 		modControl.plugAdded;
 	}
+
+	updateModTargets { modControl.getParams }
 	
 	wakeFromLoad
 	{
