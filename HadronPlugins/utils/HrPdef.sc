@@ -82,7 +82,7 @@ HrPdef : HrEventPatternProxy {
 		this.class.all.removeAt(this.key);
 		this.clear;
 		this.class.changed(\removed);
-	}	
+	}
 
 	*initClass {
 		all = IdentityDictionary.new;
