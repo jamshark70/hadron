@@ -6,7 +6,7 @@ HadronPlugin
 	<>saveGets, <>saveSets, <extraArgs, <boundCanvasItem, <helpString,
 	<modSets, <modGets, <modMapSets, <mappedMods;
 
-	var <synthInstance;
+	var <synthInstance, <polyMode = false;
 
 	var badValueSynth, badValueResp;
 	var identView;
@@ -608,10 +608,15 @@ HadronPlugin
 				.action_({
 					registration.remove;
 					tempwin.close;
-					this.makeSynth;
+					if(polyMode.not) { this.makeSynth };
 				});
 			tempwin.front;
 		};
+
+		// mainly for pattern-player plugins
+		// the bad value will be detected in the target plugin(s),
+		// but this should also stop the pattern
+		this.changed(\badValue, badchannels);
 	}
 
 	ident_ { |string|
@@ -753,6 +758,7 @@ HadronPlugin
 		} {
 			if(synthInstance.isNil) { this.makeSynth }
 		};
+		polyMode = bool;
 	}
 
 	// plugs that own HadronModTargetControls should override this

@@ -172,11 +172,13 @@ HrPolyPattern : HadronPlugin {
 
 	targetPlugin_ { |plug|
 		if((plug.tryPerform(\polySupport) ? false) or: { plug.isNil }) {
+			targetPlugin.removeDependant(this);
 			targetPlugin.tryPerform(\polyMode_, false);
 			targetPlugin = plug;
 			if(plug.notNil) {
 				targetPlugin.polyMode = true;
 				baseEvent.proto[\instrument] = plug.defName.asSymbol;
+				targetPlugin.addDependant(this);
 			};
 			defer {
 				targetMenu.value = (plugList.indexOf(targetPlugin) ? -1) + 1;
@@ -215,7 +217,8 @@ HrPolyPattern : HadronPlugin {
 
 	update { |obj, what ... more|
 		var temp;
-		if(obj === subpatEdit) {
+		case
+		{ obj === subpatEdit } {
 			switch(what)
 			{ \focusedRow } {
 				if(more[0].notNil) {
@@ -231,29 +234,30 @@ HrPolyPattern : HadronPlugin {
 			{ \deleteRow } {
 				subpatEdit[min(more[0], subpatEdit.size-1)].tryPerform(\focus, true);
 			}
-		} {
-			case
-			{ obj === HrPbindef and: { #[added, removed].includes(what) } } {
-				defer {
-					pdefMenu.items = (if(key.isNil) { ["empty"] } { [] })
-					++ HrPbindef.keys.asArray.sort;
-					pdefMenu.value = pdefMenu.items.detectIndex { |name| (name.asSymbol == key) } ? 0;
-				}
+		}
+		{ obj === targetPlugin and: { what == \badValue } } {
+			this.run(false);
+		}
+		{ obj === HrPbindef and: { #[added, removed].includes(what) } } {
+			defer {
+				pdefMenu.items = (if(key.isNil) { ["empty"] } { [] })
+				++ HrPbindef.keys.asArray.sort;
+				pdefMenu.value = pdefMenu.items.detectIndex { |name| (name.asSymbol == key) } ? 0;
 			}
-			{ obj === HrPMod } {
-				switch(what)
-				{ \added } {
-					modGets.put(more[0], HrPMod.modGets[more[0]]);
-					modSets.put(more[0], HrPMod.modSets[more[0]]);
-					modMapSets.put(more[0], HrPMod.modMapSets[more[0]]);
-					parentApp.alivePlugs.do(_.updateModTargets);
-				}
-				{ \removed } {
-					modGets.removeAt(more[0]);
-					modSets.removeAt(more[0]);
-					modMapSets.removeAt(more[0]);
-					parentApp.alivePlugs.do(_.updateModTargets);
-				}
+		}
+		{ obj === HrPMod } {
+			switch(what)
+			{ \added } {
+				modGets.put(more[0], HrPMod.modGets[more[0]]);
+				modSets.put(more[0], HrPMod.modSets[more[0]]);
+				modMapSets.put(more[0], HrPMod.modMapSets[more[0]]);
+				parentApp.alivePlugs.do(_.updateModTargets);
+			}
+			{ \removed } {
+				modGets.removeAt(more[0]);
+				modSets.removeAt(more[0]);
+				modMapSets.removeAt(more[0]);
+				parentApp.alivePlugs.do(_.updateModTargets);
 			}
 		}
 	}
@@ -333,13 +337,13 @@ HrPolyPattern : HadronPlugin {
 		HrPbindef.removeDependant(this);
 		HrPMod.removeDependant(this);
 		subpatEdit.removeDependant(this);
+		if(targetPlugin.notNil) { targetPlugin.removeDependant(this) };
 		playWatcher.remove;
 		player.stop;
 		iMadePdefs.do { |name| HrPbindef(name).remove };
 	}
 
 	mapModCtl { |paramName, ctlBus|
-		var node;
 		if(paramName != \start) {
 			// adds/removes from mappedMods
 			// not needed for synth, but needed for save/load
