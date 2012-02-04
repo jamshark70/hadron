@@ -240,3 +240,67 @@ HrPdefn : HrPatternProxy {
 		this.class.changed(\removed, saveKey);
 	}
 }
+
+
+// A pattern-y thing that serves as a modulation target
+
+HrPMod : HrPdefn {
+	classvar <>allMods;
+	var <spec;
+
+	*initClass {
+		allMods = IdentityDictionary.new;
+		StartUp.add {
+			Library.put(HrPMod, \modSets, IdentityDictionary.new);
+			Library.put(HrPMod, \modGets, IdentityDictionary.new);
+		};
+	}
+
+	*all { ^allMods }
+	*at { |key| ^allMods[key] }
+
+	*new { |key, value, spec|
+		var res, asSpec;
+		res = this.at(key);
+		if(res.isNil) {
+			asSpec = spec.asSpec;
+			res = super.new(key).source_(value ?? { asSpec.default }).spec_(asSpec);
+		} {
+			// not changing anything, so skip the updates - speed
+			if(value.isNil and: { spec.isNil }) { ^res };
+			asSpec = (spec ?? { res.spec }).asSpec;
+			if(spec.notNil) { res.spec = asSpec };
+			res.source = asSpec.constrain(value ?? { res.source ?? { asSpec.default } });
+		};
+		^res
+	}
+
+	value { ^source }
+	value_ { |val| this.source = val }
+
+	source_ { |val|
+		// have to check val because the superclass does source_(nil) upon remove
+		super.source = if(spec.notNil and: { val.notNil }) { spec.constrain(val) } { val };
+	}
+
+	spec_ { |newSpec|
+		spec = newSpec.asSpec;
+		if(source.notNil) { this.source = source };  // re-constrain
+	}
+
+	prAdd { |argKey|
+		this.class.modGets.put(argKey, { source });
+		this.class.modSets.put(argKey, { |argg| this.source = argg });
+		super.prAdd(argKey);
+	}
+
+	remove {
+		this.class.modGets.removeAt(key);
+		this.class.modSets.removeAt(key);
+		super.remove;
+	}
+
+	*modGets { ^Library.at(HrPMod, \modGets) }
+	*modSets { ^Library.at(HrPMod, \modSets) }
+	*modMapSets { ^Library.at(HrPMod, \modSets) }
+}
