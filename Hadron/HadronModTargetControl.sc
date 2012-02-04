@@ -1,7 +1,7 @@
 HadronModTargetControl
 {
 	var parentApp, <parentPlug, <currentSelPlugin, <currentSelParam, <paramNames, loadHolder;
-	
+
 	*new
 	{|argParentView, argBounds, argParentApp, argParentPlug|
 	

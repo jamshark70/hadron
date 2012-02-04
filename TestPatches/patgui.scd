@@ -160,3 +160,13 @@ HrPbindef.exists(\a)
 HrPbindef(\a)
 
 Meta_HrPbindef.findRespondingMethodFor(\exists)
+
+
+
+// HrPMod additions?????
+f = { |...args| args.postln };
+
+HrPMod.addDependant(f);
+HrPMod.removeDependant(f);
+
+HrPMod(\a, 1, [0.1, 10]);
