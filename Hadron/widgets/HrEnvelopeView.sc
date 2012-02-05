@@ -28,12 +28,22 @@ HrEnvelopeView : SCViewHolder {
 		releaseNodeColor = Color.red(0.5);
 		fillColor = Color.black;
 		background = Color.white;
-		curveZoneColor = Color(0.9, 0.9, 1.0);
+		curveZoneColor = Color(0, 0, 1.0, alpha: 0.12); // Color(0.9, 0.9, 1.0);
 
 		this.view = CompositeView(parent, bounds);
-		userView = UserView(view, zeroBounds)
-		.background_(background)
-		.drawFunc_({ |view|
+		if(GUI.id == \qt) {
+			envView = EnvelopeView(view, zeroBounds).background_(background);
+			userView = UserView(envView, zeroBounds).background_(Color.clear);
+			// pass mouse movements thru to the envView
+			userView.mouseDownAction_(false)
+			.mouseUpAction_(false)
+			.mouseMoveAction_(false);
+		} {
+			userView = UserView(view, zeroBounds).background_(background);
+			envView = EnvelopeView(view, zeroBounds).background_(Color.clear);
+		};
+
+		userView.drawFunc_({ |view|
 			var point, yboundsPoint;
 			// any curve that is a number gets a draggable zone
 			(0 .. curves.size - 2).do { |i|
@@ -61,8 +71,7 @@ HrEnvelopeView : SCViewHolder {
 				};
 			};
 		});
-		envView = EnvelopeView(view, zeroBounds)
-			.background_(Color.clear);
+
 		envView.thumbSize = thumbSize;
 		envView.action = { |view|
 			var mouse, left, right;
