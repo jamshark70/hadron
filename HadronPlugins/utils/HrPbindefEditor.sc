@@ -191,7 +191,7 @@ Use an interactive code window to edit this pattern.
 	}
 
 	update { |obj, what ... more|
-		var i, new;
+		var i, temp;
 		if(obj === model) {
 			if(obj.isKindOf(HrPbindef)) {
 				this.key = obj.key;
@@ -208,17 +208,18 @@ Use an interactive code window to edit this pattern.
 						subpats[i].bounds = Rect(2, 14 + (24*(i+1)), mainView.bounds.width-4, 24);
 					};
 				};
-				new = HrPatternLine(mainView,
+				temp = HrPatternLine(mainView,
 					Rect(2, 14 + (24*i), mainView.bounds.width-4, 24),
 					"(new)", nil, nil, i
 				);
-				subpats.insert(i, new);  // adds if i >= size
-				new.addDependant(this);
+				subpats.insert(i, temp);  // adds if i >= size
+				temp.addDependant(this);
 				this.changed(\addRow, i);
 				// actually, no... don't do this until you fill in a key and value
 				// this.rebuildModel;
 			}
 			{ \deleteRow } {
+				temp = subpats[i];
 				subpats[i].removeDependant(this);
 				subpats[i].remove;
 				subpats.removeAt(i);
@@ -229,13 +230,13 @@ Use an interactive code window to edit this pattern.
 					};
 				};
 				this.rebuildModel;
-				this.changed(\deleteRow, i);
+				this.changed(\deleteRow, i, temp);
 			}
 			{ \reorder } {
 				// more[0] is new index, more[1] is old
 				// obj is nil if moving to first place
 				// using 'new' as a temp var
-				new = subpats[more[1]];
+				temp = subpats[more[1]];
 				if(more[0] > more[1]) {
 					// moving down
 					(more[1] .. more[0]-1).do { |j|
@@ -252,15 +253,17 @@ Use an interactive code window to edit this pattern.
 					};
 					more[0] = more[0] + 1;
 				};
-				subpats[more[0]] = new;
-				new.index = more[0];
-				new.bounds = Rect(2, 14 + (24*(more[0])), mainView.bounds.width-4, 24);
+				subpats[more[0]] = temp;
+				temp.index = more[0];
+				temp.bounds = Rect(2, 14 + (24*(more[0])), mainView.bounds.width-4, 24);
 				this.rebuildModel;
 				this.changed(\reorder, *more);
 			}
 			{ \key } {
 				if(obj.text != "") {
 					this.rebuildModel;
+					// send old key back up to parent
+					this.changed(\rowKey, subpats.indexOf(obj), more[1]);
 				}
 			}
 			{ \source } {
@@ -326,12 +329,18 @@ HrPatternLine : SCViewHolder {
 		.states_([["-"]])
 		.action_({ this.changed(\deleteRow, index) });
 
-		key = argKey.asSymbol;
+		key = argKey.asHrPbindefKey;
 		// key.asString: for SwingOSC - it chokes on symbols
+		// also needed for HrMonoTarget
 		label = TextField(view, 100@height).string_(key.asString).align_(\center)
 		.action_({ |view|
-			key = view.string.asSymbol;
-			this.changed(\key, key);
+			// do not try to act on the display string from an HrMonoTarget
+			// check is needed because this runs when losing focus,
+			// even if string was set programmatically and the user didn't change it
+			if(view.string.first != $/) {
+				key = view.string.asSymbol;
+				this.changed(\key, key);
+			};
 		})
 		.focusGainedAction_({ this.changed(\gotFocus, index) })
 		.focusLostAction_({ |view|
@@ -434,9 +443,10 @@ HrPatternLine : SCViewHolder {
 	}
 
 	key_ { |name|
-		key = name.asSymbol;
+		var oldKey = key;
+		key = name.asHrPbindefKey;
 		label.string = name.asString;
-		this.changed(\key, key);
+		this.changed(\key, key, oldKey);
 	}
 
 	isLast_ { |bool(false)|

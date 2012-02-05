@@ -107,7 +107,9 @@ HrPbindProxy : Pattern {
 		^source.embedInStream(inval)
 	}
 	find { arg key;
-		pairs.pairsDo { |u,x,i| if(u === key) { ^i } }; ^nil
+		// this is u === key in the original
+		// but I need to match HrMonoTarget objects too
+		pairs.pairsDo { |u,x,i| if(u == key) { ^i } }; ^nil
 	}
 	quant_ { arg val;
 		pairs.pairsDo { arg key, item; item.quant = val }; // maybe use ref later

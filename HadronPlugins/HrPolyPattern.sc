@@ -71,22 +71,15 @@ HrPolyPattern : HadronPlugin {
 			this.key = new;  // switch anyway
 		});
 
-		plugList = parentApp.alivePlugs.select(_.polySupport);
-
+		this.setPlugList;
 		targetMenu = PopUpMenu(window, boundFunc.(3))
-		.items_(["None"] ++ plugList.collect { |plug| plug.boundCanvasItem.string }.sort)
-		.value_(0)
-		.action_({ |view|
-			this.targetPlugin = plugList[view.value-1];  // nil if "none"
-		});
+		.items_(["None"] ++ plugList.collect { |plug| plug.boundCanvasItem.string })
+		.value_(0);
 
 		modsMenu = PopUpMenu(window, boundFunc.(4))
-		.items_(["None"])
-		.action_({ |view|
-			if(subpatEdit.focusedRow.notNil) {
-				subpatEdit[subpatEdit.focusedRow].key = view.item.asSymbol;
-			}
-		});
+		.items_(["None"]);
+
+		this.initAction;
 
 		subpatEdit = HrPbindefEditor(window, Rect(2, 24,
 			window.bounds.width - 4, window.bounds.height - 26));
@@ -195,17 +188,17 @@ HrPolyPattern : HadronPlugin {
 
 	notifyPlugAdd { |plug|
 		var oldPlug, oldPlugList;
-		if(plug.polySupport) {
-			oldPlugList = plugList;
-			plugList = parentApp.alivePlugs.select(_.polySupport);
+		oldPlugList = plugList;
+		this.setPlugList;
+		if(plugList != oldPlugList) {
 			defer {
 				oldPlug = oldPlugList[targetMenu.value - 1];
 				targetMenu.items = ["None"] ++ plugList.collect { |plug|
 					plug.boundCanvasItem.string
-				}.sort;
+				};
 				targetMenu.value = plugList.indexOf(oldPlug) ? 0;
 			};
-		}
+		};
 	}
 
 	notifyPlugKill { |plug|
@@ -351,4 +344,23 @@ HrPolyPattern : HadronPlugin {
 		};
 	}
 	getMapModArgs { ^[] }
+
+	/****** SUBCLASS SUPPORT ******/
+	// moderately hacky...
+
+	initAction {
+		targetMenu.action_({ |view|
+			this.targetPlugin = plugList[view.value-1];  // nil if "none"
+		});
+
+		modsMenu.action_({ |view|
+			if(subpatEdit.focusedRow.notNil) {
+				subpatEdit[subpatEdit.focusedRow].key = view.item.asSymbol;
+			}
+		});
+	}
+
+	setPlugList {
+		plugList = parentApp.alivePlugs.select(_.polySupport);
+	}
 }
