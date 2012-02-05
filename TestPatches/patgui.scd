@@ -170,3 +170,83 @@ HrPMod.addDependant(f);
 HrPMod.removeDependant(f);
 
 HrPMod(\a, 1, [0.1, 10]);
+
+
+
+// mono targets
+h = Hadron.new;
+
+c = HrMonoTarget(h, h.alivePlugs[0], \freq);
+c.asSymbol
+
+e = Pbind(c, Pn(1, 1)).asStream.next(());
+
+e.keys.do { |key|
+	key.plugin.modSets[key.modName].def.dumpByteCodes
+};
+
+
+// poc
+(
+Event.addEventType(\hrMonoPattern, #{ |server|
+	var freqs, lag, dur, strum, bndl, msgFunc;
+	freqs = ~freq = ~detunedFreq.value;
+
+	if(freqs.isRest.not) {
+		~server = server;
+		freqs = ~freq;
+		~amp = ~amp.value;
+
+		bndl = server.makeBundle(false, {
+			currentEnvironment.keysValuesDo { |key, val|
+				if(key.isKindOf(HrMonoTarget)) {
+					// this generates the n_set message to add to the bundle
+					if(val.class === Symbol) {
+						key.value = val.envirGet
+					} {
+						key.value = val;
+					};
+				};
+			};
+		});
+
+		~schedBundleArray.value(~lag, ~timingOffset, server, bndl);
+	};
+});
+)
+
+h = Hadron.new;
+
+p = h.alivePlugs;
+
+Event[
+	\type -> \hrMonoPattern,
+	HrMonoTarget(h, p[0], \freq) -> exprand(400, 1200),
+	HrMonoTarget(h, p[2], \param0) -> exprand(1000, 12000),
+	HrMonoTarget(h, p[3], \t_trig) -> 1
+].play;
+
+
+// awright, this is CRAZY fricken' dope
+z = Pbind(
+	\type, \hrMonoPattern,
+	HrMonoTarget(h, p[0], \freq), Pexprand(400, 1200),
+	HrMonoTarget(h, p[2], \param0), Pexprand(1000, 12000),
+	HrMonoTarget(h, p[3], \t_trig), 1,
+	\dur, Pwhite(1, 4, inf) * 0.125
+).play;
+
+z.stop;
+
+
+// mapping works too!
+z = Pbind(
+	\type, \hrMonoPattern,
+	\degree, Pwhite(-7, 7, inf),
+	HrMonoTarget(h, p[0], \freq), \freq,
+	HrMonoTarget(h, p[2], \param0), Pexprand(1000, 12000),
+	HrMonoTarget(h, p[3], \t_trig), 1,
+	\dur, Pwhite(1, 4, inf) * 0.125
+).play;
+
+z.stop;
