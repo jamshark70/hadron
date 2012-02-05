@@ -219,6 +219,22 @@ h = Hadron.new;
 
 p = h.alivePlugs;
 
+p.last.targetPlugin
+p.last.slotAt(\plugList)
+
+p.last.key
+p.last.slotAt(\baseEvent).proto
+
+HrPbindef(\x).source.pairs[2].asString
+
+HrMonoTarget(h, p[0], \freq).getSaveValues
+// HrMonoTarget(##).fromSymbol('794977131:freq')
+HrMonoTarget(h).parse('794977131:freq').inspect;
+
+HrMonoTarget.fromSymbol(h, '794977131:freq').inspect
+
+HrPbindef(\x)
+
 Event[
 	\type -> \hrMonoPattern,
 	HrMonoTarget(h, p[0], \freq) -> exprand(400, 1200),
