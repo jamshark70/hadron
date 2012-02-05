@@ -1,0 +1,62 @@
+class:: HrCtlEnv
+summary:: A control-rate envelope generator, targeting modulatable controls of other plug-ins
+related:: Classes/HrCtlMod, Classes/HrMultiCtlMod
+categories:: HadronPlugins
+
+DESCRIPTION::
+This is a Hadron plugin. Hadron plugins are not meant for instantiating by hand in code. They are used internally by the Hadron system.
+
+Like link::Classes/HrCtlMod::, but the signal comes from an envelope that may be edited graphically.
+
+strong::Graphic editing::
+
+An envelope consists of a number of segments, each with endpoints and a curve factor. Drag the endpoints to any position (except: an endpoint may not go before the preceding endpoint, or after the next one). To adjust the curve, drag the spot inside the blue rectangles.
+
+Ctrl-click an endpoint to delete it. Ctrl-click between endpoints to insert a new one.
+
+image::Screenshot-HrCtlEnv.png#Editor panel::
+
+The "trigger" button sends an impulse to start the envelope. To trigger the envelope automatically, use link::Classes/HrCtlMod:: or link::Classes/HrMultiCtlMod:: to modulate HrCtlEnv's "t_trig" parameter, or connect to a trigger signal to HrCtlEnv's input.
+
+Triggers are echoed at HrCtlEnv's right output. If you need several envelope generators to trigger at the same time, you can daisy-chain them and all will trigger at the same time.
+
+image::three-envelopes.png#Daisy-chained triggers::
+
+strong::Envelope duration: :: The envelope editor represents one second. Use the "time scale" slider to stretch or compress the envelope in time. This may be modulated by HrCtlMod.
+
+strong::Loop and release nodes: :: SuperCollider envelopes can fall into two types:
+
+list::
+definitionlist::
+## Timed || "rel" is "None." The envelope starts at the beginning and proceeds to the end according to its own timing.
+## Gated || "rel" is the number of an endpoint (the first endpoint is 0). When the envelope generator reaches this endpoint, it will hold at this level until the gate is released. Or, if "loop" is an endpoint number (must be less than "rel"), then the envelope generator cycles through those endpoints until the gate closes.
+::
+::
+
+The trigger or modulation input can also be a gate: a signal that is positive (x > 0) while the gate is open, and 0 when closed. code::Trig1.kr(trig, duration):: is a very useful generator for gates.
+
+definitionlist::
+## One Input || A trigger.
+## Two Outputs || Left channel = envelope signal. Right channel = trigger/gate output.
+## Creation arguments ||
+definitionlist::
+## 1: shouldWatch || Boolean (default = false). If true, the target plug-ins will show the modulation in their windows. If false, you will hear the effect of the modulation but not see it. Envelopes are typically fast-moving signals, not meaningful to view at slow update rates.
+## 2: pollRate || How often to update the target plug-ins' windows. May be set later using a slider.
+::
+::
+
+
+
+CLASSMETHODS::
+
+private:: initClass
+private:: height
+private:: shouldWatch
+private:: numOuts
+
+INSTANCEMETHODS::
+
+private:: spec
+private:: init
+private:: synthArgs
+private:: makeSynthDef

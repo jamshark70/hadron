@@ -1,0 +1,43 @@
+CLASS:: HrMultiCtlMod
+summary:: A generator of multiple control signals, targeting modulatable controls of other plug-ins
+related:: Classes/HrCtlMod, Classes/HrCtlEnv
+categories:: HadronPlugins
+
+DESCRIPTION::
+This is a Hadron plugin. Hadron plugins are not meant for instantiating by hand in code. They are used internally by the Hadron system.
+
+HrMultiCtlMod follows the same structure as link::Classes/HrCtlMod::. HrCtlMod can map onto only one modulation target. HrMultiCtlMod can generate several channels of control signals, mapping each channel to a different modulatable control.
+
+definitionlist::
+## Input(s) || Audio-rate signal(s). These are converted to control rate and passed as arguments to the user function. The number of function arguments determines the number of inputs.
+## Output(s) || The control-rate channels are mirrored in the plug-in's outputs as audio-rate signals.
+## User function || Defines the control signal. May optionally accept one or more arguments, e.g. code:: { |sig| sig.linexp(-1, 1, 200, 800) } ::. The result must be control rate, and should output the real values that the control expects.
+## Creation arguments ||
+definitionlist::
+## 1: numChannels || Number of initial output channels. The actual number of channels from the user function will override this.
+## 2: shouldWatch || Boolean (default = true). If true, the target plug-ins will show the modulation in their windows. If false, you will hear the effect of the modulation but not see it.
+## 3: pollRate || How often to update the target plug-ins' windows. May be set later using a slider.
+::
+::
+
+
+CLASSMETHODS::
+
+private:: initClass
+private:: height
+
+INSTANCEMETHODS::
+
+private:: init
+private:: cleanUp
+private:: synthArgs
+private:: makeSynthDef
+private:: rebuildBus
+private:: rebuildTargets
+private:: update
+private:: targetControlSize
+private:: notifyPlugKill
+private:: notifyPlugAdd
+private:: updateModTargets
+private:: wakeFromLoad
+private:: wakeConnections

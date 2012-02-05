@@ -1,0 +1,55 @@
+class:: HrCtlMod
+summary:: A control-signal generator, targeting modulatable controls of other plug-ins
+related:: Classes/HrSimpleModulator, Classes/HrCtlEnv, Classes/HrMultiCtlMod
+categories:: HadronPlugins
+
+DESCRIPTION::
+This is a Hadron plugin. Hadron plugins are not meant for instantiating by hand in code. They are used internally by the Hadron system.
+
+This plug-in uses an arbitrary function provided by the user to generate a control rate signal. This signal may be assigned to other plugins' modulation targets, using the menus to choose the plug-in and control name.
+
+HrCtlMod is based on link::Classes/HrSimpleModulator::, but it maps the target's control input to a control bus allocated by this plugin.
+
+list::
+## The target reads a smooth curve from the modulation function (unlike HrSimpleModulator's discrete updates).
+## Graphic updates take place periodically according to the "update rate" slider. This does not affect the sound -- this is only for the interface.
+::
+
+note:: Because of the server-side mapping, the function should output the real values that the control expects. This is different from HrSimpleModulator.::
+
+definitionlist::
+## One input || An audio-rate signal. This is converted to control rate and passed as an argument to the user function.
+## One output || The control-rate signal is mirrored in the plug-in's output as an audio-rate signal.
+## User function || Defines the control signal. May optionally accept one argument, e.g. code:: { |sig| sig.linexp(-1, 1, 200, 800) } ::. The result must match the number of channels of the modulation target (almost always one channel), and be control rate.
+## Creation arguments ||
+definitionlist::
+## 1: numChannels || Number of channels. Most modulation targets are single-channel. HrPresetMorph defines a modulation target, code::\surfaceXY::, that accepts two channels.
+## 2: shouldWatch || Boolean (default = true). If true, the target plug-in will show the modulation in its window. If false, you will hear the effect of the modulation but not see it.
+## 3: pollRate || How often to update the target plug-in's window. May be set later using a slider.
+::
+::
+
+
+CLASSMETHODS::
+
+private:: defaultPollRate
+private:: initClass
+private:: height
+private:: numOuts
+private:: shouldWatch
+
+INSTANCEMETHODS::
+
+private:: numChannels
+private:: pollRate
+private:: shouldWatch
+private:: modulatesOthers
+private:: init
+private:: releaseSynth
+private:: makeSynth
+private:: synthArgs
+private:: makeSynthDef
+private:: cleanUp
+private:: updateBusConnections
+private:: update
+private:: targetControlSize
