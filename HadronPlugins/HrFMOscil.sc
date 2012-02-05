@@ -233,24 +233,24 @@ HrFMOscil : HadronPlugin {
 			timescale: { timescaleSl.value }
 		));
 		modSets.putAll((
-			freq: { |argg| defer { freqSl.valueAction = argg } },
-			detune: { |argg| defer { detuneSl.valueAction = argg } },
-			keyscale: { |argg| defer { keyscaleSl.valueAction = argg } },
-			amp: { |argg| defer { ampSl.valueAction = argg } },
-			timescale: { |argg| defer { timescaleSl.valueAction = argg } }
+			freq: { |argg| synthInstance.set(\freq, argg); defer { freqSl.value = argg } },
+			detune: { |argg| synthInstance.set(\detune, argg); defer { detuneSl.value = argg } },
+			keyscale: { |argg| synthInstance.set(\keyscale, argg); defer { keyscaleSl.value = argg } },
+			amp: { |argg| synthInstance.set(\amp, argg); defer { ampSl.value = argg } },
+			timescale: { |argg| synthInstance.set(\timescale, argg); defer { timescaleSl.value = argg } }
 		));
 		modMapSets.putAll((
 			freq: { |argg| defer { freqSl.value = argg } },
 			detune: { |argg| defer { detuneSl.value = argg } },
 			keyscale: { |argg| defer { keyscaleSl.value = argg } },
 			amp: { |argg| defer { ampSl.value = argg } },
-			timescale: { |argg| defer { timescaleSl.valueAction = argg } }
+			timescale: { |argg| defer { timescaleSl.value = argg } }
 		));
 		modGuis.do { |env, i|
 			#[coarse, fine, level, mul, pan].do { |name|
 				var modname = env[(name ++ "Sym").asSymbol];
 				modGets.put(modname, { env[name].value });
-				modSets.put(modname, { |argg| defer { env[name].valueAction = argg } });
+				modSets.put(modname, { |argg| synthInstance.set(modname, argg); defer { env[name].value = argg } });
 				modMapSets.put(modname, { |argg| defer { env[name].value = argg } });
 			}
 		};

@@ -44,7 +44,7 @@ HrPan : HadronPlugin {
 		];
 
 		modGets.put(\pan, { panSlider.value });
-		modSets.put(\pan, { |argg| defer { panSlider.valueAction_(argg) } });
+		modSets.put(\pan, { |argg| synthInstance.set(\pan, argg); defer { panSlider.value_(argg) } });
 		modMapSets.put(\pan, { |argg| defer { panSlider.value_(argg) } });
 
 		synthInstance = Synth('HrPan', [
@@ -182,10 +182,14 @@ HrFilter : HadronPlugin {
 		params.do { |sl, i| modGets.put(("param" ++ i).asSymbol, { sl.value }) };
 
 		modSets = (
-			preamp: { |argg| defer { preAmpSlider.valueAction = argg } },
-			postamp: { |argg| defer { postAmpSlider.valueAction = argg } }
+			preamp: { |argg| synthInstance.set(\preamp, argg.dbamp); defer { preAmpSlider.value = argg } },
+			postamp: { |argg| synthInstance.set(\postamp, argg.dbamp); defer { postAmpSlider.value = argg } }
 		);
-		params.do { |sl, i| modSets.put(("param" ++ i).asSymbol, { |argg| sl.valueAction = argg }) };
+		params.do { |sl, i| modSets.put(("param" ++ i).asSymbol, { |argg|
+			var argname = filtTypes[filtType][1][i * 2];
+			if(argname.notNil) { synthInstance.set(argname, argg) };
+			defer { sl.value = argg };
+		}) };
 
 		modMapSets = (
 			preamp: { |argg| defer { preAmpSlider.value = argg } },
@@ -437,13 +441,13 @@ HrOscil : HadronPlugin {
 			timescale: { timescaleSl.value }
 		);
 		modSets = (
-			freq: { |argg| defer { freqSl.valueAction = argg } },
-			amp: { |argg| defer { ampSl.valueAction = argg } },
-			noiseDetune: { |argg| defer { noiseFreqSl.valueAction = argg } },
-			noiseAmp: { |argg| defer { noiseAmpSl.valueAction = argg } },
-			noiseRq: { |argg| defer { noiseRqSl.valueAction = argg } },
-			noisePan: { |argg| defer { noisePanSl.valueAction = argg } },
-			timescale: { |argg| defer { timescaleSl.valueAction = argg } }
+			freq: { |argg| synthInstance.set(\freq, argg); defer { freqSl.value = argg } },
+			amp: { |argg| synthInstance.set(\amp, argg); defer { ampSl.value = argg } },
+			noiseDetune: { |argg| synthInstance.set(\noiseDetune, argg); defer { noiseFreqSl.value = argg } },
+			noiseAmp: { |argg| synthInstance.set(\noiseAmp, argg); defer { noiseAmpSl.value = argg } },
+			noiseRq: { |argg| synthInstance.set(\noiseRq, argg); defer { noiseRqSl.value = argg } },
+			noisePan: { |argg| synthInstance.set(\noisePan, argg); defer { noisePanSl.value = argg } },
+			timescale: { |argg| synthInstance.set(\timescale, argg); defer { timescaleSl.value = argg } }
 		);
 		modMapSets = (
 			freq: { |argg| defer { freqSl.value = argg } },
@@ -459,7 +463,7 @@ HrOscil : HadronPlugin {
 				var modname = "o%_%".format(i, key).asSymbol,
 				guiName = (key ++ "Sl").asSymbol;
 				modGets.put(modname, { oscilGuis[i][guiName].value });
-				modSets.put(modname, { |argg| defer { oscilGuis[i][guiName].valueAction = argg } });
+				modSets.put(modname, { |argg| synthInstance.set(modname, argg); defer { oscilGuis[i][guiName].value = argg } });
 				modMapSets.put(modname, { |argg| defer { oscilGuis[i][guiName].value = argg } });
 			}
 		};
