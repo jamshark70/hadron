@@ -20,6 +20,9 @@ HrMonoPattern : HrPolyPattern {
 				if(row[0].isString and: { row[0].beginsWith("HrMonoTarget") }) {
 					target = "{ |app| % }".format(row[0].replace("##", "app"))
 					.interpret.value(parentApp);
+					if(target.respondsTo(\plugin)) {
+						this.addTarget(target.plugin);
+					};
 				} {
 					target = row[0];
 				};
@@ -29,6 +32,7 @@ HrMonoPattern : HrPolyPattern {
 			HrPbindef(key, *pairs);
 			this.key_(key, savedTexts);
 		};
+		saveSets[2] = nil;
 	}
 
 	targetPlugin_ { |plug|
@@ -66,6 +70,9 @@ HrMonoPattern : HrPolyPattern {
 		});
 	}
 
+	// can always play... it might not *do* anything but you can play it
+	targetIsEmpty { ^false }
+
 	addTarget { |target|
 		targetPlugins.add(target);
 		target.addDependant(this);
@@ -87,7 +94,7 @@ HrMonoPattern : HrPolyPattern {
 			switch(what)
 			{ \focusedRow } {
 				if(more[0].notNil) {
-					temp = subpatEdit[more[0]];
+					temp = subpatEdit[more[0]].key;
 					if(temp.isKindOf(HrMonoTarget)) {
 						this.targetPlugin = temp.plugin;
 					} {

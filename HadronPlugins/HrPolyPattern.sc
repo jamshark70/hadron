@@ -264,22 +264,18 @@ HrPolyPattern : HadronPlugin {
 		if(wasPlaying != bool) {
 			if(bool) {
 				if(HrPbindef.exists(key).not) {
-					if(playError != \noPattern) {
-						playError = \noPattern;
-						defer {
-							parentApp.displayStatus("No pattern to play", -1);
-							startButton.value = 0
-						};
+					playError = \noPattern;
+					defer {
+						parentApp.displayStatus("No pattern to play", -1);
+						startButton.value = 0
 					};
 					^this
 				};
-				if(targetPlugin.isNil) {
-					if(playError != \noTarget) {
-						playError = \noTarget;
-						defer {
-							parentApp.displayStatus("Set a target before playing", -1);
-							startButton.value = 0
-						};
+				if(this.targetIsEmpty) {
+					playError = \noTarget;
+					defer {
+						parentApp.displayStatus("Set a target before playing", -1);
+						startButton.value = 0
 					};
 					^this
 				};
@@ -346,7 +342,6 @@ HrPolyPattern : HadronPlugin {
 	getMapModArgs { ^[] }
 
 	/****** SUBCLASS SUPPORT ******/
-	// moderately hacky...
 
 	initAction {
 		targetMenu.action_({ |view|
@@ -363,4 +358,6 @@ HrPolyPattern : HadronPlugin {
 	setPlugList {
 		plugList = parentApp.alivePlugs.select(_.polySupport);
 	}
+
+	targetIsEmpty { ^targetPlugin.isNil }
 }
