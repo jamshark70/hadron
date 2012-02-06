@@ -1,6 +1,6 @@
 class:: HrCtlEnv
 summary:: A control-rate envelope generator, targeting modulatable controls of other plug-ins
-related:: Classes/HrCtlMod, Classes/HrMultiCtlMod
+related:: Classes/HrCtlMod, Classes/HrMultiCtlMod, Classes/HrAudioEnv
 categories:: HadronPlugins
 
 DESCRIPTION::
@@ -23,6 +23,19 @@ Triggers are echoed at HrCtlEnv's right output. If you need several envelope gen
 image::three-envelopes.png#Daisy-chained triggers::
 
 strong::Envelope duration: :: The envelope editor represents one second. Use the "time scale" slider to stretch or compress the envelope in time. This may be modulated by HrCtlMod.
+
+strong::Range mapping: :: The bottom of the envelope editor represents 0; the top is 1. The envelope's target may expect a different range. For example, an envelope controlling filter frequency might need to range between 300 and 10000 Hz, with an exponential curve. The "map" boxes let you set the bottom ("min") and top ("max") values, the type of curve ("warp"), and a rounding unit ("step": 0 means no rounding; 0.1 rounds to the nearest 1/10 and so on).
+
+"Warp" may be any of the following:
+
+table::
+## strong::identifier:: || strong::meaning::
+## \linear or \lin || A straight line between min and max
+## \exponential or \exp || An exponential curve between min and max
+## \sine or \sin || Like the first 1/4 of a sine curve
+## \cosine or \cos || S-shaped, like the first 1/4 of a cosine curve
+## (a number) || User-controllable curve factor. 0 is a straight line. Positive numbers pull the line toward the right; negative numbers pull it to the left.
+::
 
 strong::Loop and release nodes: :: SuperCollider envelopes can fall into two types:
 
