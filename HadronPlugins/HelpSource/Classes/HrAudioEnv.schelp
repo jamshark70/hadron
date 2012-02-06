@@ -1,0 +1,38 @@
+class:: HrAudioEnv
+summary:: An audio-rate envelope generator
+related:: Classes/HrCtlEnv
+categories:: HadronPlugins
+
+DESCRIPTION::
+This is a Hadron plugin. Hadron plugins are not meant for instantiating by hand in code. They are used internally by the Hadron system.
+
+HrAudioEnv behaves very much like link::Classes/HrCtlEnv::. Envelope editing, time scaling and range mapping are the same. See link::Classes/HrCtlEnv:: for details.
+
+The differences:
+
+list::
+## HrCtlEnv can address another plug-in's modulation target, using the pop-up menus. HrAudioEnv does not. It simply sends the audio-rate envelope signal out from the left output.
+## There are no creation arguments. They are related to interface updates. A plug-in's audio output does not change on-screen values, so there are no options to control update visibility and rate.
+::
+
+definitionlist::
+## One Input || A trigger.
+## Two Outputs || Left channel = envelope signal. Right channel = trigger/gate output.
+::
+
+
+CLASSMETHODS::
+
+private:: initClass
+private:: height
+private:: shouldWatch
+
+INSTANCEMETHODS::
+
+private:: modulatesOthers
+private:: init
+private:: synthArgs
+private:: makeSynthDef
+private:: notifyPlugAdd
+private:: notifyPlugKill
+private:: wakeFromLoad

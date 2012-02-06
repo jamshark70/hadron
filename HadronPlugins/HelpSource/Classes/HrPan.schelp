@@ -1,0 +1,42 @@
+class:: HrPan
+summary:: A stereo panner
+categories:: HadronPlugins
+
+DESCRIPTION::
+This is a Hadron plugin. Hadron plugins are not meant for instantiating by hand in code. They are used internally by the Hadron system.
+
+A simple stereo panner. The pan position may be modulated externally by link::Classes/HrCtlMod::.
+
+strong::Controls::
+
+list::
+definitionlist::
+## [Mono/Stereo]-to-stereo || Controls the panning behavior.
+definitionlist::
+## Mono-to-stereo || The two audio inputs are mixed into a mono signal, and panned using link::Classes/Pan2::.
+## Stereo-to-stereo || The two audio inputs are fed separately into link::Classes/Balance2:: for panning. This merely adjusts the balance between the incoming left and right channels; it does not move left to right or vice versa. (If the pan control is full right = 1, the left channel will be inaudible -- lost.)
+::
+## Pan || -1 is full left; 1 is full right.
+::
+::
+
+strong::Ins/Outs::
+
+list::
+definitionlist::
+## Two inputs || A stereo pair.
+## Two outputs || The panned stereo signal.
+::
+::
+
+
+CLASSMETHODS::
+
+private:: initClass
+private:: new
+
+INSTANCEMETHODS::
+
+private:: init
+private:: updateBusConnections
+private:: cleanUp

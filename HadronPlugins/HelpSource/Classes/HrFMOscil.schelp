@@ -1,0 +1,66 @@
+class:: HrFMOscil
+summary:: A dual Frequency-Modulation oscillator
+related:: Classes/HrOscil
+categories:: HadronPlugins
+
+DESCRIPTION::
+This is a Hadron plugin. Hadron plugins are not meant for instantiating by hand in code. They are used internally by the Hadron system.
+
+HrOscil is a dual Frequency-Modulation oscillator:
+
+[modulator 1 --> carrier 1] + [modulator 2 --> carrier 2]
+
+It is compatible with link::Classes/HrPolyPattern::. The envelope controls are important for this use, but otherwise not useful.
+
+strong::Carrier section::
+
+list::
+definitionlist::
+## Freq || Frequency
+## Detune || In cents: the pitch difference between the two FM pairs.
+## Keyscale || Reduces the modulator levels for higher frequencies, to avoid harsh aliasing effects.
+## Amp || Volume.
+## Show carrier wave || Opens an editor for the carrier waveform.
+## Show carrier envelope || This envelope is used for link::Classes/HrPolyPattern::.
+::
+::
+
+strong::Modulator sections::
+
+list::
+definitionlist::
+## Coarse || Modulator ratio, in 1/2 increments.
+## Fine || In cents: Detunes the modulator away from the carrier frequency.
+## Level || "Modulation index": the strength of the frequency modulation.
+## Mul || A multiplier for "level" -- a link::Classes/HrCtlEnv:: can be applied here for a modulator envelope.
+## Pan || Panning position of this FM pair.
+## Show modulator wave || Opens an editor for the modulator waveform.
+::
+::
+
+strong::Ins/Outs::
+
+list::
+definitionlist::
+## No inputs.
+## Two outputs || The mixed stereo signal.
+::
+::
+
+
+CLASSMETHODS::
+
+private:: initClass
+private:: new
+
+INSTANCEMETHODS::
+
+private:: init
+private:: synthArgs
+private:: updateBusConnections
+private:: makeSynthDef
+private:: makeSynth
+private:: cleanUp
+private:: hasGate
+private:: polySupport
+private:: defName

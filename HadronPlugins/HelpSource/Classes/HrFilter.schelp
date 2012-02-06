@@ -1,0 +1,70 @@
+class:: HrFilter
+summary:: A stereo multimode filter, with distortion option
+related:: Classes/HrOscil
+categories:: HadronPlugins
+
+DESCRIPTION::
+This is a Hadron plugin. Hadron plugins are not meant for instantiating by hand in code. They are used internally by the Hadron system.
+
+A stereo multimode filter, providing low pass, high pass, band pass, Moog-style, ringing and EQ boost/cut filters. Use together with link::Classes/HrOscil:: for modular-style subtractive synthesis.
+
+strong::Controls::
+
+list::
+definitionlist::
+## Filter || Filtering mode.
+## Clip || Distortion style.
+## Preamp || dB to amplify/cut the signal emphasis::before:: filtering and distortion.
+## Filter parameters || In the green box, the parameters depend on the filter mode.
+
+table::
+## LPF || Lowpass filter, no resonance (-12 dB/octave) || freq: cutoff
+## HPF || Highpass filter, no resonance (-12 dB/octave) || freq: cutoff
+## RLPF || Resonant lowpass filter || freq: cutoff; rq = 1/Q
+## RHPF || Resonant highpass filter || freq: cutoff; rq = 1/Q
+## BPF || Bandpass filter || freq: center; rq = 1/Q
+## MoogFF || Moog-style || freq: cutoff; gain = resonance (0-4)
+## Ringz || Ringing filter || freq: center; decaytime = time for ringing to fall by -60 dB
+## MidEQ || Boost/cut EQ filter || freq: center; rq = 1/Q; db = gain
+::
+
+## Postamp || dB to amplify/cut the signal emphasis::after:: filtering and distortion.
+::
+::
+
+strong::Modulation targets::
+
+Parameter names inside the green box can change depending on the filter mode. But, a plug-in's modulation targets may not change names. So, HrFilter represents the parameters that are specific to the type of filter by code::param0::, code::param1:: and code::param2::, for the first, second and third parameters respectively.
+
+list::
+## param0 is always the filter's frequency.
+## param1 is for bandwidth, or Q (expressed as 1/Q), resonance (MoogFF), or decaytime (Ringz).
+## param2 is MidEQ's gain, and is available only for this filter mode.
+::
+
+Preamp and postamp are available as modulation targets, by name.
+
+strong::Ins/Outs::
+
+list::
+definitionlist::
+## Two inputs || A stereo pair.
+## Two outputs || The filtered stereo signal.
+::
+::
+
+CLASSMETHODS::
+
+private:: initClass
+private:: new
+
+INSTANCEMETHODS::
+
+private:: init
+private:: releaseSynth
+private:: synthArgs
+private:: makeSynthDef
+private:: mapModCtl
+private:: getMapModArgs
+private:: updateBusConnections
+private:: cleanUp

@@ -1,0 +1,69 @@
+class:: HrOscil
+summary:: An analog-style dual oscillator
+related:: Classes/FMOscil
+categories:: HadronPlugins
+
+DESCRIPTION::
+This is a Hadron plugin. Hadron plugins are not meant for instantiating by hand in code. They are used internally by the Hadron system.
+
+HrOscil is an analog-style dual oscillator, with:
+
+list::
+## a pair of independently-tuned oscillators;
+## sawtooth, triangle and pulse waves (pulse width may be modulated);
+## noise generator with bandpass filter.
+::
+
+The oscillator does not include a built-in filter. The output will be very strong in high frequencies and may be uncomfortable to hear for long periods of time. Strongly recommended to connect this plug-in's output to a link::Classes/HrFilter::.
+
+It is compatible with link::Classes/HrPolyPattern::. The envelope controls toward the bottom right are important for this use, but otherwise not useful.
+
+strong::Oscillator sections::
+
+list::
+definitionlist::
+## Waveform menu || Choose sawtooth, pulse or triangle. Choosing "pulse" activates the width control (which is hidden otherwise).
+## Coarse || Tuning in semitones.
+## Fine || Tuning in cents.
+## Amp || Volume of this oscillator (may be used just for balance, or independently enveloped by link::Classes/HrCtlEnv::).
+## Pan || Panning position.
+## Width || (Pulse wave only) The pulse width. 0.5 is a square wave. The oscillator will be silent if width = 0.0 or 1.0.
+::
+::
+
+strong::Noise oscillator section::
+
+list::
+definitionlist::
+## Detune || In semitones, with 0.01 resolution (i.e., one cent). This controls the bandpass filter's frequency, relative to the main frequency.
+## RQ || 1/Q: Lower numbers mean a narrower bandwidth (clearer sense of pitch).
+## Amp || Volume.
+## Pan || Panning position.
+::
+::
+
+strong::Ins/Outs::
+
+list::
+definitionlist::
+## No inputs.
+## Outputs || The mixed stereo signal.
+::
+::
+
+
+CLASSMETHODS::
+
+private:: new
+private:: initClass
+
+INSTANCEMETHODS::
+
+private:: init
+private:: updateBusConnections
+private:: synthArgs
+private:: makeSynthDef
+private:: cleanUp
+private:: hasGate
+private:: polySupport
+private:: defName
