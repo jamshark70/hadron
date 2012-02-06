@@ -293,7 +293,7 @@ HrOscil : HadronPlugin {
 			));
 		};
 
-		ampEnv = Env(#[0, 1, 1, 0], #[0.05, 0.9, 0.05], 0, 2);
+		ampEnv = Env([0, 1, 1, 0], [0.05, 0.9, 0.05], 0, 2);
 
 		2.do { |i|
 			StaticText(window, Rect(2 + (280*i), 2, 270, 20))
@@ -350,7 +350,7 @@ HrOscil : HadronPlugin {
 		.action_({ |view|
 			var win, gui;
 			if(view.value > 0 and: { envGui.isNil }) {
-				win = Window("carrier envelope", Rect(
+				win = Window("amplitude envelope", Rect(
 					Window.screenBounds.width - 405,
 					max(0, Window.screenBounds.height - 350),
 					400, 301
