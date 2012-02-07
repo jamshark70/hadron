@@ -112,12 +112,13 @@ Hadron
 			
 			
 			win.front;
-		}
+		};
+
+		ServerQuit.add(this, Server.default);
 	}
 	
-	prShowSave
-	{
-		HadronStateSave(this).showSaveDialog;
+	prShowSave { |action|
+		HadronStateSave(this).showSaveDialog(action);
 	}
 	
 	prShowLoad
@@ -229,39 +230,44 @@ Hadron
 	displayStatus
 	{|argString, statusMood| //statusMood is -1: error, 0: neutral, 1: success
 
-		statusStString.string_(argString);
-		statusMood.switch
-		(
-			-1,
-			{//error text
-				
-				win.front;
-				// qt doesn't run the forked thread b/c of halt()
-				// unless it's delayed just slightly
-				AppClock.sched(0.05, r {
-					statusView.background_(Color(1, 0.2, 0.2));
-					4.wait;
-					if(statusView.notClosed) {
-						statusView.background_(Color.gray(0.8));
-					};
-				});
-			},
-			0,
-			{
-				statusView.background_(Color.gray(0.8));
-			},
-			1,
-			{//success text
-				AppClock.sched(0.05, r {
-					statusView.background_(Color(0.2, 1, 0.2));
-					4.wait;
-					if(statusView.notClosed) {
-						statusView.background_(Color.gray(0.8));
-					};
-				});
-			}
-		);
-		
+		if(win.isClosed.not) {
+			statusStString.string_(argString);
+			statusMood.switch
+			(
+				-1,
+				{//error text
+					
+					win.front;
+					// qt doesn't run the forked thread b/c of halt()
+					// unless it's delayed just slightly
+					AppClock.sched(0.05, r {
+						if(statusView.notClosed) {
+							statusView.background_(Color(1, 0.2, 0.2));
+						};
+						4.wait;
+						if(statusView.notClosed) {
+							statusView.background_(Color.gray(0.8));
+						};
+					});
+				},
+				0,
+				{
+					statusView.background_(Color.gray(0.8));
+				},
+				1,
+				{//success text
+					AppClock.sched(0.05, r {
+						if(statusView.notClosed) {
+							statusView.background_(Color(0.2, 1, 0.2));
+						};
+						4.wait;
+						if(statusView.notClosed) {
+							statusView.background_(Color.gray(0.8));
+						};
+					});
+				}
+			);
+		};		
 	}
 	
 	reorderGraph
@@ -290,5 +296,24 @@ Hadron
 		alivePlugs.size.do({ alivePlugs[0].selfDestruct; });
 		blackholeBus.free;
 		win.close;
+		ServerQuit.remove(this, Server.default);
+	}
+
+	doOnServerQuit {
+		var tempWin; //can be modal but meh. does SwingOSC have it?
+		if(isDirty) {
+			canvasObj.showWin;
+			tempWin = Window("Save patch?", Rect(400, 400, 190, 85), resizable: false);
+			StaticText(tempWin, Rect(0, 15, 190, 20)).string_("Must close Hadron app; save?").align_(\center);
+			Button(tempWin, Rect(10, 50, 80, 20)).states_([["Save"]]).action_({
+				tempWin.close;
+				this.prShowSave({ this.graceExit });
+			}).focus(true);
+			Button(tempWin, Rect(100, 50, 80, 20)).states_([["Discard"]]).action_({ tempWin.close; this.graceExit; });
+			
+			tempWin.front;
+		} {
+			this.graceExit;
+		}
 	}
 }

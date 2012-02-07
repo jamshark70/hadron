@@ -14,13 +14,13 @@ HadronStateSave
 		parentApp = argParentApp;
 	}
 	
-	showSaveDialog
-	{		
+	showSaveDialog { |action|
 		File.saveDialog("Save project", {}, {|pathFile|
 			if(pathFile.isArray and: pathFile.isString.not) {
 				pathFile = pathFile.first;
 			};
 			this.saveState(pathFile);
+			action.value;
 		});
 	}
 	
