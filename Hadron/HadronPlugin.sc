@@ -746,6 +746,7 @@ HadronPlugin
 
 	// you should 'try' this method -- the error is really just an exception
 	polyMode_ { |bool(false)|
+		polyMode = bool;
 		if(bool) {
 			if(this.polySupport) {
 				this.releaseSynth;
@@ -758,7 +759,6 @@ HadronPlugin
 		} {
 			if(synthInstance.isNil) { this.makeSynth }
 		};
-		polyMode = bool;
 	}
 
 	// plugs that own HadronModTargetControls should override this

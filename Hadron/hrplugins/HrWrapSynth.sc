@@ -180,7 +180,9 @@ HrWrapSynth : HadronPlugin
 
 	makeSynth {
 		this.releaseSynth;
-		synthInstance = Synth(sName, this.synthArgs, target: group);
+		if(polyMode.not) {
+			synthInstance = Synth(sName, this.synthArgs, target: group);
+		};
 	}
 
 	synthArgs {
