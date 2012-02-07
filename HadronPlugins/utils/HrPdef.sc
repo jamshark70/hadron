@@ -263,6 +263,9 @@ HrPMod : HrPdefn {
 
 	*new { |key, value, spec|
 		var res, asSpec;
+		if(key == \run) {
+			Error("HrPMod: \\run is a reserved key for Hr[Poly|Mono]Pattern").throw;
+		};
 		res = this.at(key);
 		if(res.isNil) {
 			asSpec = spec.asSpec;

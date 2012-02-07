@@ -98,7 +98,7 @@ HrPolyPattern : HadronPlugin {
 			{ targetPlugin.uniqueID },
 			{ startButton.value },
 			{	var pmod;
-				mappedMods.keys.collect { |pmodname|
+				mappedMods.keys.reject(_ == \run).collect { |pmodname|
 					pmod = HrPMod(pmodname);
 					[pmodname, pmod.value, pmod.spec]
 				}
@@ -333,7 +333,7 @@ HrPolyPattern : HadronPlugin {
 	}
 
 	mapModCtl { |paramName, ctlBus|
-		if(paramName != \start) {
+		if(paramName != \run) {
 			// adds/removes from mappedMods
 			// not needed for synth, but needed for save/load
 			super.mapModCtl(paramName, ctlBus);
