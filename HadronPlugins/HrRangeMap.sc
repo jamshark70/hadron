@@ -211,8 +211,9 @@ HrRangeMap : HadronPlugin {
 			inminval = 0, inmaxval = 1, instep = 0,
 			outminval = 0, outmaxval = 1, outstep = 0,
 			useAudioIn = 0|
-			var input = A2K.kr(InFeedback.ar(inBus0)),
+			var input = InFeedback.ar(inBus0),
 			localSpec;
+			modValue = K2A.ar(modValue);
 			input = (input - modValue) * Lag.kr(useAudioIn.clip(0, 1), 0.05) + modValue;
 			localSpec = inSpec.copy
 			.minval_(inminval)  // replace hardcoded endpoints with control inputs
@@ -224,9 +225,10 @@ HrRangeMap : HadronPlugin {
 			.maxval_(outmaxval)
 			.step_(outstep);
 			input = localSpec.map(input);
+			Out.ar(outBus0, input);
+			input = A2K.kr(input);
 			SendReply.kr(Impulse.kr(pollRate), '/modValue', input, replyID);
 			Out.kr(prOutBus, input);
-			Out.ar(outBus0, K2A.ar(input));
 		}).add;
 	}
 
