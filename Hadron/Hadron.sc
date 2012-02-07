@@ -72,10 +72,6 @@ Hadron
 			.states_([["Load"]])
 			.action_({ this.prShowLoad; });
 			
-			Button(win, Rect(310, 15, 50, 20))
-			.states_([["Save"]])
-			.action_({ this.prShowSave; });
-			
 			HrButton(win, Rect(430, 15, 50, 20))
 			.states_([["Collide", Color.black, Color(0.7, 0.7, 1)]])
 			.action_({ alivePlugs.do(_.collide); });
