@@ -1,0 +1,60 @@
+class:: HrRangeMap
+summary:: Converts a signal from one value range to another
+categories:: HadronPlugins
+
+DESCRIPTION::
+This is a Hadron plugin. Hadron plugins are not meant for instantiating by hand in code. They are used internally by the Hadron system.
+
+A simple plug-in that converts a signal from one range to another. The window displays two ranges: input and output. The input range is what is expected from the source, and the output range should make sense for the target.
+
+Internally, the input signal is converted to a linear 0-1 range according to the "in" parameters, and then the normalized 0-1 range is converted to the output range. This uses the same formulas as link::Classes/ControlSpec::.
+
+The result may be used as an audio signal, from the output, or as a modulation source. For modulation, choose the target using the pop-up menus.
+
+The "warps" or curve shapes are respected -- so, for example, if you need to convert a frequency (exponential curve) into pan position (linear), you can specify \exp for "in warp."
+
+"Warp" may be any of the following:
+
+table::
+## strong::identifier:: || strong::meaning::
+## \linear or \lin || A straight line between min and max
+## \exponential or \exp || An exponential curve between min and max
+## \sine or \sin || Like the first 1/4 of a sine curve
+## \cosine or \cos || S-shaped, like the first 1/4 of a cosine curve
+## (a number) || User-controllable curve factor. 0 is a straight line. Positive numbers pull the line toward the right; negative numbers pull it to the left.
+::
+
+strong::Input source::
+
+The input may be control rate, from link::Classes/HrCtlMod::, link::Classes/HrCtlEnv:: or link::Classes/HrMultiCtlMod::. Use "modValue" as the modulation target.
+
+Or, the input can be audio rate, received from HrRangeMap's audio input.
+
+The button at top-left switches between modulator input and audio cable input.
+
+strong::Ins/Outs::
+
+list::
+definitionlist::
+## One input || An audio signal for range conversion. The input is ignored if the top-left button reads "Using modulator."
+## One output || The range-converted signal.
+::
+::
+
+
+CLASSMETHODS::
+
+private:: initClass
+private:: new
+
+INSTANCEMETHODS::
+
+private:: pollRate
+private:: init
+private:: synthArgs
+private:: makeSynthDef
+private:: update
+private:: updateBusConnections
+private:: wakeFromLoad
+private:: notifyPlugAdd
+private:: cleanUp
