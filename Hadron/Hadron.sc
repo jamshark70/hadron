@@ -175,7 +175,7 @@ Hadron
 		alivePlugs.do(_.notifyPlugAdd(tempHolder));
 		
 		this.reorderGraph;
-		canvasObj.cWin.front;
+		canvasObj.showWin;
 		^tempHolder;
 	}
 
