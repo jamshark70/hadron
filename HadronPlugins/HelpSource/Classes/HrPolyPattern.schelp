@@ -1,0 +1,127 @@
+class:: HrPolyPattern
+summary:: A polyphonic pattern editor and player
+related:: Classes/HrMonoPattern
+categories:: HadronPlugins
+
+DESCRIPTION::
+This is a Hadron plugin. Hadron plugins are not meant for instantiating by hand in code. They are used internally by the Hadron system.
+
+HrPolyPattern provides an interface to edit a link::Classes/Pbind:: style pattern graphically, and play the pattern against one of the (few) plug-ins that supports polyphonic use. Its companion, link::Classes/HrMonoPattern::, does not play polyphonically, but it can feed values to any modulation target of any plug-in (even several plug-ins at the same time).
+
+Currently, the following plug-ins are supported as targets of HrPolyPattern.
+
+list::
+## link::Classes/HrWrapSynth::
+## link::Classes/HrOscil::
+## link::Classes/HrFMOscil::
+::
+
+strong::Pattern structure::
+
+link::Classes/Pbind:: is well documented elsewhere, in the class's help file and in the Practical Guide to Patterns under link::Tutorials/A-Practical-Guide/PG_03_What_Is_Pbind##What Is Pbind?::. Following is a brief overview.
+
+Pbind is an event pattern. It generates link::Classes/Event:: objects, which can be played to take various actions. An event associates values with names:
+
+code::(degree: 0, dur: 2)::
+
+In this event, the scale degree is 0 (which translates to middle C) and the duration is 2 beats.
+
+In Pbind, and in the pattern editor, the names are associated with other patterns that produce a new value for every event. Common ones are listed in the Practical Guide chapter 2, link::Tutorials/A-Practical-Guide/PG_02_Basic_Vocabulary##Basic Vocabulary::.
+
+If the name of the pair matches a synth parameter, then the associated value will control the sound. The pattern editor provides a menu listing the modulation targets of the target plug-in, to make it easier to assign the right name.
+
+You may also create rows in the editor where the name does not match a synth parameter. These can be used to calculate intermediate values, but they will not directly control the sound.
+
+strong::Pattern storage::
+
+HrPolyPattern and HrMonoPattern use a global repository, held in the HrPbindef class. This is a modified version of the link::Overviews/JITLib:: class link::Classes/Pbindef::. All existing HrPbindefs are listed in the pattern selector menu.
+
+If you prefer to work outside the graphic editor, you can modify HrPbindefs using interactive code and the changes should be reflected in the interface.
+
+code::
+// add an amplitude key-value pair
+HrPbindef(\demo, \amp, Pexprand(0.02, 0.1, inf));
+::
+
+Patterns may also be composed into more complex behaviors. These cannot be represented in the graphic interface, but you can write the pattern manually using HrPdef and the pattern can be played by HrPolyPattern. If you do this, the graphic interface will change to a message explaining that the editor is inactive. You can still work with the HrPdef in code and hear the resulting changes.
+
+code::
+HrPdef(\demo, Pseq([Pbind.new, Pbind.new], 1));
+::
+
+strong::Using modulator values in the pattern::
+
+You might want to receive values from a modulator such as link::Classes/HrCtlMod:: and use it in pattern calculations. To do this, write an expression like the following into the pattern box:
+
+code::HrPMod(\name, start_value, range_spec)::
+
+E.g.,
+
+code::HrPMod(\sinewave, 0, [-1, 1])::
+
+The easiest way to write the range_spec is, as above, the low and high values inside brackets: code::[low, high]::.
+
+Then, "sinewave" will be published as a modulation target, which you can use in the target selectors in HrCtlMod and similar plug-ins.
+
+You can do math on HrPMod in the pattern expression:
+
+code::
+// convert sinewave to frequency
+HrPMod(\sinewave, 0, [-1, 1]).linexp(-1, 1, 200, 800)
+::
+
+strong::Controls::
+
+list::
+definitionlist::
+## Start/stop button || May be driven by a modulator. A modulation signal > 0 starts the pattern; <= 0 stops it.
+## Pattern selector menu || Choose a pattern by name from the global repository.
+## New-pattern text box || Type a name for a new pattern here.
+## Target plug-in menu || Choose the plug-in that will play the notes.
+## Modulator menu || Selecting an item from this menu will change the highlighted pattern row to use that name.
+::
+::
+
+strong::Pattern editor::
+
+list::
+definitionlist::
+## Green arrow || Click to insert a new row.
+## Pink arrowheads || Drag onto a green arrow to move this row to the arrow's position.
+## [-] button || Delete this row.
+## Name textbox || Type a name to which the value will belong. Or, choose a modulation target from the rightmost menu.
+## Pattern box || Type a pattern to generate the values. If it should be a constant value, just type the value. Make sure your syntax is correct!
+::
+::
+
+strong::Ins/Outs::
+list::
+definitionlist::
+## No inputs.
+## Two outputs || A trigger value of 1 will be sent out both outputs for every event. You can use this to trigger link::Classes/HrCtlEnv::, for instance.
+::
+::
+
+
+CLASSMETHODS::
+
+private:: initClass
+private:: new
+
+INSTANCEMETHODS::
+
+private:: key
+private:: targetPlugin
+private:: init
+private:: notifyPlugAdd
+private:: notifyPlugKill
+private:: update
+private:: run
+private:: asPattern
+private:: updateBusConnections
+private:: cleanUp
+private:: mapModCtl
+private:: getMapModArgs
+private:: initAction
+private:: setPlugList
+private:: targetIsEmpty

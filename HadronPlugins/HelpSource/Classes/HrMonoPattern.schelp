@@ -1,0 +1,48 @@
+class:: HrMonoPattern
+summary:: A monophonic pattern editor and player
+related:: Classes/HrPolyPattern
+categories:: HadronPlugins
+
+DESCRIPTION::
+This is a Hadron plugin. Hadron plugins are not meant for instantiating by hand in code. They are used internally by the Hadron system.
+
+HrMonoPattern follows the basic design of link::Classes/HrPolyPattern::, but it is intended for monophonic use. Instead of triggering new notes, it sends the parameter values to modulation targets of existing plug-ins.
+
+The structure and interface are almost identical. Consult link::Classes/HrPolyPattern:: help for details.
+
+A HrMonoPattern can speak to modulation targets of several plug-ins at the same time. One pattern can, simultaneously:
+
+list::
+## Change an oscillator's frequency;
+## Trigger amplitude and filter-frequency envelopes;
+## and so on...
+::
+
+So, it can sound just like playing notes on a monophonic synthesizer.
+
+strong::Connecting pattern values to modulation targets::
+
+When an editor has focus (green background), you can use the two menus at the top right to choose the plug-in and modulation target that will receive this pattern's values. After making a valid selection, the name field will display code::/plugin_id:mod_name::.
+
+warning::
+Do not try to type the "/..." format by hand. It will not be understood. This is because we cannot assume that the plugin_id uniquely identifies the plug-in. The backend objects keep track of the target's unique ID, but this cannot be conveniently displayed; more information exists behind the scenes than you can see. Use the menus to set the target.
+::
+
+
+CLASSMETHODS::
+
+private:: initClass
+
+
+INSTANCEMETHODS::
+
+private:: removeTarget
+private:: targetIsEmpty
+private:: setPlugList
+private:: notifyPlugKill
+private:: initAction
+private:: update
+private:: cleanUp
+private:: targetPlugin
+private:: asPattern
+private:: addTarget
