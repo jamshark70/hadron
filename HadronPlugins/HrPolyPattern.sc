@@ -102,6 +102,9 @@ HrPolyPattern : HadronPlugin {
 					pmod = HrPMod(pmodname);
 					[pmodname, pmod.value, pmod.spec]
 				}
+			},
+			{
+				if(key.notNil) { HrPbindef(key).quant } { nil }
 			}
 		];
 		saveSets = [
@@ -126,13 +129,31 @@ HrPolyPattern : HadronPlugin {
 			{ |argg|
 				// need to ensure all HrPMods exist
 				argg.do { |row| HrPMod(*row) }
+			},
+			{ |argg|
+				if(key.notNil and: { argg.notNil }) { HrPbindef(key).quant = argg };
 			}
 		];
 
-		modGets.put(\run, { startButton.value });
-		modSets.put(\run, { |argg| defer { startButton.valueAction = binaryValue(argg > 0) } });
+		modGets.put(\startOrStop, { startButton.value });
+		modSets.put(\startOrStop, { |argg| defer { startButton.valueAction = binaryValue(argg > 0) } });
 		// normally just "value = " but here we need a client action
-		modMapSets.put(\run, { |argg| defer { startButton.valueAction = binaryValue(argg > 0) } });
+		modMapSets.put(\startOrStop, { |argg| defer { startButton.valueAction = binaryValue(argg > 0) } });
+
+		// this variant ignores "stop" modulator values (i.e. <= 0)
+		// useful for finite-pattern gestures that should run to completion
+		// no matter what the modulator does after triggering
+		modGets.put(\start, { startButton.value });
+		modSets.put(\start, { |argg|
+			if(argg > 0) {
+				defer { startButton.valueAction = 1 }
+			};
+		});
+		modMapSets.put(\start, { |argg|
+			if(argg > 0) {
+				defer { startButton.valueAction = 1 }
+			};
+		});
 
 		modGets.putAll(HrPMod.modGets);
 		modSets.putAll(HrPMod.modSets);
@@ -333,7 +354,7 @@ HrPolyPattern : HadronPlugin {
 	}
 
 	mapModCtl { |paramName, ctlBus|
-		if(paramName != \run) {
+		if(#[startOrStop, start].includes(paramName)) {
 			// adds/removes from mappedMods
 			// not needed for synth, but needed for save/load
 			super.mapModCtl(paramName, ctlBus);

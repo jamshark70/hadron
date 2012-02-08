@@ -2,7 +2,7 @@
 // no passing in an arbitrary pattern
 
 HrPbindefEditor : SCViewHolder {
-	var <model, <key, <focusedRow = nil;
+	var <model, <key, <focusedRow = nil, quantSl;
 
 	// 'view' is the wrapper, CompositeView
 	// this is the main thing inside, which may contain other things
@@ -16,6 +16,12 @@ HrPbindefEditor : SCViewHolder {
 
 	init { |parent, bounds, argKey|
 		this.view = CompositeView(parent, bounds);
+		quantSl = EZSlider(view, Rect(2, 2, bounds.width - 4, 20), "quant",
+			[0, 8, \lin, 1/16],
+			{ |view|
+				if(model.notNil) { model.quant = view.value };
+			}, 1
+		);
 		this.key = argKey;
 	}
 
@@ -26,16 +32,18 @@ HrPbindefEditor : SCViewHolder {
 	makeView { |keyChanged(false), savedTexts|
 		var patTemp = this.convertPattern(model.source);
 		var buttonSize = HrPatternLine.buttonSize;
-		var zeroBounds = view.bounds.moveTo(0, 0);
+		var mainViewBounds = view.bounds.moveTo(0, 24);
+		mainViewBounds.height = view.bounds.height - 26;  // 2 as a lower margin
 		case
 		{ model.isNil } {
 			if(status == \editing or: { mainView.isNil }) {
 				this.clearView;
 				mainView.remove;
-				mainView = TextView(view, zeroBounds)
+				mainView = TextView(view, mainViewBounds)
 				.resize_(5)
 				.background_(Color.gray(0.9))
 				.editable_(false);
+				quantSl.visible = false;
 			};
 			mainView.string_("Set a valid pattern name to begin editing.");
 			status = \empty;
@@ -45,10 +53,14 @@ HrPbindefEditor : SCViewHolder {
 			if(status == \editing or: { mainView.isNil }) {
 				this.clearView;
 				mainView.remove;
-				mainView = TextView(view, zeroBounds)
+				mainView = TextView(view, mainViewBounds)
 				.background_(Color.gray(0.9))
 				.resize_(5)
 				.editable_(false);
+				quantSl.visible = true;
+				// tryPerform *shouldn't* fall back to nil,
+				// but let's avoid unnecessary error-throws anyway
+				quantSl.value = model.tryPerform(\quant) ? 1;
 			};
 			mainView.string_("Only Pbind-style patterns can be edited by GUI.
 
@@ -66,10 +78,13 @@ Use an interactive code window to edit this pattern.
 					}
 				}
 			) {
+				quantSl.visible = true;
+				quantSl.value = model.tryPerform(\quant) ? 1;
+
 				mainView.remove;
 				this.clearView;  // which sets subpats to List.new - see below
 
-				mainView = ScrollView(view, zeroBounds)
+				mainView = ScrollView(view, mainViewBounds)
 				.resize_(5)
 				.autohidesScrollers_(true)
 				.hasVerticalScroller_(true)
@@ -193,9 +208,14 @@ Use an interactive code window to edit this pattern.
 	update { |obj, what ... more|
 		var i, temp;
 		if(obj === model) {
-			if(obj.isKindOf(HrPbindef)) {
+			case
+			{ what == \quant } {
+				defer { quantSl.value = more[0] }
+			}
+			{ obj.isKindOf(HrPbindef) } {
 				this.key = obj.key;
-			} {
+			}
+			{	// default case
 				this.makeView;  // if we get here, it probably won't work
 			};
 		} {

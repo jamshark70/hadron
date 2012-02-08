@@ -44,6 +44,12 @@ HrEventPatternProxy : EventPatternProxy {
 			Error("% does not have a collection of patterns".format(this.name)).throw;
 		};
 	}
+
+	quant_ { arg val;
+		try { source.quant = val };
+		quant = val;
+		this.changed(\quant, val);
+	}
 }
 
 HrPdef : HrEventPatternProxy {
@@ -197,7 +203,6 @@ HrPbindef : HrPdef {
 
 	storeArgs { ^[key]++pattern.storeArgs }
 	repositoryArgs { ^this.storeArgs }
-	quant_ { arg val; super.quant = val; source.quant = val }
 }
 
 
@@ -263,8 +268,8 @@ HrPMod : HrPdefn {
 
 	*new { |key, value, spec|
 		var res, asSpec;
-		if(key == \run) {
-			Error("HrPMod: \\run is a reserved key for Hr[Poly|Mono]Pattern").throw;
+		if(#[startOrStop, start].includes(key)) {
+			Error("HrPMod: %% is a reserved key for Hr[Poly|Mono]Pattern".format($\\, \abc)).throw;
 		};
 		res = this.at(key);
 		if(res.isNil) {
