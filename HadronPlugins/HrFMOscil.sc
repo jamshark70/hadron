@@ -269,7 +269,7 @@ HrFMOscil : HadronPlugin {
 			freq: freqSl.value, detune: detuneSl.value, amp: ampSl.value,
 			keyscale: keyscaleSl.value, bufs: wavetables, outBus0: outBusses[0],
 			env: carEnv, timescale: timescaleSl.value
-		] ++ mods
+		] ++ mods ++ this.getMapModArgs
 	}
 
 	updateBusConnections { synthInstance.set(\outBus0, outBusses[0]) }
