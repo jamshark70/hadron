@@ -163,8 +163,11 @@ Hadron
 	
 	prAddPlugin
 	{|argPlug, argIdent, argUniqueID, extraArgs, argCanvasXY|
+		var tempHolder;
+
+		canvasObj.showWin;
 	
-		var tempHolder = argPlug.new(this, argIdent, argUniqueID, extraArgs, argCanvasXY);
+		tempHolder = argPlug.new(this, argIdent, argUniqueID, extraArgs, argCanvasXY);
 		isDirty = true;
 		alivePlugs.add(tempHolder);
 		idPlugDict.put(tempHolder.uniqueID, tempHolder);
@@ -172,7 +175,6 @@ Hadron
 		alivePlugs.do(_.notifyPlugAdd(tempHolder));
 		
 		this.reorderGraph;
-		canvasObj.showWin;
 		^tempHolder;
 	}
 
