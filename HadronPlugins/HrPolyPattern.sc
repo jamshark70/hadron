@@ -19,7 +19,11 @@ HrPolyPattern : HadronPlugin {
 				};
 			};
 			Library.put(this, \parentKeys, keys);
-		}
+
+			SynthDef('HrPolyPattern', { |t_trig, outBus0|
+				Out.ar(outBus0, K2A.ar(t_trig) ! 2);
+			}).add;
+		};
 	}
 
 	*new { |argParentApp, argIdent, argUniqueID, argExtraArgs, argCanvasXY|
@@ -305,11 +309,14 @@ HrPolyPattern : HadronPlugin {
 				playWatcher = SimpleController(player).put(\stopped, {
 					playWatcher.remove;
 					player = nil;
+					this.releaseSynth;
 					defer { startButton.value = 0 };
 				});
+				this.makeSynth;
 			} {
 				player.stop;
 				player = nil;
+				this.releaseSynth;
 				defer { startButton.value = 0 };
 			};
 		};
@@ -324,14 +331,17 @@ HrPolyPattern : HadronPlugin {
 			// BUT the pattern might provide, e.g., \degree
 			// and this should override \freq in the plugin.
 			Pfunc({ |ev|
+				(type: \set, id: synthInstance.nodeID, t_trig: 1, args: #[t_trig]).play;
 				targetPlugin.synthArgs.pairsDo { |key, value|
 					if((keylist = keycheck[key]).notNil) {
 						// this will also check 'key' itself
 						if(keylist.every { |test| ev[test].isNil }) {
-							ev.put(key, value)
+							// synthArgs might include an array arg
+							// that should not multichannel expand in an event
+							ev.put(key, if(value.isArray) { [value] } { value })
 						}
 					} {
-						if(ev[key].isNil) { ev.put(key, value) };
+						ev.put(key, if(value.isArray) { [value] } { value })
 					};
 				};
 				ev
@@ -361,6 +371,18 @@ HrPolyPattern : HadronPlugin {
 		};
 	}
 	getMapModArgs { ^[] }
+
+	makeSynth {
+		if(player.notNil) {
+			synthInstance = Synth('HrPolyPattern', [outBus0: outBusses[0]], group);
+		}
+	}
+
+	releaseSynth {
+		Server.default.makeBundle(Server.default.latency, {
+			super.releaseSynth;
+		});
+	}
 
 	/****** SUBCLASS SUPPORT ******/
 

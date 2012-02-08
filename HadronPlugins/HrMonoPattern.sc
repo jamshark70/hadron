@@ -126,7 +126,13 @@ HrMonoPattern : HrPolyPattern {
 	}
 
 	asPattern {
-		^HrPbindef(key).source
+		^Pchain(
+			Pfunc({ |ev|
+				(type: \set, id: synthInstance.nodeID, t_trig: 1, args: #[t_trig]).play;
+				ev
+			}),
+			HrPbindef(key).source
+		)
 	}
 
 	setPlugList {
