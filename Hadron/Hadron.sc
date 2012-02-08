@@ -114,11 +114,37 @@ Hadron
 			win.front;
 		};
 
-		ServerQuit.add(this, Server.default);
+		NotificationCenter.register(Server.default, \didQuit, this, {
+			var tempWin; //can be modal but meh. does SwingOSC have it?
+			if(isDirty) {
+				if(Library.at(this, \emergencySave).isNil) {
+					Library.put(this, \emergencySave, true);
+					canvasObj.showWin;
+					tempWin = Window("Save patch?", Rect(400, 400, 190, 85), resizable: false);
+					StaticText(tempWin, Rect(0, 15, 190, 20)).string_("Must close Hadron app; save?").align_(\center);
+					Button(tempWin, Rect(10, 50, 80, 20)).states_([["Save"]]).action_({
+						tempWin.close;
+						this.prShowSave({
+							this.graceExit;
+							Library.global.removeEmptyAt(this, \emergencySave);
+						}, { Library.global.removeEmptyAt(this, \emergencySave) });
+					}).focus(true);
+					Button(tempWin, Rect(100, 50, 80, 20)).states_([["Discard"]]).action_({
+						tempWin.close;
+						this.graceExit;
+						Library.global.removeEmptyAt(this, \emergencySave);
+					});
+				
+					tempWin.front;
+				};
+			} {
+				this.graceExit;
+			}
+		})
 	}
 	
-	prShowSave { |action|
-		HadronStateSave(this).showSaveDialog(action);
+	prShowSave { |action, cancel|
+		HadronStateSave(this).showSaveDialog(action, cancel);
 	}
 	
 	prShowLoad
@@ -298,24 +324,7 @@ Hadron
 		alivePlugs.size.do({ alivePlugs[0].selfDestruct; });
 		blackholeBus.free;
 		win.close;
-		ServerQuit.remove(this, Server.default);
+		NotificationCenter.unregister(Server.default, \didQuit, this);
 	}
 
-	doOnServerQuit {
-		var tempWin; //can be modal but meh. does SwingOSC have it?
-		if(isDirty) {
-			canvasObj.showWin;
-			tempWin = Window("Save patch?", Rect(400, 400, 190, 85), resizable: false);
-			StaticText(tempWin, Rect(0, 15, 190, 20)).string_("Must close Hadron app; save?").align_(\center);
-			Button(tempWin, Rect(10, 50, 80, 20)).states_([["Save"]]).action_({
-				tempWin.close;
-				this.prShowSave({ this.graceExit });
-			}).focus(true);
-			Button(tempWin, Rect(100, 50, 80, 20)).states_([["Discard"]]).action_({ tempWin.close; this.graceExit; });
-			
-			tempWin.front;
-		} {
-			this.graceExit;
-		}
-	}
 }
