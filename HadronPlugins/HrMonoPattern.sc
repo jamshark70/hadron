@@ -139,25 +139,23 @@ HrMonoPattern : HrPolyPattern {
 		plugList = parentApp.alivePlugs.reject(_ === this);
 	}
 
-	// notifyPlugAdd { |plug|
-	// 	var oldPlug, oldPlugList;
-	// 	oldPlugList = plugList;
-	// 	this.setPlugList;
-	// 	defer {
-	// 		oldPlug = oldPlugList[targetMenu.value - 1];
-	// 		targetMenu.items = ["None"] ++ plugList.collect { |plug|
-	// 			plug.boundCanvasItem.string
-	// 		}.sort;
-	// 		targetMenu.value = plugList.indexOf(oldPlug) ? 0;
-	// 	};
-	// }
-
 	notifyPlugKill { |plug|
 		this.notifyPlugAdd(plug);
 		subpatEdit.size.do { |i|
 			if(subpatEdit[i].key.tryPerform(\plugin) === plug) {
 				subpatEdit[i].key = \none;
 			};
+		};
+	}
+
+	notifyIdentChanged { |plug, ident|
+		if(key.notNil) {
+			HrPbindef(key).source.pairs.pairsDo { |key, value, i|
+				if(key.isKindOf(HrMonoTarget) and: { key.plugin === plug }) {
+					key.setString;
+					subpatEdit[i>>1].key = key;  // update gui
+				};
+			}
 		};
 	}
 
@@ -272,7 +270,10 @@ HrMonoTarget {
 			displayString = "<empty>";
 			keySymbol = '0:none';
 		} {
-			displayString = "/%:%".format(plugin.boundCanvasItem.string, modName);
+			displayString = "/%:%".format(
+				if(plugin.ident == "unnamed") { plugin.class.name } { plugin.ident },
+				modName
+			);
 			keySymbol = "%:%".format(plugin.uniqueID, modName).asSymbol;
 		};
 	}
