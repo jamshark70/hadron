@@ -102,7 +102,8 @@ HadronPlugin
 
 		// name and ident should be set before drawing canvas item
 		name = argName;
-		ident = argIdent; //ident is to identify an instance when there is more than one instance.
+		//ident is to identify an instance when there is more than one instance.
+		ident = argIdent ?? { "unnamed" };
 		boundCanvasItem = HadronCanvasItem(parentApp.canvasObj, this, argCanvasXY.x, argCanvasXY.y);
 
 		if(this.shouldCheckBad) {
