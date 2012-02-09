@@ -50,7 +50,7 @@ HadronCanvas
 				({|item|
 				
 					//Pen.line(item[0], item[1]);
-					tempDist = (item[0].y - item[1].y).abs.clip(0, 50);
+					tempDist = (item[0].y absdif: item[1].y) * 0.4;
 					Pen.moveTo(item[0]);
 					Pen.curveTo(item[1], item[0].x@(item[0].y+tempDist), item[1].x@(item[1].y-tempDist));
 				});
