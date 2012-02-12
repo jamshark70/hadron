@@ -6,7 +6,7 @@ categories:: HadronPlugins
 DESCRIPTION::
 This is a Hadron plugin. Hadron plugins are not meant for instantiating by hand in code. They are used internally by the Hadron system.
 
-HrPolyPattern provides an interface to edit a link::Classes/Pbind:: style pattern graphically, and play the pattern against one of the (few) plug-ins that supports polyphonic use. Its companion, link::Classes/HrMonoPattern::, does not play polyphonically, but it can feed values to any modulation target of any plug-in (even several plug-ins at the same time).
+HrPolyPattern provides an interface to edit a link::Classes/Pbind:: style pattern graphically, and play the pattern against one of the (few) plug-ins that support polyphonic use. Its companion, link::Classes/HrMonoPattern::, does not play polyphonically, but it can feed values to any modulation target of any plug-in (even several plug-ins at the same time).
 
 Currently, the following plug-ins are supported as targets of HrPolyPattern.
 
@@ -51,7 +51,7 @@ HrPdef(\demo, Pseq([Pbind.new, Pbind.new], 1));
 
 strong::Using modulator values in the pattern::
 
-You might want to receive values from a modulator such as link::Classes/HrCtlMod:: and use it in pattern calculations. To do this, write an expression like the following into the pattern box:
+You might want to receive values from a modulator such as link::Classes/HrCtlMod:: and use it in pattern calculations. To do this, write an expression like the following, using link::Classes/HrPMod::, into the pattern box:
 
 code::HrPMod(\name, start_value, range_spec)::
 
