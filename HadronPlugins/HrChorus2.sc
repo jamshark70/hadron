@@ -156,8 +156,7 @@ HrChorus2 : HadronPlugin {
 							doneAction: 2
 						)
 					);
-					Out.ar(outBus0, fx[0]);
-					Out.ar(outBus1, fx[1]);
+					Out.ar(outBus0, fx);
 				}).add;
 				Server.default.sync;
 				playFunc.value;
@@ -258,8 +257,7 @@ HrFlanger : HrChorus2 {
 							doneAction: 2
 						)
 					);
-					Out.ar(outBus0, fx[0]);
-					Out.ar(outBus1, fx[1]);
+					Out.ar(outBus0, fx);
 				}).add;
 				Server.default.sync;
 				playFunc.value;
