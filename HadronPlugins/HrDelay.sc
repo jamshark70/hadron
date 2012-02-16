@@ -147,8 +147,34 @@ HrDelay : HadronPlugin {
 			synthInstance.set(\ffreq, view.value);
 		}, 8000);
 
-		saveGets = [];
-		saveSets = [];
+		saveGets = [
+			{ ffreqSl.value },
+			{ mixSl.value },
+			{ [mulLSl.collect(_.value), mulRSl.collect(_.value)] },
+			{ [secBeatsButton, syncFBButton, syncDTButton].collect(_.value) },
+			{ [delays, feedbacks] }
+		];
+		saveSets = [
+			{ |argg| ffreqSl.valueAction_(argg) },
+			{ |argg| mixSl.valueAction_(argg) },
+			{ |argg| 
+				[mulLSl, mulRSl].do { |sliders, i|
+					sliders.do { |sl, j|
+						sl.valueAction_(argg[i][j])
+					}
+				}
+			},
+			{ |argg|
+				[secBeatsButton, syncFBButton, syncDTButton].do { |bt, i|
+					bt.valueAction_(argg[i])
+				}
+			},
+			{ |argg|
+				#delays, feedbacks = argg;
+				delaySl.do { |sl, i| sl.valueAction_(delays[i]) };
+				feedbackSl.do { |sl, i| sl.valueAction_(feedbacks[i]) };
+			}
+		];
 
 		modGets.putAll(());
 		modSets.putAll(());
@@ -169,6 +195,10 @@ HrDelay : HadronPlugin {
 		]
 	}
 	makeSynthDef {}
+	defName { ^this.class.name }
+	updateBusConnections {
+		synthInstance.set(*this.synthArgs)
+	}
 
 	cleanUp {
 		buffers.do(_.free);
