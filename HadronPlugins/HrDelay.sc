@@ -153,6 +153,12 @@ HrDelay : HadronPlugin {
 		modGets.putAll(());
 		modSets.putAll(());
 		modMapSets.putAll(());
+
+		// defer makeSynth until buffers ready - will this work?
+		fork {
+			Server.default.sync;
+			this.makeSynth;
+		}
 	}
 
 	synthArgs {
@@ -162,6 +168,7 @@ HrDelay : HadronPlugin {
 			mulL: mulLSl.collect(_.value), mulR: mulRSl.collect(_.value)
 		]
 	}
+	makeSynthDef {}
 
 	cleanUp {
 		buffers.do(_.free);
