@@ -1,0 +1,20 @@
+?Hadron 1
+?StartPlugs
+HrDACunnamed64834nilPoint( 191, 399 )Rect(1040, 59, 250, 130)Rect(116.61793756485, 956.05097913742, 250, 130)false
+HrWrapSynthunnamed63799[ "analog" ]Point( 199, 277 )Rect(870, 186, 350, 240)Rect(400, 400, 350, 240)false
+HrPolyPatternunnamed1610172973nilPoint( 185, 98 )Rect(765, 204, 600, 490)Rect(263.80240130424, 77.637057304382, 600, 490)false
+HrCtlModunnamed1800815270nilPoint( 339, 63 )Rect(255, 54, 450, 240)Rect(254.12123727798, 78.876806259155, 450, 240)false
+?EndPlugs
+?StartConnections
+64834[ [ 63799, 0 ], [ 63799, 1 ] ][  ]
+63799[  ][ [ 64834, 0 ], [ 64834, 1 ] ]
+1610172973[  ][ [ nil, nil ], [ nil, nil ] ]
+1800815270[ [ nil, nil ] ][ [ nil, nil ] ]
+?EndConnections
+?StartPlugParams
+648340.157300nil0
+637990.447400nilList[  ]0.529200nilList[  ]0.666600nilList[  ]0.768600nilList[  ]0.316200nilList[  ]1
+1610172973'analog1'[ [ 'dur', "Pwhite(1, 4, inf) * 0.125" ], [ 'degree', "Pwhite(-7, 7, inf)" ], [ 'ffreq', "HrPMod(\\ffreq, 2000, \\freq)" ] ]637991Set[ [ 'ffreq', 440.0, ControlSpec(20, 20000, 'exp', 0, 440, " Hz") ] ]
+1800815270"{ |sig| SinOsc.kr(0.1).exprange(600, 12000) }"[ 3, 1 ]14
+?EndPlugParams
+?EndSave

@@ -1,0 +1,20 @@
+?Hadron 1
+?StartPlugs
+HrDIYSynthunnamed1416164707nilPoint( 100, 100 )Rect(609, 134, 450, 440)Rect(608.3451294899, 159.27011299133, 450, 440)false
+HrDACunnamed789879865nilPoint( 100, 185 )Rect(1, 583, 250, 160)Rect(225, 462, 250, 160)true
+HrPanunnamed510451706nilPoint( 100, 141 )Rect(836, 501, 350, 140)Rect(224.32133674622, 258.03168034554, 350, 140)false
+HrADCunnamed2099751199nilPoint( 100, 55 )Rect(629, 232, 350, 120)Rect(627.96227550507, 256.86893749237, 350, 120)false
+?EndPlugs
+?StartConnections
+1416164707[ [ 2099751199, 0 ], [ 2099751199, 1 ] ][ [ 510451706, 0 ], [ 510451706, 1 ] ]
+789879865[ [ 510451706, 0 ], [ 510451706, 1 ] ][  ]
+510451706[ [ 1416164707, 0 ], [ 1416164707, 1 ] ][ [ 789879865, 0 ], [ 789879865, 1 ] ]
+2099751199[  ][ [ 1416164707, 0 ], [ 1416164707, 1 ] ]
+?EndConnections
+?StartPlugParams
+1416164707"{ |input| PitchShift.ar(input[0], windowSize: 0.1, pitchRatio: LFNoise1.kr(0.2).exprange(0.5, 2.0), pitchDispersion: SinOsc.kr(15, 0, 0.3)) }"
+7898798651nil0
+51045170600
+2099751199100.000000trueinfnilList[  ]
+?EndPlugParams
+?EndSave

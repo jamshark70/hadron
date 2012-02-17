@@ -1,0 +1,23 @@
+?Hadron 1
+?StartPlugs
+HrOscilunnamed794977131nilPoint( 109, 241 )Rect(805, 304, 560, 415)Rect(974, 456, 560, 415)false
+HrDACunnamed552728017nilPoint( 106, 385 )Rect(1, 583, 250, 160)Rect(2, 558, 250, 160)true
+HrFilterunnamed870128436nilPoint( 106, 307 )Rect(1, 483, 350, 260)Rect(1, 459, 350, 260)true
+HrCtlEnvunnamed2063427900nilPoint( 161, 158 )Rect(1, 353, 450, 390)Rect(1, 329, 450, 390)true
+HrMonoPatternunnamed669352216nilPoint( 188, 70 )Rect(700, 85, 600, 490)Rect(709.21254014969, 617.94095563889, 600, 490)false
+?EndPlugs
+?StartConnections
+794977131[  ][ [ 870128436, 0 ], [ 870128436, 1 ] ]
+552728017[ [ 870128436, 0 ], [ 870128436, 1 ] ][  ]
+870128436[ [ 794977131, 0 ], [ 794977131, 1 ] ][ [ 552728017, 0 ], [ 552728017, 1 ] ]
+2063427900[ [ nil, nil ] ][ [ nil, nil ], [ nil, nil ] ]
+669352216[  ][ [ nil, nil ], [ nil, nil ] ]
+?EndConnections
+?StartPlugParams
+7949771310.100000818.563063[ [ 0, 0, 1.0, 0.5, 0, 'sawtooth' ], [ 0, 9.2199921607971, 1, 0.5, 0, 'pulse' ] ]00101Env([ 0, 1, 1, 0 ], [ 0.05, 0.9, 0.05 ], 0, 2)
+5527280170.666700nil0
+8701284362000[ 1424.010379336, 0.10232931102517, 0.0 ]
+2063427900"HrControlSpec(0.0, 0.1, 'linear', 0.0, 0.0, \"\")""Env([ 0.0, 1.0, 0.5, 0.0 ], [ 0.0076335877862595, 0.22900763358779, 0.76335877862595 ], [ -4.0, -4.0, -4.0 ])""0.28216744793073"[ 1, 1 ]1
+669352216'x'[ [ 'dur', "Pexprand(0.08, 0.4, inf)" ], [ "HrMonoTarget(##).parse('2063427900:timeScale')", "Pkey(\\dur) * 0.8" ], [ "HrMonoTarget(##).parse('2063427900:t_trig')", "1" ], [ "HrMonoTarget(##).parse('794977131:freq')", "Pexprand(400, 900, inf)" ], [ "HrMonoTarget(##).parse('870128436:param0')", "Pexprand(1000, 8000, inf)" ] ]20634279000Set[  ]
+?EndPlugParams
+?EndSave

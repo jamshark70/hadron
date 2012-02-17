@@ -342,3 +342,71 @@ q = Pchain(
 q.stop;
 
 p.synthArgs
+
+
+
+// test delay synthdef
+(
+SynthDef("HrDelay", { | /*inBus0, outBus0,*/ outbus, ffreq = 8000, mix = 0.5,
+	bufs = #[0, 1],
+	feedback = #[0, 0], delaytime = #[0.1, 0.1],
+	mulL = #[1, 0], mulR = #[0, 1]|
+
+	var sig = In.ar(/*inBus0*/ outbus, 2),
+	fbsig = LocalIn.ar(2) * feedback,
+	delay;
+
+	sig = sig + fbsig;
+	sig = [mulL, mulR].collect { |mul, i| mul * sig[i] }.sum;
+
+	delay = BufDelayL.ar(bufs, sig, delaytime - ControlDur.ir);
+	LocalOut.ar(LPF.ar(delay, ffreq));
+
+	delay = XFade2.ar(sig, delay, mix.madd(2, -1));
+	// Out.ar(outBus0, delay);
+	ReplaceOut.ar(outbus, delay);
+}).add;
+)
+
+m = MixerChannel(\test, s, 2, 2);
+
+b.free;
+b = Buffer.allocConsecutive(2, s, 65536, 1);
+
+a = m.playfx("HrDelay", [bufs: b, delaytime: #[0.5, 0.5]]);
+
+a.trace;
+a.free;
+
+SynthDef(\shortblip, { |out|
+	Out.ar(out, SinOsc.ar(#[440, 880], 0, EnvGen.kr(Env.perc(0.01, 0.1), doneAction: 2)))
+}).add;
+
+// m.play((freq: #[440, 880], pan: #[-1, 1], sustain: 0.05, amp: 0.8));
+m.play((instrument: \shortblip));
+s.sendBundle(0.205, [\n_trace, a.nodeID]);
+s.sendBundle(0.705, [\n_trace, a.nodeID]);
+
+
+
+SynthDef("HrDelay", { | /*inBus0, outBus0,*/ outbus, ffreq = 8000, mix = 0.5,
+	bufs = #[0, 1],
+	feedback = #[0, 0], delaytime = #[0.1, 0.1],
+	mulL = #[1, 0], mulR = #[0, 1]|
+
+	var sig = InFeedback.ar(/*inBus0*/ outbus, 2),
+	fbsig = LocalIn.ar(2) * feedback,
+	delay;
+
+	sig = sig + fbsig;
+	sig = [mulL, mulR].collect { |mul, i| mul * sig[i] }.sum;
+
+	delay = BufDelayL.ar(bufs, sig, delaytime - ControlDur.ir);
+	LocalOut.ar(LPF.ar(delay, ffreq));
+
+	delay = XFade2.ar(sig, delay, mix.madd(2, -1));
+	// Out.ar(outBus0, delay);
+	ReplaceOut.ar(outbus, delay);
+}).draw;
+
+Quarks.gui;
