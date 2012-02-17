@@ -87,7 +87,6 @@ HadronStateLoad
 			if(loadStage == 5,
 			{
 				parentApp.alivePlugs.do({|plug| plug.wakeConnections; });
-				parentApp.alivePlugs.do({|plug| plug.prUpdateBusConnections; });
 				// the other "if" loadStages have to process multiple lines
 				// but this one must go once and only once
 				loadStage = nil;
@@ -103,6 +102,8 @@ HadronStateLoad
 			if(loadStage == 7,
 			{
 				parentApp.alivePlugs.do(_.wakeFromLoad);
+				0.25.wait;
+				parentApp.alivePlugs.do(_.prUpdateBusConnections);
 				parentApp.canvasObj.drawCables;
 				parentApp.isDirty = false;
 				parentApp.displayStatus("State loaded!", 1);
