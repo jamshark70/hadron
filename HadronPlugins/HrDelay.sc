@@ -14,17 +14,17 @@ HrDelay : HadronPlugin {
 				feedback = #[0, 0], delaytime = #[0.1, 0.1],
 				mulL = #[1, 0], mulR = #[0, 1]|
 
-				var sig = In.ar(inBus0, 2),
+				var input = In.ar(inBus0, 2),
 				fbsig = LocalIn.ar(2) * feedback,
+				sig = input + fbsig,
 				delay;
 
-				sig = sig + fbsig;
 				sig = [mulL, mulR].collect { |mul, i| mul * sig[i] }.sum;
 
 				delay = BufDelayL.ar(bufs, sig, delaytime - ControlDur.ir);
 				LocalOut.ar(LPF.ar(delay, ffreq));
 
-				delay = XFade2.ar(sig, delay, mix.madd(2, -1));
+				delay = XFade2.ar(input, delay, mix.madd(2, -1));
 				Out.ar(outBus0, delay);
 			}, #[nil, nil, 0.05, 0.05, nil, nil, 0.05, 0.05, 0.05, 0.05]).add;
 		};
