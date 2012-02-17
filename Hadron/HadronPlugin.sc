@@ -720,7 +720,7 @@ HadronPlugin
 			if(shouldPlay) {
 				Server.default.sync;
 				this.releaseSynth;
-				synthInstance = Synth(this.class.name++uniqueID, this.synthArgs, group);
+				synthInstance = Synth(this.defName, this.synthArgs, group);
 			};
 		};
 		if(thisThread.isKindOf(Routine)) {
@@ -765,5 +765,5 @@ HadronPlugin
 	// plugs that own HadronModTargetControls should override this
 	updateModTargets {}
 
-	defName { ^"" }  // really only for poly stuff, may fill in for others later
+	defName { ^this.class.name++uniqueID }
 }
