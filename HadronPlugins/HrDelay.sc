@@ -122,7 +122,7 @@ HrDelay : HadronPlugin {
 		.action_({ |view|
 			var bool = (view.value == 0);
 			delaySl[1].visible = bool;
-			delays = delaySl[[0, bool.binaryValue]];
+			delays = delaySl[[0, bool.binaryValue]].collect(_.value);
 			if(synthInstance.notNil) {
 				synthInstance.set(\delaytime, delays);
 			};
@@ -133,7 +133,7 @@ HrDelay : HadronPlugin {
 		.action_({ |view|
 			var bool = (view.value == 0);
 			feedbackSl[1].visible = bool;
-			feedbacks = feedbackSl[[0, bool.binaryValue]];
+			feedbacks = feedbackSl[[0, bool.binaryValue]].collect(_.value);
 			if(synthInstance.notNil) {
 				synthInstance.set(\feedback, feedbacks);
 			};
