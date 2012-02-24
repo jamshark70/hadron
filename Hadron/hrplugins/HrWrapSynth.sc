@@ -49,10 +49,10 @@ HrWrapSynth : HadronPlugin
 			numControls = ctlNameStrings.size; // synthDesc.metadata.at(\specs).size;
 			
 			numIns = synthDesc.controlNames.count({ |item|
-				item.asString.find("inBus", true, 0) == 0
+				item.asString.find("inBus", false, 0) == 0
 			});
 			numOuts = synthDesc.controlNames.count({ |item|
-				item.asString.find("outBus", true, 0) == 0
+				item.asString.find("outBus", false, 0) == 0
 			});
 			
 			bounds = Rect(400, 400, 350, 50 + (numControls * 30));
