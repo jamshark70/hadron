@@ -27,7 +27,7 @@ HrPolyPattern : HadronPlugin {
 	}
 
 	*new { |argParentApp, argIdent, argUniqueID, argExtraArgs, argCanvasXY|
-		^super.new(argParentApp, "HrPolyPattern", argIdent, argUniqueID, argExtraArgs, Rect((Window.screenBounds.width - 600).rand, (Window.screenBounds.width - 450).rand, 600, 450), 0, 2, argCanvasXY).init
+		^super.new(argParentApp, this.name.asString, argIdent, argUniqueID, argExtraArgs, Rect((Window.screenBounds.width - 600).rand, (Window.screenBounds.width - 450).rand, 600, 450), 0, 2, argCanvasXY).init
 	}
 
 	init {
