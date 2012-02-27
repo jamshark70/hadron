@@ -171,6 +171,7 @@ HrMonoPattern : HrPolyPattern {
 			Event.addEventType(\hrMonoPattern, #{ |server|
 				var freqs, lag, dur, strum, bndl, msgFunc;
 				freqs = ~freq = ~detunedFreq.value;
+				~sustain = ~sustain.value;
 
 				if(freqs.isRest.not) {
 					~server = server;
