@@ -168,7 +168,17 @@ HadronModTargetControlView : SCViewHolder {
 		model.removeDependant(this);
 		model = newModel;
 		model.addDependant(this);
-		defer { this.refreshAppMenu };
+		defer {
+			this.refreshAppMenu;
+
+			if(model.notNil and: { model.currentSelPlugin.notNil }) {
+				model.getParams;
+				this.update(model, \plugin, model.currentSelPlugin);
+				if(model.currentSelParam.notNil) {
+					this.update(model, \param, model.currentSelParam);
+				}
+			};
+		};
 	}
 
 	viewDidClose {
