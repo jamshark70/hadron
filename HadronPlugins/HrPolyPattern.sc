@@ -99,7 +99,7 @@ HrPolyPattern : HadronPlugin {
 					[subpatEdit[i].key, subpatEdit[i].text]
 				})
 			},
-			{ targetPlugin.uniqueID },
+			{ targetPlugin.tryPerform(\uniqueID) },
 			{ startButton.value },
 			{	var pmod;
 				mappedMods.keys.reject(_ == \run).collect { |pmodname|
