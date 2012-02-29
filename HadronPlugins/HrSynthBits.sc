@@ -232,7 +232,7 @@ HrFilter : HadronPlugin {
 		var node;
 		paramName = paramName.asString;
 		if(paramName.beginsWith("param")) {
-			paramName = filtTypes[filtType][1][paramName[5..].asInteger];
+			paramName = filtTypes[filtType][1][paramName[5..].asInteger * 2];
 		};
 		if(ctlBus == -1 or: { ctlBus.tryPerform(\index) == -1 }) {
 			mappedMods.removeAt(paramName.asSymbol);
@@ -291,6 +291,10 @@ HrOscil : HadronPlugin {
 					[(1, 3 .. topPartial).reciprocal.squared * #[1, -1], 0].lace(topPartial)
 				}
 			));
+			NotificationCenter.register(Server.default, \didQuit, this.class, {
+				// force wavetables to be rebuilt if server was stopped
+				Library.removeEmptyAt('HrOscil', \sawbufs);
+			})
 		};
 
 		ampEnv = Env([0, 1, 1, 0], [0.05, 0.9, 0.05], 0, 2);
@@ -612,7 +616,7 @@ HrOscil : HadronPlugin {
 				}).know_(true);
 				env
 			});
-		}
+		};
 	}
 
 	hasGate { ^true }
