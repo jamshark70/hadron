@@ -341,7 +341,9 @@ HrPolyPattern : HadronPlugin {
 							ev.put(key, if(value.isArray) { [value] } { value })
 						}
 					} {
-						ev.put(key, if(value.isArray) { [value] } { value })
+						if(ev[key].isNil) {
+							ev.put(key, if(value.isArray) { [value] } { value })
+						};
 					};
 				};
 				ev
