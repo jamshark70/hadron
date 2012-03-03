@@ -366,17 +366,16 @@ HadronPlugin
 		//if "Disconnected" is selected
 		if(argTargetPlugin == nil,
 		{
-			//outConnections[argMyBusNo][0].inBusses[outConnections[argMyBusNo][1]] =
-			//	outConnections[argMyBusNo][0].dummyInBusses[outConnections[argMyBusNo][1]];
-
 			// remove old binding to this output from target plugin
 			// but we can't assume this was actually connected to something
 			// (i.e., the current target plug of this outConnection may be nil)
 			if(outConnections[argMyBusNo][0].notNil) {
-				outConnections[argMyBusNo][0].inConnections[outConnections[argMyBusNo][1]] = [nil, nil];
+				outConnections[argMyBusNo][0].setInputConnection(
+					outConnections[argMyBusNo][1], [nil, nil]
+				);
 			};
 			//remove my binding
-			outConnections[argMyBusNo] = [nil, nil];
+			this.setOutputConnection(argMyBusNo, [nil, nil]);
 			//redirect my bus to blackhole.
 			mainOutBusses[argMyBusNo] = parentApp.blackholeBus;
 			this.prUpdateBusConnections;
@@ -393,7 +392,7 @@ HadronPlugin
 			if((item[0] === this) and: { item[1] === argMyBusNo },
 			{//inBusses in plugins are not altered in anyway so just delete the binding.
 			//.prUpdateBusConnections on target will be called later but probably not necessary for there.
-				argTargetPlugin.inConnections[count] = [nil, nil];
+				argTargetPlugin.setInputConnection(count, [nil, nil]);
 			});
 		});
 
@@ -403,7 +402,7 @@ HadronPlugin
 			tempPlugin = argTargetPlugin.inConnections[argTargetBusNo][0];
 			//remove the old binding from the plugin that connects to the input of the target plugin.
 			argTargetPlugin.inConnections[argTargetBusNo][0]
-				.outConnections[argTargetPlugin.inConnections[argTargetBusNo][1]] = [nil, nil];
+			.setOutputConnection(argTargetPlugin.inConnections[argTargetBusNo][1], [nil, nil]);
 
 			//redirect its busses to blackhole.
 			argTargetPlugin.inConnections[argTargetBusNo][0]
@@ -416,24 +415,30 @@ HadronPlugin
 		//if we are already connected to stg, notify the target, she does not need .updateConnections, just notifying.
 		if(outConnections[argMyBusNo] != [nil, nil],
 		{
-			outConnections[argMyBusNo][0].inConnections[outConnections[argMyBusNo][1]] = [nil, nil];
+			outConnections[argMyBusNo][0].setInputConnection(outConnections[argMyBusNo][1],
+				[nil, nil]);
 		});
-
-
-
 
 		//change my out port to match the relevant input.
 		mainOutBusses[argMyBusNo] = argTargetPlugin.inBusses[argTargetBusNo];
 		//change the binding appropriately.
-		outConnections[argMyBusNo] = [argTargetPlugin, argTargetBusNo];
+		this.setOutputConnection(argMyBusNo, [argTargetPlugin, argTargetBusNo]);
 
 		//bind the target to me.
-		argTargetPlugin.inConnections[argTargetBusNo] = [this, argMyBusNo];
+		argTargetPlugin.setInputConnection(argTargetBusNo, [this, argMyBusNo]);
 
 		argTargetPlugin.prUpdateBusConnections;
 		this.prUpdateBusConnections;
 		parentApp.canvasObj.drawCables;
+	}
 
+	// subclasses may overwrite for custom behavior; see HrLFO
+	setInputConnection { |index, connectionArray|
+		inConnections[index] = connectionArray;
+	}
+
+	setOutputConnection { |index, connectionArray|
+		outConnections[index] = connectionArray;
 	}
 
 	wakeConnections
