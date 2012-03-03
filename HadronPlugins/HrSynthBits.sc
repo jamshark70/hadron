@@ -71,14 +71,29 @@ HrFilter : HadronPlugin {
 			Spec.specs[\hadrondecaytime] = ControlSpec(0.01, 10, \exp, 0, 0.1);
 			Spec.specs[\hadrondb] = ControlSpec(-20, 20, \lin, 0, 0);
 			Spec.specs[\hadronmooggain] = ControlSpec(0, 4);
+
+			Library.put('HrFilter', \filtTypes, [
+				// arrays are pairs: param name, spec name
+				['LPF': #[freq, freq]],
+				['HPF': #[freq, freq]],
+				['RLPF': #[freq, freq, rq, hadronrq]],
+				['RHPF': #[freq, freq, rq, hadronrq]],
+				['BPF': #[freq, freq, rq, hadronrq]],
+				['MoogFF': #[freq, freq, gain, hadronmooggain]],
+				['Ringz': #[freq, freq, decaytime, hadrondecaytime]],
+				['MidEQ': #[freq, freq, rq, hadronrq, db, hadrondb]]
+			]);
 		};
 	}
 
 	*new { |argParentApp, argIdent, argUniqueID, argExtraArgs, argCanvasXY|
-		var bounds = Rect((Window.screenBounds.width - 350).rand, (Window.screenBounds.height - 190).rand, 350, 190);
+		var height = this.height,
+		bounds = Rect((Window.screenBounds.width - 350).rand, (Window.screenBounds.height - height).rand, 350, height);
 
-		^super.new(argParentApp, this.name.asString, argIdent, argUniqueID, argExtraArgs, bounds, argNumIns: 2, argNumOuts: 2, argCanvasXY: argCanvasXY).init
+		^super.new(argParentApp, this.name.asString, argIdent, argUniqueID, argExtraArgs, bounds, argNumIns: this.numInputs, argNumOuts: this.numInputs, argCanvasXY: argCanvasXY).init
 	}
+	*height { ^190 }
+	*numInputs { ^2 }
 
 	init {
 		var paramComp;
@@ -100,17 +115,7 @@ HrFilter : HadronPlugin {
 		};
 		var paramNotInited = true ! 3;
 
-		filtTypes = [
-			// arrays are pairs: param name, spec name
-			['LPF': #[freq, freq]],
-			['HPF': #[freq, freq]],
-			['RLPF': #[freq, freq, rq, hadronrq]],
-			['RHPF': #[freq, freq, rq, hadronrq]],
-			['BPF': #[freq, freq, rq, hadronrq]],
-			['MoogFF': #[freq, freq, gain, hadronmooggain]],
-			['Ringz': #[freq, freq, decaytime, hadrondecaytime]],
-			['MidEQ': #[freq, freq, rq, hadronrq, db, hadrondb]]
-		];
+		filtTypes = Library.at(this.class.name, \filtTypes);
 		clipTypes = #[none, distort, softclip, tanh];
 		
 		filtType = 0;
@@ -268,7 +273,301 @@ HrFilter : HadronPlugin {
 	cleanUp {}
 }
 
+// not because HrLFO is a kind of filter
+// but because it also needs variable parameters
+// and I want to exploit the logic from HrFilter
+HrLFO : HrFilter {
+	var spec, specEditor, prOutBus, freqFromInput,
+	modControl, pollRate, pollRateView, replyID, watcher, isMapped = false, startButton;
 
+	*initClass {
+		this.addHadronPlugin;
+		StartUp.add {
+			Spec.specs.put(\hadronlofreq, [0.02, 100, \exp, 0, 1].asSpec);
+			Spec.specs.put(\hadron2pi, [0, 2pi].asSpec);
+			Spec.specs.put(\hadron0to2, [0, 2].asSpec);
+			Spec.specs.put(\hadron0to4, [0, 4].asSpec);
+			Spec.specs.put(\hadronpwidth, [0, 1, \lin, 0, 0.5].asSpec);
+			Library.put('HrLFO', \filtTypes, [
+				// arrays are pairs: param name, spec name
+				['SinOsc': #[freq, hadronlofreq, phase, hadron2pi]],
+				['LFSaw': #[freq, hadronlofreq, phase, hadron0to2]],
+				['LFTri': #[freq, hadronlofreq, phase, hadron0to4]],
+				['LFPulse': #[freq, hadronlofreq, phase, unipolar, width, hadronpwidth]],
+				['LFDNoise0': #[freq, hadronlofreq]],
+				['LFDNoise1': #[freq, hadronlofreq]],
+				['LFDNoise3': #[freq, hadronlofreq]]
+			])
+		};
+	}
+	*height { ^245 }
+	*numInputs { ^1 }
+
+	init {
+		var paramComp, specErrResp;
+		var fixParamViews = {
+			params.do { |sl, i|
+				var argname = filtTypes[filtType][1][i * 2];
+				if(argname.notNil) {
+					sl.visible_(true).label_(argname).spec_(filtTypes[filtType][1][i * 2 + 1]);
+					if(paramNotInited[i]) {
+						sl.value = sl.spec.default;
+						paramNotInited[i] = false;
+					} {
+						sl.value = sl.spec.constrain(sl.value);
+					};
+				} {
+					sl.visible = false;
+				}
+			};
+		};
+		var paramNotInited = true ! 3;
+
+		prOutBus = Bus.control(Server.default, 1);
+		filtTypes = Library.at(this.class.name, \filtTypes);
+		freqFromInput = 0;
+
+		filtType = 0;
+		StaticText(window, Rect(10, 10, 60, 20)).string_("filter");
+		filtMenu = PopUpMenu(window, Rect(80, 10, 90, 20))
+		.items_(filtTypes.collect(_[0]))
+		.action_({ |view|
+			filtType = view.value;
+			fixParamViews.defer;
+			this.makeSynth;
+		});
+
+		startButton = Button(window, Rect(180, 10, 80, 20)).states_([["Start"],["Stop"]])
+		.value_(0)
+		.action_
+		({|btn|
+			if(btn.value == 1) {
+				modControl.map(prOutBus);
+				isMapped = true;
+				synthInstance.set(\pollRate, pollRate/* * (watcher.notNil.binaryValue) */);
+			} {
+				modControl.unmap;
+				isMapped = false;
+				synthInstance.set(\pollRate, 0);
+			};
+		});
+
+		paramComp = CompositeView(window, Rect(5, 40, 340, 90))
+		.background_(Color(0.8, 1, 0.8));
+		params = Array.fill(3, { |i|
+			var sl = HrEZSlider(paramComp, Rect(5, 5 + (30 * i), 330, 20), "", nil, { |view|
+				var argname = filtTypes[filtType][1][i * 2];
+				if(argname.notNil) { synthInstance.set(argname, view.value) };
+			});
+			if(i == 2) { sl.visible = false };
+			sl
+		});
+
+		spec = nil.asSpec;
+		specEditor = HrSpecEditor(window, Rect(5, 135, 340, 50), 5@5, "range", 65)
+		.value_(spec)
+		.action_({ |view, paramName|
+			spec = view.value;
+			if(paramName == \warp) {
+				this.makeSynth;
+			} {
+				synthInstance.set(paramName, spec.perform(paramName));
+			};
+		});
+		specErrResp = SimpleController(specEditor).put(\message, { |obj, what, string, mood = 0|
+			defer {
+				parentApp.displayStatus(string, mood);
+			};
+		})
+		.put(\viewDidClose, { specErrResp.remove });
+
+		modControl = HadronModTargetControl.new(window, Rect(10, 190, 330, 20), parentApp, this);
+		modControl.addDependant(this);
+
+		pollRate = HrCtlMod.defaultPollRate;
+		pollRateView = HrEZSlider(window, Rect(10, 215, 330, 20),
+			"update rate", [1, 25], { |view|
+				this.pollRate = view.value;
+			}, pollRate, labelWidth: 100, numberWidth: 45
+		);
+
+		watcher = OSCresponderNode(Server.default.addr, '/modValue', { |time, resp, msg|
+			if(msg[2] == replyID) {
+				modControl.updateMappedGui(msg[3]);
+			}
+		}).add;
+
+		saveGets = [
+			{ filtType },
+			{ spec },
+			{ modControl.getSaveValues; },
+			{ startButton.value; },
+			{ pollRate },
+			{ params.collect(_.value) }
+		];
+
+		saveSets = [
+			{ |argg|
+				filtType = argg;
+				defer { filtMenu.value = argg; fixParamViews.value };
+			},
+			{ |argg|
+				spec = argg;
+				defer { specEditor.value = spec };
+				this.makeSynth;
+			},
+			{ |argg| modControl.putSaveValues(argg); },
+			{ |argg| startButton.valueAction_(argg); },
+			{ |argg|
+				if(argg.notNil) {
+					this.pollRate = argg;
+					pollRateView.tryPerform(\value_, argg);
+				}
+			},
+			{ |argg| params.do({ |sl, i| sl.valueAction = argg[i] }) }
+		];
+
+		modGets = ();
+		params.do { |sl, i| modGets.put(("param" ++ i).asSymbol, { sl.value }) };
+		modGets.putAll((
+			outmin: { spec.minval },
+			outmax: { spec.maxval },
+			outstep: { spec.step }
+		));
+
+		modSets = ();
+		params.do { |sl, i| modSets.put(("param" ++ i).asSymbol, { |argg|
+			var argname = filtTypes[filtType][1][i * 2];
+			if(argname.notNil) { synthInstance.set(argname, argg) };
+			defer { sl.value = argg };
+		}) };
+		modSets.putAll((
+			outmin: { |argg|
+				spec.minval = argg;
+				synthInstance.set(\minval, argg);
+				defer { specEditor.value = spec };
+			},
+			outmax: { |argg|
+				spec.maxval = argg;
+				synthInstance.set(\maxval, argg);
+				defer { specEditor.value = spec };
+			},
+			outstep: { |argg|
+				spec.step = argg;
+				synthInstance.set(\step, argg);
+				defer { specEditor.value = spec };
+			}
+		));
+
+		modMapSets = ();
+		params.do { |sl, i| modMapSets.put(("param" ++ i).asSymbol, { |argg| defer { sl.value = argg } }) };
+		modSets.putAll((
+			outmin: { |argg|
+				spec.minval = argg;
+				defer { specEditor.value = spec };
+			},
+			outmax: { |argg|
+				spec.maxval = argg;
+				defer { specEditor.value = spec };
+			},
+			outstep: { |argg|
+				spec.step = argg;
+				defer { specEditor.value = spec };
+			}
+		));
+
+		fixParamViews.value;
+		this.makeSynth;
+	}
+
+	synthArgs {
+		var parmValues = Array(6);
+		filtTypes[filtType][1].pairsDo { |name, spec, i|
+			parmValues.add(name).add(params[i div: 2].value);
+		};
+		^[inBus0: inBusses[0], outBus0: outBusses[0], prOutBus: prOutBus,
+			freqFromInput: freqFromInput,
+			pollRate: pollRate * isMapped.binaryValue/* * (watcher.notNil.binaryValue) */,
+			minval: spec.minval, maxval: spec.maxval, step: spec.step, 
+		] ++ parmValues ++ this.getMapModArgs
+	}
+
+	makeSynthDef {
+		replyID = UniqueID.next;
+		SynthDef("HrLFO" ++ uniqueID, { |inBus0, outBus0, prOutBus, freqFromInput = 0,
+			minval = 0, maxval = 1, step = 0, pollRate = 0|
+			var parmValues = Array(3),
+			sig = InFeedback.ar(inBus0, 1),
+			localSpec = spec.copy
+			.minval_(minval)  // replace hardcoded endpoints with control inputs
+			.maxval_(maxval)
+			.step_(step);
+			filtTypes[filtType][1].pairsDo { |name, spec|
+				parmValues.add(NamedControl(name, spec.asSpec.default, lags: 0.05, fixedLag: true))
+			};
+			// switch for ar/kr freq input
+			parmValues[0] = Select.kr(freqFromInput, [parmValues[0], sig]);
+			sig = filtTypes[filtType][0].asClass.kr(*parmValues);
+			sig = localSpec.map(sig.range(0, 1));
+			SendReply.kr(Impulse.kr(pollRate), '/modValue', sig, replyID);
+			Out.kr(prOutBus, sig);
+			Out.ar(outBus0, K2A.ar(sig));
+		}).add;
+	}
+
+	updateBusConnections {
+		freqFromInput = inConnections[0][0]/*.debug("HrLFO:updateBusConnections")*/.notNil.binaryValue/*.debug("freqFromInput")*/;
+		// defer { params[0].enabled = (freqFromInput == 0).debug("enabled") };
+		synthInstance.set(\inBus0, inBusses[0], \outBus0, outBusses[0],
+			\freqFromInput, freqFromInput);
+	}
+
+	cleanUp {
+		modControl.removeDependant(this).remove;
+		watcher.remove;
+		prOutBus.free;
+	}
+
+	notifyPlugKill { |argPlug|
+		modControl.plugRemoved(argPlug);
+	}
+	
+	notifyPlugAdd { |argPlug|
+		modControl.plugAdded;
+	}
+
+	updateModTargets { modControl.getParams }
+	
+	wakeFromLoad {
+		modControl.doWakeFromLoad;
+	}
+
+	update { |obj, what, argument, oldplug, oldparam|
+		if(#[currentSelPlugin, currentSelParam].includes(what)) {
+			if(argument.notNil) {
+				modControl.unmap(oldplug, oldparam);
+				isMapped = modControl.map(prOutBus);
+				synthInstance.set(\pollRate,
+					pollRate * isMapped.binaryValue/* * (watcher.notNil.binaryValue) */
+				);
+				defer { startButton.value = isMapped.binaryValue };
+			} {
+				modControl.unmap(oldplug, oldparam);
+				synthInstance.set(\pollRate, 0);
+				isMapped = false;
+				defer { startButton.value = 0 };
+			};
+		};
+	}
+
+	pollRate_ { |rate|
+		pollRate = rate;
+		if(synthInstance.notNil) {
+			synthInstance.set(\pollRate, pollRate * isMapped.binaryValue/* * (watcher.notNil.binaryValue) */);
+		};
+		modControl.pollRate = rate;
+	}
+}
 
 HrOscil : HadronPlugin {
 	var oscilGuis, freqSl, ampSl, noiseFreqSl, noiseAmpSl, noiseRqSl, noisePanSl,
