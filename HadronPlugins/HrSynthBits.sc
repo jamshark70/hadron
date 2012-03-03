@@ -516,10 +516,14 @@ HrLFO : HrFilter {
 	}
 
 	updateBusConnections {
-		freqFromInput = inConnections[0][0]/*.debug("HrLFO:updateBusConnections")*/.notNil.binaryValue/*.debug("freqFromInput")*/;
-		// defer { params[0].enabled = (freqFromInput == 0).debug("enabled") };
-		synthInstance.set(\inBus0, inBusses[0], \outBus0, outBusses[0],
-			\freqFromInput, freqFromInput);
+		synthInstance.set(\inBus0, inBusses[0], \outBus0, outBusses[0]);
+	}
+
+	setInputConnection { |index, connectionArray|
+		super.setInputConnection(index, connectionArray);
+		freqFromInput = inConnections[0][0].notNil.binaryValue;
+		synthInstance.set(\freqFromInput, freqFromInput);
+		defer { params[0].enabled = (freqFromInput == 0) };
 	}
 
 	cleanUp {
