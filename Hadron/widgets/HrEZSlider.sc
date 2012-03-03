@@ -71,6 +71,13 @@ HrEZSlider : SCViewHolder {
 		defer { labelView.string = newLabel };
 	}
 
+	// should call these from within defer {}
+	enabled { ^sliderView.enabled }
+	enabled_ { |bool|
+		sliderView.enabled = bool;
+		numberView.enabled = bool;
+	}
+
 	//// copy and paste - thank you, no multiple inheritance ////
 	prInit
 	{|argParent, argBounds|
