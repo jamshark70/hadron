@@ -31,6 +31,7 @@ HadronStateLoad
 		
 		var contents;
 		var tempFile = File(argFile, "r");
+		var tempPlug, tempThing;
 		
 		contents = tempFile.readAllString().split($\n);
 		tempFile.close;
@@ -67,21 +68,33 @@ HadronStateLoad
 			if(loadStage == 4,
 			{
 				item = item.split(31.asAscii);
-				parentApp.idPlugDict.at(item[0].interpret).inConnections = 
-					item[1].interpret.collect
-					({|inItem| 
+				tempPlug = parentApp.idPlugDict.at(item[0].interpret);
+				tempThing = item[1].interpret;
+				tempPlug.inConnections = Array.fill(tempThing.size/*, { [nil, nil] }*/);
+					
+				tempThing.do { |inItem, i|
+					tempPlug.setInputConnection(i, 
 						if(inItem[0] != nil, 
-						{ [parentApp.idPlugDict.at(inItem[0]), inItem[1]]},
-						{ inItem; }); 
-					});
+							{ [parentApp.idPlugDict.at(inItem[0]), inItem[1]]},
+							{ inItem; });
+					);
+				};
 				
-				parentApp.idPlugDict.at(item[0].interpret).outConnections = 
-					item[2].interpret.collect
-					({|outItem| 
+				tempThing = item[2].interpret;
+				tempThing.do { |outItem, i|
+					tempPlug.setOutputConnection(i, 
 						if(outItem[0] != nil, 
-						{ [parentApp.idPlugDict.at(outItem[0]), outItem[1]]},
-						{ outItem; }); 
-					});
+							{ [parentApp.idPlugDict.at(outItem[0]), outItem[1]]},
+							{ outItem; });
+					);
+				};
+				// tempPlug.outConnections = Array.fill(tempThing.size/*, { [nil, nil] }*/);
+				// 	item[2].interpret.collect
+				// 	({|outItem| 
+				// 		if(outItem[0] != nil, 
+				// 		{ [parentApp.idPlugDict.at(outItem[0]), outItem[1]]},
+				// 		{ outItem; }); 
+				// 	});
 			});
 			
 			if(loadStage == 5,
