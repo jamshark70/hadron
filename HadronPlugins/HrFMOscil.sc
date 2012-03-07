@@ -4,31 +4,33 @@ HrFMOscil : HadronPlugin {
 
 	*initClass {
 		this.addHadronPlugin;
-		ServerBoot.add {
-			SynthDef('HrFMOscil', { |freq = 440, detune, amp = 0.1, keyscale,
-				m0_coarse = 1, m0_fine = 0, m0_level, m0_mul = 1, m0_pan,
-				m1_coarse = 1, m1_fine = 0, m1_level, m1_mul = 1, m1_pan,
-				bufs = #[0, 0, 0], outBus0, gate = 1, timescale = 1, doneAction = 2|
+		StartUp.add {
+			ServerBoot.add {
+				SynthDef('HrFMOscil', { |freq = 440, detune, amp = 0.1, keyscale,
+					m0_coarse = 1, m0_fine = 0, m0_level, m0_mul = 1, m0_pan,
+					m1_coarse = 1, m1_fine = 0, m1_level, m1_mul = 1, m1_pan,
+					bufs = #[0, 0, 0], outBus0, gate = 1, timescale = 1, doneAction = 2|
 
-				var basefreq = 220, freqs, mods, cars, env, eg;
-				m0_level = m0_level * basefreq / ((keyscale * freq) + (basefreq * (1 - keyscale)));
-				m1_level = m1_level * basefreq / ((keyscale * freq) + (basefreq * (1 - keyscale)));
+					var basefreq = 220, freqs, mods, cars, env, eg;
+					m0_level = m0_level * basefreq / ((keyscale * freq) + (basefreq * (1 - keyscale)));
+					m1_level = m1_level * basefreq / ((keyscale * freq) + (basefreq * (1 - keyscale)));
 
-				env = NamedControl.kr(\env, (0 ! 40).overWrite(Env.adsr.asArray));
-				eg = EnvGen.kr(env, gate, timeScale: timescale, doneAction: doneAction);
+					env = NamedControl.kr(\env, (0 ! 40).overWrite(Env.adsr.asArray));
+					eg = EnvGen.kr(env, gate, timeScale: timescale, doneAction: doneAction);
 
-				freqs = freq * [1, (detune * 0.01).midiratio];
-				mods = [
-					[m0_coarse, m0_fine, m0_level, m0_mul],
-					[m1_coarse, m1_fine, m1_level, m1_mul]
-				].collect { |row, i|
-					var ratio = row[0] * (row[1] * 0.01).midiratio;
-					Osc.ar(bufs[i+1], freqs[i] * ratio, 0, row[2] * row[3], 1)
-				};
-				cars = Osc.ar(bufs[0], freqs * mods, 0);
-				Out.ar(outBus0, Pan2.ar(cars, [m0_pan, m1_pan], amp * eg).sum)
-			}).add;
-		}
+					freqs = freq * [1, (detune * 0.01).midiratio];
+					mods = [
+						[m0_coarse, m0_fine, m0_level, m0_mul],
+						[m1_coarse, m1_fine, m1_level, m1_mul]
+					].collect { |row, i|
+						var ratio = row[0] * (row[1] * 0.01).midiratio;
+						Osc.ar(bufs[i+1], freqs[i] * ratio, 0, row[2] * row[3], 1)
+					};
+					cars = Osc.ar(bufs[0], freqs * mods, 0);
+					Out.ar(outBus0, Pan2.ar(cars, [m0_pan, m1_pan], amp * eg).sum)
+				}).add;
+			};
+		};
 	}
 
 	*new { |argParentApp, argIdent, argUniqueID, argExtraArgs, argCanvasXY|

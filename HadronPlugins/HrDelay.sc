@@ -8,25 +8,27 @@ HrDelay : HadronPlugin {
 
 	*initClass {
 		this.addHadronPlugin;
-		ServerBoot.add {
-			SynthDef("HrDelay", { |inBus0, outBus0, ffreq = 8000, mix = 0.5,
-				bufs = #[0, 1],
-				feedback = #[0, 0], delaytime = #[0.1, 0.1],
-				mulL = #[1, 0], mulR = #[0, 1]|
+		StartUp.add {
+			ServerBoot.add {
+				SynthDef("HrDelay", { |inBus0, outBus0, ffreq = 8000, mix = 0.5,
+					bufs = #[0, 1],
+					feedback = #[0, 0], delaytime = #[0.1, 0.1],
+					mulL = #[1, 0], mulR = #[0, 1]|
 
-				var input = In.ar(inBus0, 2),
-				fbsig = LocalIn.ar(2) * feedback,
-				sig = input + fbsig,
-				delay;
+					var input = In.ar(inBus0, 2),
+					fbsig = LocalIn.ar(2) * feedback,
+					sig = input + fbsig,
+					delay;
 
-				sig = [mulL, mulR].collect { |mul, i| mul * sig[i] }.sum;
+					sig = [mulL, mulR].collect { |mul, i| mul * sig[i] }.sum;
 
-				delay = BufDelayL.ar(bufs, sig, delaytime - ControlDur.ir);
-				LocalOut.ar(LPF.ar(delay, ffreq));
+					delay = BufDelayL.ar(bufs, sig, delaytime - ControlDur.ir);
+					LocalOut.ar(LPF.ar(delay, ffreq));
 
-				delay = XFade2.ar(input, delay, mix.madd(2, -1));
-				Out.ar(outBus0, delay);
-			}, #[nil, nil, 0.05, 0.05, nil, nil, 0.05, 0.05, 0.05, 0.05]).add;
+					delay = XFade2.ar(input, delay, mix.madd(2, -1));
+					Out.ar(outBus0, delay);
+				}, #[nil, nil, 0.05, 0.05, nil, nil, 0.05, 0.05, 0.05, 0.05]).add;
+			};
 		};
 	}
 

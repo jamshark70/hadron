@@ -3,17 +3,19 @@ HrPan : HadronPlugin {
 
 	*initClass {
 		this.addHadronPlugin;
-		ServerBoot.add {
-			SynthDef('HrPan', { |inBus0, outBus0, monoIn = 0, pan = 0|
-				var sig = InFeedback.ar(inBus0, 2);
-				sig = XFade2.ar(
-					Balance2.ar(sig[0], sig[1], pan),
-					Pan2.ar(sig.sum, pan),
-					Lag.kr(monoIn, 0.05) * 2 - 1
-				);
-				Out.ar(outBus0, sig);
-			}).add;
-		}
+		StartUp.add {
+			ServerBoot.add {
+				SynthDef('HrPan', { |inBus0, outBus0, monoIn = 0, pan = 0|
+					var sig = InFeedback.ar(inBus0, 2);
+					sig = XFade2.ar(
+						Balance2.ar(sig[0], sig[1], pan),
+						Pan2.ar(sig.sum, pan),
+						Lag.kr(monoIn, 0.05) * 2 - 1
+					);
+					Out.ar(outBus0, sig);
+				}).add;
+			};
+		};
 	}
 
 	*new { |argParentApp, argIdent, argUniqueID, argExtraArgs, argCanvasXY|
