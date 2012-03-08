@@ -3,12 +3,21 @@ HrDelay : HadronPlugin {
 
 	// these depend on button values - the arrays allow synchronous access
 	var feedbacks, delays;
-	var ffreqSl, mixSl, feedbackSl, delaySl, mulLSl, mulRSl, syncFBButton, syncDTButton,
+	var ffreqSl, mixSl, feedbackSl, delaySl, mulLSl, mulRSl,
+	syncFBButton, syncDTButton, fbSynced = false, dtSynced = false,
 	secBeatsButton;
 
 	*initClass {
+		var dict, i, ctl, ctls;
 		this.addHadronPlugin;
 		StartUp.add {
+			Library.put(this, \modIndices, (
+				L_feedback: 6, R_feedback: 7,
+				L_delay: 8, R_delay: 9,
+				L_to_L: 10, L_to_R: 11,
+				R_to_L: 12, R_to_R: 13
+			));
+
 			ServerBoot.add {
 				SynthDef("HrDelay", { |inBus0, outBus0, ffreq = 8000, mix = 0.5,
 					bufs = #[0, 1],
@@ -122,22 +131,58 @@ HrDelay : HadronPlugin {
 		syncDTButton = Button(window, Rect(268, delaySl[0].bounds.top + comps[0].bounds.top, 86, 20))
 		.states_([["dual"], ["synced"]])
 		.action_({ |view|
-			var bool = (view.value == 0);
-			delaySl[1].visible = bool;
-			delays = delaySl[[0, bool.binaryValue]].collect(_.value);
+			var tempDelays;
+			dtSynced = (view.value == 0);  // inside here
+			delaySl[1].visible = dtSynced;
+			delays = delaySl[[0, dtSynced.binaryValue]].collect(_.value);
+			tempDelays = delays.copy;
+			dtSynced = dtSynced.not;  // for the outside world
+			if(mappedMods['L_delay'].notNil) {
+				tempDelays[0] = mappedMods['L_delay'].asMap;
+				if(dtSynced.not and: { mappedMods['L_delay'] == mappedMods['R_delay'] }) {
+					this.mapModCtl('R_delay', -1);
+				};
+			};
+			if(mappedMods['R_delay'].notNil) {
+				tempDelays[1] = mappedMods['R_delay'].asMap;
+			} {
+				// mappedMods['R_delay'].isNil here
+				if(dtSynced and: { mappedMods['L_delay'].notNil }) {
+					this.mapModCtl('R_delay', mappedMods['L_delay']);
+					tempDelays = tempDelays[0];
+				};
+			};
 			if(synthInstance.notNil) {
-				synthInstance.set(\delaytime, delays);
+				synthInstance.set(\delaytime, tempDelays);
 			};
 		});
 
 		syncFBButton = Button(window, Rect(268, feedbackSl[0].bounds.top + comps[0].bounds.top, 86, 20))
 		.states_([["dual"], ["synced"]])
 		.action_({ |view|
-			var bool = (view.value == 0);
-			feedbackSl[1].visible = bool;
-			feedbacks = feedbackSl[[0, bool.binaryValue]].collect(_.value);
+			var tempFeedbacks;
+			fbSynced = (view.value == 0);  // inside here
+			feedbackSl[1].visible = fbSynced;
+			feedbacks = feedbackSl[[0, fbSynced.binaryValue]].collect(_.value);
+			tempFeedbacks = feedbacks.copy;
+			fbSynced = fbSynced.not;  // for the outside world
+			if(mappedMods['L_feedback'].notNil) {
+				tempFeedbacks[0] = mappedMods['L_feedback'].asMap;
+				if(fbSynced.not and: { mappedMods['L_feedback'] == mappedMods['R_feedback'] }) {
+					this.mapModCtl('R_feedback', -1);
+				};
+			};
+			if(mappedMods['R_feedback'].notNil) {
+				tempFeedbacks[1] = mappedMods['R_feedback'].asMap;
+			} {
+				// mappedMods['R_feedback'].isNil here
+				if(fbSynced and: { mappedMods['L_feedback'].notNil }) {
+					this.mapModCtl('R_feedback', mappedMods['L_feedback']);
+					tempFeedbacks = tempFeedbacks[0];
+				};
+			};
 			if(synthInstance.notNil) {
-				synthInstance.set(\feedback, feedbacks);
+				synthInstance.set(\feedback, tempFeedbacks);
 			};
 		});
 
@@ -178,9 +223,30 @@ HrDelay : HadronPlugin {
 			}
 		];
 
-		modGets.putAll(());
-		modSets.putAll(());
-		modMapSets.putAll(());
+
+		modGets.putAll((
+			mix: { mixSl.value },
+			ffreq: { ffreqSl.value }
+		));
+		modSets.putAll((
+			mix: { |argg| defer { mixSl.valueAction = argg } },
+			ffreq: { |argg| defer { ffreqSl.valueAction = argg } }
+		));
+		modMapSets.putAll((
+			mix: { |argg| defer { mixSl.value = argg } },
+			ffreq: { |argg| defer { ffreqSl.value = argg } }
+		));
+
+		[feedback: feedbackSl, delay: delaySl, to_L: mulLSl, to_R: mulRSl]
+		.pairsDo { |key, sliders|
+			[#['L', 'R'], sliders].flop.do { |ctlpair|
+				var slider = ctlpair[1],
+				modname = "%_%".format(ctlpair[0], key).asSymbol;
+				modGets.put(modname, { slider.value });
+				modMapSets.put(modname, { |argg| defer { slider.value = argg } });
+				modSets.put(modname, { |argg| defer { slider.valueAction = argg } });
+			};
+		};
 
 		// defer makeSynth until buffers ready - will this work?
 		fork {
@@ -204,5 +270,25 @@ HrDelay : HadronPlugin {
 
 	cleanUp {
 		buffers.do(_.free);
+	}
+
+	mapModCtl { |paramName, ctlBus|
+		var checkSync = { |checkName, bool|
+			if(bool and: { paramName == checkName }) {
+				this.mapModCtl(paramName.asString.put(0, $R).asSymbol, ctlBus);
+			};
+		},
+		modIndex = Library.at(this.class, \modIndices).at(paramName) ?? { paramName },
+		node;
+		checkSync.('L_delay', dtSynced);
+		checkSync.('L_feedback', fbSynced);
+		if(ctlBus == -1 or: { ctlBus.tryPerform(\index) == -1 }) {
+			mappedMods.removeAt(paramName.asSymbol);
+		} {
+			mappedMods.put(paramName.asSymbol, ctlBus);
+		};
+		if((node = this.tryPerform(\synthInstance)).notNil) {
+			node.map(modIndex, ctlBus);
+		};
 	}
 }
