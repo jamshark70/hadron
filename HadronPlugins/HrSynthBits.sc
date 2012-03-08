@@ -330,7 +330,7 @@ HrLFO : HrFilter {
 		freqFromInput = 0;
 
 		filtType = 0;
-		StaticText(window, Rect(10, 10, 60, 20)).string_("filter");
+		StaticText(window, Rect(10, 10, 60, 20)).string_("LFO type");
 		filtMenu = PopUpMenu(window, Rect(80, 10, 90, 20))
 		.items_(filtTypes.collect(_[0]))
 		.action_({ |view|
@@ -535,6 +535,9 @@ HrLFO : HrFilter {
 	}
 
 	notifyPlugKill { |argPlug|
+		if(inConnections[0].tryPerform(\at, 0) === argPlug) {
+			this.setInputConnection(0, [nil, nil]);
+		};
 		modControl.plugRemoved(argPlug);
 	}
 	
