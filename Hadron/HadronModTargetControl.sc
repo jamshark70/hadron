@@ -28,7 +28,7 @@ HadronModTargetControl
 
 	currentSelParam_ { |param|
 		var oldparam;
-		if(param.isNil or: { paramNames.includesEqual(param) }) {
+		if(param.isNil or: { paramNames.detect { |item| item == param }.notNil }) {
 			oldparam = currentSelParam;
 			currentSelParam = param;
 			this.changed(\param, param);
