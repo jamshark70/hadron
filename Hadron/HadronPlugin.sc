@@ -147,24 +147,6 @@ HadronPlugin
 		.userCanClose_(false)
 		.acceptsMouseOver_(true);
 
-		outerWindow.view.keyDownAction_
-		({|...args|
-
-			//SwingOSC has different key bindings
-
-			//args.postln;
-			if(GUI.id == \swing,
-			{
-				args[2].switch(131072, { args[2] = 131074; }); //keyboard bindings
-			});
-
-			if((args[1] == $H) and: { args[2] == 131074 }, //if shift+h, show help
-			{
-				{ this.class.openHelpFile; }.defer;
-			});
-
-		});
-
 		Button(outerWindow, Rect(oldWinBounds.width - 80, oldWinBounds.height - 30, 50, 20))
 		.states_([["Hide"]])
 		.action_({ this.prHideWindow; });
