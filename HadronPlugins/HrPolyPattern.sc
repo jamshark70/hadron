@@ -20,9 +20,11 @@ HrPolyPattern : HadronPlugin {
 			};
 			Library.put(this, \parentKeys, keys);
 
-			SynthDef('HrPolyPattern', { |t_trig, outBus0|
-				Out.ar(outBus0, K2A.ar(t_trig) ! 2);
-			}).add;
+			ServerBoot.add {
+				SynthDef('HrPolyPattern', { |t_trig, outBus0|
+					Out.ar(outBus0, K2A.ar(t_trig) ! 2);
+				}).add;
+			};
 		};
 	}
 
