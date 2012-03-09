@@ -69,10 +69,10 @@ HrListSelector : SCViewHolder {
 	allItems_ { |items|
 		allItems = items;
 		activeItems = activeItems.select { |item|
-			allItems.includesEqual(item)
+			this.includesEqual(allItems, item)
 		};
 		availItems = allItems.reject { |item|
-			activeItems.includesEqual(item)
+			this.includesEqual(activeItems, item)
 		};
 		this.refresh;
 	}
@@ -104,7 +104,7 @@ HrListSelector : SCViewHolder {
 	setAllAndActiveItems { |all, active|
 		allItems = all;
 		activeItems = active.copy;
-		availItems = all.reject { |item| active.includesEqual(item) };
+		availItems = all.reject { |item| this.includesEqual(active, item) };
 		this.refresh;
 	}
 
@@ -151,6 +151,12 @@ HrListSelector : SCViewHolder {
 
 	// SCViewHolder action is for the view, not (this)
 	doAction { action.value(this) }
+
+	// slightly hacky: 3.4 doesn't have includesEqual in common
+	// so I have to have a substitute (in 'this')
+	includesEqual { |collection, item|
+		^collection.detect(_ == item).notNil
+	}
 }
 
 
@@ -158,7 +164,7 @@ HrListSelector : SCViewHolder {
 	unionEqual { |that|
 		var result = this.copy;
 		that.do { |item|
-			if (result.includesEqual(item).not) {
+			if(result.detect(_ == item).isNil) {
 				result = result.add(item);
 			}
 		};
