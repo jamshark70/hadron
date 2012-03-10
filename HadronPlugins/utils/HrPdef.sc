@@ -269,7 +269,7 @@ HrPMod : HrPdefn {
 	*new { |key, value, spec|
 		var res, asSpec;
 		if(#[startOrStop, start].includes(key)) {
-			Error("HrPMod: %% is a reserved key for Hr[Poly|Mono]Pattern".format($\\, \abc)).throw;
+			Error("HrPMod: %% is a reserved key for Hr[Poly|Mono]Pattern".format($\\, key)).throw;
 		};
 		res = this.at(key);
 		if(res.isNil) {
