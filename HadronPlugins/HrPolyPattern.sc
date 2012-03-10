@@ -104,7 +104,7 @@ HrPolyPattern : HadronPlugin {
 			{ targetPlugin.tryPerform(\uniqueID) },
 			{ startButton.value },
 			{	var pmod;
-				mappedMods.keys.reject(_ == \run).collect { |pmodname|
+				mappedMods.keys.reject(#[startOrStop, start].includes(_)).collect { |pmodname|
 					pmod = HrPMod(pmodname);
 					[pmodname, pmod.value, pmod.spec]
 				}
