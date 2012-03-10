@@ -87,7 +87,11 @@ HadronCanvas
 					cWin.front;
 					tempField = TextField(cWin, Rect(x, y, 200, 20))
 					.focus(true)
-					.keyDownAction_({ 1; }) //do not bubble up to the parent view.
+					.keyDownAction_({ |view, char|
+						if(char.ascii == 27) {
+							tempField.remove;
+						};
+					}) //do not bubble up to the parent view.
 					.action_
 					{|field|
 					
