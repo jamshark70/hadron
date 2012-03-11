@@ -690,7 +690,7 @@ HadronPlugin
 	makeSynth { |newSynthDef(true)|
 		// it's a little bit dumb that I have to do this, but
 		// it's the only way to conditionally not execute something after try
-		var shouldPlay = true,
+		var shouldPlay = this.polyMode.not,
 		// and this: don't recall if forkIfNeeded exists in 3.4
 		doIt = {
 			if(newSynthDef) {
