@@ -601,7 +601,7 @@ HrOscil : HadronPlugin {
 			));
 			NotificationCenter.register(Server.default, \didQuit, this.class, {
 				// force wavetables to be rebuilt if server was stopped
-				Library.removeEmptyAt('HrOscil', \sawbufs);
+				Library.global.removeEmptyAt('HrOscil', \sawbufs);
 			})
 		};
 
