@@ -1,6 +1,6 @@
 HadronCanvas
 {
-	var <cWin, <cView, parentApp, <oldBounds, isHidden, <>isSelectingTarget,
+	var <cWin, <cView, parentApp, <oldBounds, <isHidden, <>isSelectingTarget,
 	<>currentSource, cablePointsBucket, anchorMouseXY, draggingMouseXY, isDragSelecting,
 	<>selectedItems;
 	
@@ -28,11 +28,26 @@ HadronCanvas
 		
 		cWin = Window("Canvas", oldBounds)
 		.userCanClose_(false)
-		.acceptsMouseOver_(true);
+		.acceptsMouseOver_(true)
+		.toFrontAction_({
+			NotificationCenter.notify(this, \toFront);
+		})
+		.endFrontAction_({
+			NotificationCenter.notify(this, \endFront);
+		})
+		.onClose_({ NotificationCenter.unregister(this, \toFront, \canvasArrayUpdater) });
+
+		// currently used for emergency save but may be useful elsewhere
+		NotificationCenter.register(this, \toFront, \canvasArrayUpdater, {
+			var array = Library.at(Hadron, \visibleCanvases);
+			if(array.last !== parentApp) {
+				array.remove(parentApp);
+				Library.put(Hadron, \visibleCanvases, array.add(parentApp));
+			};
+		});
 		
 		// why do we need this?
 		// cWin.view.keyDownAction_({|...args| this.handleKeys(*args); });
-		
 		
 		
 		cView = UserView(cWin, cWin.view.bounds)
@@ -176,6 +191,7 @@ HadronCanvas
 	{
 		if(isHidden.not,
 		{
+			Library.at(Hadron, \visibleCanvases).remove(parentApp);
 			isHidden = true;
 			oldBounds = cWin.bounds;
 			parentApp.displayStatus("READY.", 0);
@@ -188,8 +204,14 @@ HadronCanvas
 	
 	showWin
 	{
+		var array;
 		if(isHidden,
 		{
+			array = Library.at(Hadron, \visibleCanvases);
+			if(array.last !== parentApp) {
+				array.remove(parentApp);
+				Library.put(Hadron, \visibleCanvases, array.add(parentApp));
+			};
 			isHidden = false;
 			if(GUI.id != \cocoa, { cWin.visible_(true); });
 			cWin.bounds = oldBounds;

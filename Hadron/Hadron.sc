@@ -25,6 +25,8 @@ Hadron
 			};
 			"Hadron: Increased default server's audio bus count to 1024 total (992 private).".postln;
 			ServerBoot.add(HadronPlugin, \default);
+
+			Library.put(Hadron, \visibleCanvases, Array.new);
 		};
 	}
 	
@@ -37,7 +39,8 @@ Hadron
 	}
 	
 	init { |maxOutputs|
-		
+		var emergencyQuitFunc;
+
 		Server.default.waitForBoot
 		{
 			
@@ -114,35 +117,64 @@ Hadron
 			win.front;
 		};
 
-		NotificationCenter.register(Server.default, \didQuit, this, {
-			var tempWin; //can be modal but meh. does SwingOSC have it?
-			if(isDirty) {
-				if(Library.at(this, \emergencySave).isNil) {
-					Library.put(this, \emergencySave, true);
-					canvasObj.showWin;
-					tempWin = Window("Save patch?", Rect(400, 400, 190, 85), resizable: false);
-					StaticText(tempWin, Rect(0, 15, 190, 20)).string_("Must close Hadron app; save?").align_(\center);
-					Button(tempWin, Rect(10, 50, 80, 20)).states_([["Save"]]).action_({
-						tempWin.close;
-						this.prShowSave({
-							this.graceExit;
-							Library.global.removeEmptyAt(this, \emergencySave);
-						}, { Library.global.removeEmptyAt(this, \emergencySave) });
-					}).focus(true);
-					Button(tempWin, Rect(100, 50, 80, 20)).states_([["Discard"]]).action_({
-						tempWin.close;
+		NotificationCenter.register(Server.default, \didQuit, this, { this.doOnCmdPeriod });
+		CmdPeriod.add(this);
+	}
+
+	doOnCmdPeriod {
+		var tempWin,  //can be modal but meh. does SwingOSC have it?
+		canvasFrontFunc, saveWinFrontFunc;
+		if(isDirty) {
+			if(Library.at(this, \emergencySave).isNil) {
+				Library.put(this, \emergencySave, true);
+				canvasFrontFunc = {
+					// if the last fronted canvas was for this app, do nothing
+					if(Library.at(Hadron, \visibleCanvases).last !== this) {
+						if(canvasObj.isHidden) {
+							canvasObj.showWin;
+						} {
+							canvasObj.cWin.front;
+						};
+					};
+				};
+				saveWinFrontFunc = {
+					var tempFrontFunc;
+					if(tempWin.notNil) {
+						tempFrontFunc = tempWin.toFrontAction;
+						tempWin.toFrontAction_(nil).front;
+						{ tempWin.toFrontAction_(tempFrontFunc) }.defer(0.1);
+					};
+				};
+				NotificationCenter.register(canvasObj, \toFront, \emergencySave, saveWinFrontFunc);
+				canvasFrontFunc.value;
+				tempWin = Window("Save patch?", Rect(400, 400, 190, 85), resizable: false)
+				.toFrontAction_(canvasFrontFunc.addFunc(saveWinFrontFunc));
+				StaticText(tempWin, Rect(0, 15, 190, 20)).string_("Must close Hadron app; save?").align_(\center);
+				Button(tempWin, Rect(10, 50, 80, 20)).states_([["Save"]]).action_({
+					tempWin.close;
+					this.prShowSave({
 						this.graceExit;
 						Library.global.removeEmptyAt(this, \emergencySave);
+						NotificationCenter.unregister(canvasObj, \toFront, \emergencySave);
+					}, {
+						Library.global.removeEmptyAt(this, \emergencySave);
+						NotificationCenter.unregister(canvasObj, \toFront, \emergencySave);
 					});
+				}).focus(true);
+				Button(tempWin, Rect(100, 50, 80, 20)).states_([["Discard"]]).action_({
+					tempWin.close;
+					this.graceExit;
+					Library.global.removeEmptyAt(this, \emergencySave);
+					NotificationCenter.unregister(canvasObj, \toFront, \emergencySave);
+				});
 				
-					tempWin.front;
-				};
-			} {
-				this.graceExit;
-			}
-		})
+				tempWin.front;
+			};
+		} {
+			this.graceExit;
+		}
 	}
-	
+
 	prShowSave { |action, cancel|
 		HadronStateSave(this).showSaveDialog(action, cancel);
 	}
@@ -319,12 +351,13 @@ Hadron
 	
 	graceExit
 	{
+		NotificationCenter.unregister(Server.default, \didQuit, this);
+		CmdPeriod.remove(this);
 		canvasObj.cWin.close;
 		if(instWin.notNil, { if(instWin.isClosed == false, { instWin.close; }); });
 		alivePlugs.size.do({ alivePlugs[0].selfDestruct; });
 		blackholeBus.free;
 		win.close;
-		NotificationCenter.unregister(Server.default, \didQuit, this);
 	}
 
 }
