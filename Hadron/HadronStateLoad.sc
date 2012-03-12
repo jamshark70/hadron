@@ -81,6 +81,7 @@ HadronStateLoad
 				};
 				
 				tempThing = item[2].interpret;
+				tempPlug.outConnections = Array.fill(tempThing.size/*, { [nil, nil] }*/);
 				tempThing.do { |outItem, i|
 					tempPlug.setOutputConnection(i, 
 						if(outItem[0] != nil, 
