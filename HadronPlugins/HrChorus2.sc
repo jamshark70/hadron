@@ -143,7 +143,7 @@ HrChorus2 : HadronPlugin {
 				SynthDef(sdname, { |inBus0, inBus1, outBus0, outBus1,
 					predelay, speed, depth, ph_diff, preamp, gate = 1|
 					var in, sig, mods, fx;
-					in = In.ar([inBus0, inBus1], 1);
+					in = InFeedback.ar([inBus0, inBus1], 1);
 					mods = { |i|
 						SinOsc.kr(speed * rrand(0.9, 1.1), ph_diff * i, depth, predelay);
 					} ! (numDelays * 2);
@@ -244,7 +244,7 @@ HrFlanger : HrChorus2 {
 				SynthDef(sdname, { |inBus0, inBus1, outBus0, outBus1,
 					predelay, speed, depth, decay, ph_diff, preamp, gate = 1|
 					var in, sig, mods, fx;
-					in = In.ar([inBus0, inBus1], 1);
+					in = InFeedback.ar([inBus0, inBus1], 1);
 					mods = { |i|
 						SinOsc.kr(speed * rrand(0.9, 1.1), ph_diff * i, depth, predelay);
 					} ! (numDelays * 2);

@@ -24,7 +24,7 @@ HrDelay : HadronPlugin {
 					feedback = #[0, 0], delaytime = #[0.1, 0.1],
 					mulL = #[1, 0], mulR = #[0, 1]|
 
-					var input = In.ar(inBus0, 2),
+					var input = InFeedback.ar(inBus0, 2),
 					fbsig = LocalIn.ar(2) * feedback,
 					sig = input + fbsig,
 					delay;
