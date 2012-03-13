@@ -584,7 +584,7 @@ HrOscil : HadronPlugin {
 
 	*new { |argParentApp, argIdent, argUniqueID, argExtraArgs, argCanvasXY|
 
-		^super.new(argParentApp, "HrOscil", argIdent, argUniqueID, argExtraArgs, Rect(Window.screenBounds.width - 560.rand, Window.screenBounds.height - 375.rand, 560, 375), 0, 2, argCanvasXY).init
+		^super.new(argParentApp, "HrOscil", argIdent, argUniqueID, argExtraArgs, Rect((Window.screenBounds.width - 560).rand, (Window.screenBounds.height - 375).rand, 560, 375), 0, 2, argCanvasXY).init
 	}
 
 	init {
