@@ -680,7 +680,7 @@ HrOscil : HadronPlugin {
 				.insertAction_({ |view|
 					ampEnv = view.value;
 					// changes to release/loop/num of nodes require new synth
-					if(synthInstance.notNil) { this.makeSynth(false) };
+					this.makeSynth(true);
 				});
 				gui.curveAction = gui.action;
 				gui.deleteAction = gui.insertAction;
@@ -814,10 +814,10 @@ HrOscil : HadronPlugin {
 			o0_coarse = 0, o0_fine = 0, o0_amp = 1, o0_wavebuf, o0_pwidth, o0_pan,
 			o1_coarse = 0, o1_fine = 0, o1_amp = 1, o1_wavebuf, o1_pwidth, o1_pan,
 			noiseDetune = 0, noiseAmp = 0, noiseRq = 1, noisePan,
-			outBus0, timescale = 1, gate = 1, doneAction = 2|
+			outBus0, timescale = 1, doneAction = 2|
 
 			var env = NamedControl.kr(\env, (0 ! 40).overWrite(Env.adsr.asArray)),
-			eg = EnvGen.kr(env, gate, timeScale: timescale, doneAction: doneAction);
+			gate = 1, eg;
 
 			// assuming 8 buffers
 			var basefreq = 48.midicps,
@@ -838,6 +838,13 @@ HrOscil : HadronPlugin {
 				};
 				Pan2.ar(osc, params[5], amp)
 			}).sum;
+
+			// 'gate' synth control should not exist if ampEnv isn't sustaining
+			if(ampEnv.releaseNode.notNil) {
+				gate = NamedControl.kr(\gate, 1);
+			};
+			eg = EnvGen.kr(env, gate, timeScale: timescale, doneAction: doneAction);
+
 			oscs = oscs + Pan2.ar(BPF.ar(
 				PinkNoise.ar(noiseAmp),
 				freq * noiseDetune.midiratio, noiseRq

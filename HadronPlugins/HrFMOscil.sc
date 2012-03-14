@@ -4,33 +4,6 @@ HrFMOscil : HadronPlugin {
 
 	*initClass {
 		this.addHadronPlugin;
-		StartUp.add {
-			ServerBoot.add {
-				SynthDef('HrFMOscil', { |freq = 440, detune, amp = 0.1, keyscale,
-					m0_coarse = 1, m0_fine = 0, m0_level, m0_mul = 1, m0_pan,
-					m1_coarse = 1, m1_fine = 0, m1_level, m1_mul = 1, m1_pan,
-					bufs = #[0, 0, 0], outBus0, gate = 1, timescale = 1, doneAction = 2|
-
-					var basefreq = 220, freqs, mods, cars, env, eg;
-					m0_level = m0_level * basefreq / ((keyscale * freq) + (basefreq * (1 - keyscale)));
-					m1_level = m1_level * basefreq / ((keyscale * freq) + (basefreq * (1 - keyscale)));
-
-					env = NamedControl.kr(\env, (0 ! 40).overWrite(Env.adsr.asArray));
-					eg = EnvGen.kr(env, gate, timeScale: timescale, doneAction: doneAction);
-
-					freqs = freq * [1, (detune * 0.01).midiratio];
-					mods = [
-						[m0_coarse, m0_fine, m0_level, m0_mul],
-						[m1_coarse, m1_fine, m1_level, m1_mul]
-					].collect { |row, i|
-						var ratio = row[0] * (row[1] * 0.01).midiratio;
-						Osc.ar(bufs[i+1], freqs[i] * ratio, 0, row[2] * row[3], 1)
-					};
-					cars = Osc.ar(bufs[0], freqs * mods, 0);
-					Out.ar(outBus0, Pan2.ar(cars, [m0_pan, m1_pan], amp * eg).sum)
-				}).add;
-			};
-		};
 	}
 
 	*new { |argParentApp, argIdent, argUniqueID, argExtraArgs, argCanvasXY|
@@ -91,7 +64,9 @@ HrFMOscil : HadronPlugin {
 				.insertAction_({ |view|
 					carEnv = view.value;
 					// changes to release/loop/num of nodes require new synth
-					if(synthInstance.notNil) { this.makeSynth(false) };
+					// if in polyMode, makeSynth will refresh the synthdef
+					// but not play
+					this.makeSynth(true);
 				});
 				gui.curveAction = gui.action;
 				gui.deleteAction = gui.insertAction;
@@ -276,37 +251,33 @@ HrFMOscil : HadronPlugin {
 
 	updateBusConnections { synthInstance.set(\outBus0, outBusses[0]) }
 
-	// generic synthdef, already made - the stub prevents error
-	makeSynthDef {}
+	makeSynthDef {
+		SynthDef("HrFMOscil" ++ uniqueID, { |freq = 440, detune, amp = 0.1, keyscale,
+			m0_coarse = 1, m0_fine = 0, m0_level, m0_mul = 1, m0_pan,
+			m1_coarse = 1, m1_fine = 0, m1_level, m1_mul = 1, m1_pan,
+			bufs = #[0, 0, 0], outBus0, timescale = 1, doneAction = 2|
 
-	makeSynth { |newSynthDef(true)|
-		// it's a little bit dumb that I have to do this, but
-		// it's the only way to conditionally not execute something after try
-		var shouldPlay = this.polyMode.not,
-		// and this: don't recall if forkIfNeeded exists in 3.4
-		doIt = {
-			if(newSynthDef) {
-				try {
-					this.makeSynthDef;
-				} { |err|
-					if(err.isKindOf(Exception)) {
-						shouldPlay = false;
-						err.reportError;
-						defer { parentApp.displayStatus(err.errorString, -1) };
-					};
-				};
+			var basefreq = 220, freqs, mods, cars, env, eg, gate = 1;
+			m0_level = m0_level * basefreq / ((keyscale * freq) + (basefreq * (1 - keyscale)));
+			m1_level = m1_level * basefreq / ((keyscale * freq) + (basefreq * (1 - keyscale)));
+
+			env = NamedControl.kr(\env, (0 ! 40).overWrite(Env.adsr.asArray));
+			if(carEnv.releaseNode.notNil) {
+				gate = NamedControl.kr(\gate, 1);
 			};
-			if(shouldPlay) {
-				Server.default.sync;
-				this.releaseSynth;
-				synthInstance = Synth(this.class.name, this.synthArgs, group);
+			eg = EnvGen.kr(env, gate, timeScale: timescale, doneAction: doneAction);
+
+			freqs = freq * [1, (detune * 0.01).midiratio];
+			mods = [
+				[m0_coarse, m0_fine, m0_level, m0_mul],
+				[m1_coarse, m1_fine, m1_level, m1_mul]
+			].collect { |row, i|
+				var ratio = row[0] * (row[1] * 0.01).midiratio;
+				Osc.ar(bufs[i+1], freqs[i] * ratio, 0, row[2] * row[3], 1)
 			};
-		};
-		if(thisThread.isKindOf(Routine)) {
-			doIt.value
-		} {
-			doIt.fork
-		}
+			cars = Osc.ar(bufs[0], freqs * mods, 0);
+			Out.ar(outBus0, Pan2.ar(cars, [m0_pan, m1_pan], amp * eg).sum)
+		}).add;
 	}
 
 	cleanUp {
@@ -321,5 +292,5 @@ HrFMOscil : HadronPlugin {
 
 	hasGate { ^carEnv.releaseNode.notNil }
 	polySupport { ^true }
-	defName { ^"HrFMOscil" }
+	defName { ^"HrFMOscil" ++ uniqueID }
 }
