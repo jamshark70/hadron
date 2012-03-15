@@ -62,7 +62,11 @@ HrCtlMod : HrSimpleModulator {
 		modControl = HadronModTargetControl(window, Rect(10, 150, 430, 20), parentApp, this);
 		modControl.addDependant(this);
 
-		startButton = Button(window, Rect(100, 120, 80, 20)).states_([["Start"],["Stop"]])
+		startButton = Button(window, Rect(100, 120, 120, 20))
+		.states_([
+			["disconnected"],
+			["connected", Color.black, Color(0.8, 1.0, 0.8)]
+		])
 		.value_(binaryValue(modControl.currentSelPlugin.notNil and: {
 			modControl.currentSelParam.notNil
 		}))

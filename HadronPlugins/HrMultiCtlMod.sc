@@ -42,7 +42,11 @@ HrMultiCtlMod : HrCtlMod {
 			this.makeSynth;
 		});
 
-		startButton = Button(window, Rect(100, 120, 80, 20)).states_([["Start"],["Stop"]])
+		startButton = Button(window, Rect(100, 120, 120, 20))
+		.states_([
+			["disconnected"],
+			["connected", Color.black, Color(0.8, 1.0, 0.8)]
+		])
 		.value_(0)
 		.action_
 		({|btn|

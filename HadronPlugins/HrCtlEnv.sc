@@ -66,7 +66,7 @@ HrCtlEnv : HrCtlMod {
 		postOpText.deleteAction = postOpText.insertAction;
 		postOpText.nodeAction = postOpText.insertAction;
 
-		evalButton = Button(window, Rect(10, 220 - adjustY, 80, 20)).states_([["Trigger"]])
+		evalButton = Button(window, Rect(10, 220 - adjustY, 40, 20)).states_([["Trig"]])
 		.action_({
 			if(synthInstance.notNil) { synthInstance.set(\t_trig, 1) };
 		});
@@ -75,8 +75,11 @@ HrCtlEnv : HrCtlMod {
 			modControl = HadronModTargetControl(window, Rect(10, 250, 430, 20), parentApp, this);
 			modControl.addDependant(this);
 
-			startButton = Button(window, Rect(100, 220, 80, 20))
-			.states_([["Start"],["Stop"]])
+			startButton = Button(window, Rect(60, 220, 120, 20))
+			.states_([
+				["disconnected"],
+				["connected", Color.black, Color(0.8, 1.0, 0.8)]
+			])
 			.value_(binaryValue(modControl.currentSelPlugin.notNil and: {
 				modControl.currentSelParam.notNil
 			}))
