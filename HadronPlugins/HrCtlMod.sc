@@ -248,4 +248,8 @@ HrCtlMod : HrSimpleModulator {
 		// do? Yes... HrMultiCtlMod has several
 		modControl.do({ |ctl| ctl.pollRate = rate });
 	}
+
+	notifyIdentChanged {
+		modControl.do { |ctl| ctl.refreshAppMenu };
+	}
 }

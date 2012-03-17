@@ -273,4 +273,5 @@ HrAudioEnv : HrCtlEnv {
 	notifyPlugAdd {}  // override parent - I don't have a mod control
 	notifyPlugKill {}
 	wakeFromLoad {}
+	notifyIdentChanged {}
 }
