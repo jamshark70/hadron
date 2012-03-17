@@ -195,8 +195,9 @@ HadronCanvas
 			isHidden = true;
 			oldBounds = cWin.bounds;
 			parentApp.displayStatus("READY.", 0);
-			cWin.bounds = Rect(0, 0, 0, 0);
-			if(GUI.id != \cocoa, { cWin.visible_(false); });
+			// cWin.bounds = Rect(0, 0, 0, 0);
+			// if(GUI.id != \cocoa, { cWin.visible_(false); });
+			cWin.visible_(false);
 			parentApp.canvasButton.value_(0);
 			parentApp.win.front;
 		});
@@ -213,7 +214,8 @@ HadronCanvas
 				Library.put(Hadron, \visibleCanvases, array.add(parentApp));
 			};
 			isHidden = false;
-			if(GUI.id != \cocoa, { cWin.visible_(true); });
+			cWin.visible_(true);
+			// if(GUI.id != \cocoa, { cWin.visible_(true); });
 			cWin.bounds = oldBounds;
 			parentApp.canvasButton.value_(1);
 			parentApp.displayStatus("Right click on canvas to add plugins. Shift+click on a plugin to make connections. Ctrl-click = show/hide plugin window", 0);

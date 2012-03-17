@@ -211,19 +211,27 @@ HadronPlugin
 
 	prHideWindow
 	{
-		oldWinBounds = outerWindow.bounds;
-		outerWindow.bounds = Rect(0, 0, 0, 0);
-		isHidden = true;
-		parentApp.isDirty = true;
-		if(GUI.id != \cocoa, { outerWindow.visible_(false); });
+		if(isHidden.not) {
+			oldWinBounds = outerWindow.bounds;
+			// outerWindow.bounds = Rect(0, 0, 0, 0);
+			isHidden = true;
+			parentApp.isDirty = true;
+			outerWindow.visible_(false);
+			// if(GUI.id != \cocoa, { outerWindow.visible_(false); });
+		};
 	}
 
 	showWindow
 	{
-		if(isHidden, { outerWindow.bounds = oldWinBounds; isHidden = false; });
-		if(GUI.id != \cocoa, { outerWindow.visible_(true); });
-		parentApp.isDirty = true;
-		outerWindow.front;
+		// if(isHidden, { outerWindow.bounds = oldWinBounds; isHidden = false; });
+		// if(GUI.id != \cocoa, { outerWindow.visible_(true); });
+		if(isHidden) {
+			isHidden = false;
+			outerWindow.bounds = oldWinBounds;
+			outerWindow.visible_(true);
+			parentApp.isDirty = true;
+			outerWindow.front;
+		};
 	}
 
 	prShowConnections
