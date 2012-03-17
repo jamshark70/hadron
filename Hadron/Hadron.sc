@@ -267,9 +267,11 @@ Hadron
 				if(tempArgs.string.size == 0, { nil; }, { tempArgs.string.split($ ); }),
 				100@100
 			);
-			
-			this.prShowNewInstDialog(tempWin.bounds); //reshow until closed.
-			tempWin.close;
+
+			tempMenu.value = 0;
+			tempIdent.string = "";
+			tempArgs.string = "";
+			{ tempWin.front }.defer(0.2);
 		});
 		
 		Button(tempWin, Rect(110, 100, 80, 20))
