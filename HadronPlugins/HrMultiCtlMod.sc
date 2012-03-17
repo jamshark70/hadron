@@ -138,7 +138,7 @@ HrMultiCtlMod : HrCtlMod {
 	cleanUp
 	{
 		this.releaseSynth;
-		modControl.do({ |ctl| ctl.removeDependant(this).remove });
+		modControl.do({ |ctl| ctl.unmap.removeDependant(this).remove });
 		watcher.remove;
 		prOutBus.free;
 	}
