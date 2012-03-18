@@ -240,48 +240,51 @@ Hadron
 	
 	prShowNewInstDialog
 	{|argOptionalBound|
-	
-		var okButton;
-		var tempWin = Window("Select Instrument", argOptionalBound ? Rect(200, 200, 200, 130), resizable: false);
-		var tempMenu = PopUpMenu(tempWin, Rect(10, 10, 180, 20))
-		.items_(Hadron.plugins.collect({|item| item.asString; }) ++ HadronPlugin.plugins.collect(_.asString));
-		
-		var tempIdent = TextField(tempWin, Rect(90, 40, 80, 20)).action_({ okButton.valueAction_(1); });
-		var tempArgs = TextField(tempWin, Rect(90, 70, 80, 20)).action_({ okButton.valueAction_(1); });
-		
-		instWin = tempWin;
-		
-		StaticText(tempWin, Rect(10, 40, 80, 20)).string_("Ident name:");
-		StaticText(tempWin, Rect(10, 70, 80, 20)).string_("Extra Args:");
-		
-		okButton = Button(tempWin, Rect(10, 100, 80, 20))
-		.focus(true)
-		.states_([["Ok"]])
-		.action_
-		({
-			this.prAddPlugin
-			(
-				tempMenu.items.at(tempMenu.value).interpret, 
-				if(tempIdent.string.size == 0, { "unnamed"; }, { tempIdent.string; }),
-				nil,
-				if(tempArgs.string.size == 0, { nil; }, { tempArgs.string.split($ ); }),
-				100@100
-			);
 
-			tempMenu.value = 0;
-			tempIdent.string = "";
-			tempArgs.string = "";
-			{ tempWin.front }.defer(0.2);
-		});
-		
-		Button(tempWin, Rect(110, 100, 80, 20))
-		.states_([["Close"]])
-		.action_
-		({
-			tempWin.close;
-		});
-		
-		tempWin.front;
+		var okButton, tempWin, tempMenu, tempIdent, tempArgs;
+
+		if(instWin.isNil) {
+			tempWin = Window("Select Instrument", argOptionalBound ? Rect(200, 200, 200, 130), resizable: false).onClose_({ instWin = nil });
+			tempMenu = PopUpMenu(tempWin, Rect(10, 10, 180, 20))
+			.items_(Hadron.plugins.collect({|item| item.asString; }) ++ HadronPlugin.plugins.collect(_.asString));
+			
+			tempIdent = TextField(tempWin, Rect(90, 40, 80, 20)).action_({ okButton.valueAction_(1); });
+			tempArgs = TextField(tempWin, Rect(90, 70, 80, 20)).action_({ okButton.valueAction_(1); });
+			
+			instWin = tempWin;
+			
+			StaticText(tempWin, Rect(10, 40, 80, 20)).string_("Ident name:");
+			StaticText(tempWin, Rect(10, 70, 80, 20)).string_("Extra Args:");
+			
+			okButton = Button(tempWin, Rect(10, 100, 80, 20))
+			.focus(true)
+			.states_([["Ok"]])
+			.action_
+			({
+				this.prAddPlugin
+				(
+					tempMenu.items.at(tempMenu.value).interpret, 
+					if(tempIdent.string.size == 0, { "unnamed"; }, { tempIdent.string; }),
+					nil,
+					if(tempArgs.string.size == 0, { nil; }, { tempArgs.string.split($ ); }),
+					100@100
+				);
+
+				tempMenu.value = 0;
+				tempIdent.string = "";
+				tempArgs.string = "";
+				{ tempWin.front }.defer(0.2);
+			});
+			
+			Button(tempWin, Rect(110, 100, 80, 20))
+			.states_([["Close"]])
+			.action_
+			({
+				tempWin.close;
+			});
+			
+			tempWin.front;
+		} { instWin.front };
 	}
 	
 	prActiveMenuUpdate
