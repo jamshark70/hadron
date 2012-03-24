@@ -1,0 +1,61 @@
+class:: HrBuffer
+summary:: An audio buffer
+categories:: HadronPlugins
+
+DESCRIPTION::
+This is a Hadron plugin. Hadron plugins are not meant for instantiating by hand in code. They are used internally by the Hadron system.
+
+HrBuffer represents a one-channel audio buffer in the server. You can load a sound file from disk or record the signal at HrBuffer's left input.
+
+strong::Creation argument::
+
+list::
+## Number of seconds of recording time to allocate. You can change this later. If you change it in the interface, HrBuffer needs to create a new server buffer. It will try to copy the existing audio from the old buffer, but:
+list::
+## If the new buffer is shorter, some audio will be lost.
+## It's not possible to guarantee no glitches.
+::
+::
+
+strong::Inputs/outputs::
+
+definitionlist::
+## Two inputs || Left = an audio signal to record. Right = recording gate: 0 -- don't record; > 0 -- do record.
+## Two outputs || Left = buffer number. Right = the sample position currently being recorded.
+::
+
+strong::Usage::
+
+Any other plug-in using the audio data, such as link::Classes/HrDIYSynth:: or link::Classes/HrWrapSynth::, needs to know the buffer number. So, it should reserve one of the audio inputs for the buffer number.
+
+If the HrBuffer is the audio source for live granulation, the grains should avoid playing across the current recording position. So, the granulator should have an input for the recording position, and choose grain positions that will stay away from this point.
+
+The recording position can also be used for multi-tap delay lines, e.g., in HrDIYSynth:
+
+code::
+{ |input|
+	var taps = [0.25, 0.5, 1.0];
+	var buf, pos;
+	#buf, pos = input;
+	BufRd.ar(1, buf, pos + (taps * BufSampleRate.ar(buf)), loop: 1).sum
+}
+::
+
+
+CLASSMETHODS::
+
+private:: initClass
+private:: new
+
+INSTANCEMETHODS::
+
+private:: buffer
+private:: numFrames
+private:: init
+private:: makeBuffer
+private:: loadBuffer
+private:: synthArgs
+private:: makeSynthDef
+private:: defName
+private:: updateBusConnections
+private:: cleanUp
