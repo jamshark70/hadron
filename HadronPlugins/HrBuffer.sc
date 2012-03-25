@@ -25,15 +25,7 @@ HrBuffer : HadronPlugin {
 		pathLine = StaticText(flow, Rect(0, 0, 290, 20))
 		.string_("(no file)");
 		
-		loadButton = Button.new(flow, Rect(0, 0, 100, 20))
-		.states_([["Load file"]])
-		.action_({
-			File.openDialog(nil, { |path|
-				this.loadBuffer(path);
-			})
-		});
-
-		recordButton = Button(flow, Rect(0, 0, 100, 20))
+		recordButton = Button(flow, Rect(0, 0, 94, 20))
 		.states_([
 			["rec paused"],
 			["recording", Color.black, Color(0.8, 1, 0.8)]
@@ -41,6 +33,41 @@ HrBuffer : HadronPlugin {
 		.action_({ |view|
 			recording = view.value > 0;
 			synthInstance.set(\record, view.value);
+		});
+
+		loadButton = Button(flow, Rect(0, 0, 94, 20))
+		.states_([["Load file"]])
+		.action_({
+			File.openDialog(nil, { |path|
+				this.loadBuffer(path);
+			})
+		});
+
+		Button(flow, Rect(0, 0, 94, 20))
+		.states_([["Save file"]])
+		.action_({
+			var resp, saveFailed = true;
+			File.saveDialog(nil, nil, { |path|
+				resp = OSCpathResponder(Server.default.addr, ['/b_info', buffer.bufnum], {
+					saveFailed = false;
+					resp.remove;
+					buffer.path = path;
+					defer {
+						parentApp.displayStatus("Saved to %".format(path.basename), 1);
+						pathLine.string = path.basename;
+					};
+				}).add;
+				buffer.write(path, headerFormat: "WAV", completionMessage: { |buf|
+					[\b_query, buf.bufnum]
+				});
+				AppClock.sched(2.0, {
+					if(saveFailed) {
+						resp.remove;
+						parentApp.displayStatus("Save to % failed".format(path.basename), -1);
+					};
+					nil
+				});
+			});
 		});
 
 		flow.startRow;
