@@ -628,8 +628,8 @@ HadronPlugin
 	}
 
 	isHidden_ { |bool(false)|
-		isHidden = bool;
 		if(bool) { this.prHideWindow } { this.showWindow };
+		isHidden = bool;
 	}
 
 	// one plugin might use another plugin's 'ident' in a gui
