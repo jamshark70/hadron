@@ -1,11 +1,13 @@
 HrBuffer : HadronPlugin {
 	var <buffer, <numFrames, bufferReady,
-	infoLine, pathLine, loadButton, recordButton, recording = false, changeSizeView;
+	recording = false, loopRecord = true,
+	recordResp,
+	infoLine, pathLine, loadButton, recordButton, loopButton, changeSizeView, mixSl;
 
 	*initClass { this.addHadronPlugin }
 
 	*new { |argParentApp, argIdent, argUniqueID, argExtraArgs, argCanvasXY|
-		^super.new(argParentApp, "HrBuffer", argIdent, argUniqueID, argExtraArgs, Rect((Window.screenBounds.width - 300).rand, (Window.screenBounds.height - 110).rand, 300, 110), 2, 2, argCanvasXY).init
+		^super.new(argParentApp, "HrBuffer", argIdent, argUniqueID, argExtraArgs, Rect((Window.screenBounds.width - 300).rand, (Window.screenBounds.height - 140).rand, 300, 140), 2, 2, argCanvasXY).init
 	}
 	init {
 		var flow = FlowView(window, window.bounds),
@@ -25,16 +27,6 @@ HrBuffer : HadronPlugin {
 		pathLine = StaticText(flow, Rect(0, 0, 290, 20))
 		.string_("(no file)");
 		
-		recordButton = Button(flow, Rect(0, 0, 94, 20))
-		.states_([
-			["rec paused"],
-			["recording", Color.black, Color(0.8, 1, 0.8)]
-		])
-		.action_({ |view|
-			recording = view.value > 0;
-			synthInstance.set(\record, view.value);
-		});
-
 		loadButton = Button(flow, Rect(0, 0, 94, 20))
 		.states_([["Load file"]])
 		.action_({
@@ -72,6 +64,40 @@ HrBuffer : HadronPlugin {
 
 		flow.startRow;
 
+		recordButton = Button(flow, Rect(0, 0, 94, 20))
+		.states_([
+			["rec paused"],
+			["recording", Color.black, Color(0.8, 1, 0.8)]
+		])
+		.action_({ |view|
+			recording = view.value > 0;
+			// reset phasor only if not looping
+			synthInstance.set(
+				\record, view.value,
+				\t_recordGo, (loopRecord.not and: recording).binaryValue
+			);
+		});
+
+		loopButton = Button(flow, Rect(0, 0, 94, 20))
+		.states_([["no looping"], ["looping"]])
+		.value_(loopRecord.binaryValue)
+		.action_({ |view|
+			loopRecord = view.value > 0;
+			synthInstance.set(\loop, view.value);
+		});
+
+		flow.startRow;
+
+		mixSl = HrEZSlider(flow,
+			Rect(0, 0, flow.bounds.width - (2 * flow.decorator.margin.x), 20),
+			"rec mix", #[0, 1],
+			{ |view|
+				synthInstance.set(\mix, view.value);
+			}, initVal: 1
+		);
+
+		flow.startRow;
+
 		StaticText(flow, Rect(0, 0, 100, 20)).string_("Resize buffer");
 		changeSizeView = NumberBox(flow, Rect(0, 0, 100, 20))
 		.maxDecimals_(3)
@@ -79,25 +105,43 @@ HrBuffer : HadronPlugin {
 			this.makeBuffer(view.value);
 		});
 
+		recordResp = OSCresponderNode(Server.default.addr, '/recordState', { |time, resp, msg|
+			if(msg[1] == synthInstance.tryPerform(\nodeID)) {
+				defer { recordButton.valueAction = msg[3] };
+			};
+		}).add;
+
 		this.makeSynth;
 
 		saveGets = [
-			{ numFrames }, { buffer.path }, { recording }
+			{ numFrames },
+			{ buffer.path },
+			{ loopRecord },
+			{ mixSl.value },
+			{ recording }
 		];
 		saveSets = [
 			{ |argg| this.makeBuffer(argg / Server.default.sampleRate) },
 			{ |argg| if(argg.notNil and: { argg != "" }) { this.loadBuffer(argg) } },
+			{ |argg| loopButton.valueAction = argg.binaryValue },
+			{ |argg| mixSl.valueAction = argg },
 			{ |argg| recordButton.valueAction = argg.binaryValue }
 		];
 
 		modGets = (
-			record: { recording.binaryValue }
+			record: { recording.binaryValue },
+			loop: { loopRecord.binaryValue },
+			mix: { mixSl.value }
 		);
 		modMapSets = (
-			record: { |argg| synthInstance.set(\record, argg) }
+			record: { |argg| defer { recordButton.value = argg.sign } },
+			loop: { |argg| defer { loopButton.value = argg.sign } },
+			mix: { |argg| defer { mixSl.value = argg } },
 		);
 		modSets = (
-			record: { |argg| synthInstance.set(\record, argg); defer { recordButton.value = argg.sign } }
+			record: { |argg| synthInstance.set(\record, argg); defer { recordButton.value = argg.sign } },
+			loop: { |argg| synthInstance.set(\loop, argg); defer { loopButton.value = argg.sign } },
+			mix: { |argg| synthInstance.set(\mix, argg); defer { mixSl.value = argg } }
 		);
 	}
 
@@ -138,8 +182,6 @@ HrBuffer : HadronPlugin {
 				}.fork(AppClock);
 			};
 		};
-
-		defer {  };
 	}
 
 	loadBuffer { |path|
@@ -170,16 +212,27 @@ HrBuffer : HadronPlugin {
 		};
 	}
 
-	synthArgs { ^[inBus0: inBusses[0], outBus0: outBusses[0], bufnum: buffer.bufnum, record: recording.binaryValue] }
+	synthArgs { ^[inBus0: inBusses[0], outBus0: outBusses[0], bufnum: buffer.bufnum, record: recording.binaryValue, loop: loopRecord.binaryValue, mix: mixSl.value] }
 
 	makeSynthDef {
-		SynthDef(\HrBuffer, { |inBus0, outBus0, bufnum, record = 0|
+		SynthDef(\HrBuffer, { |inBus0, outBus0, bufnum, record = 0, loop = 1, mix = 1,
+			t_recordGo = 0|
 			var input = InFeedback.ar(inBus0, 2),
 			runRec = ((record > 0) + (input[1] > 0)) > 0,
-			phase = Phasor.ar(rate: runRec, start: 0, end: BufFrames.kr(bufnum)),
+			bufFr = BufFrames.kr(bufnum),
+			endpos = bufFr + (1000 * (loop <= 0)),
+			phase, oldBufData, newSig, oldphase;
+
+			oldphase = LocalIn.ar(1);
+			phase = Phasor.ar(t_recordGo, rate: runRec * (oldphase < bufFr), start: 0, end: endpos);
 			oldBufData = BufRd.ar(1, bufnum, phase, loop: 0, interpolation: 1);
 
-			BufWr.ar(Select.ar(runRec, [oldBufData, input[0]]), bufnum, phase, loop: 0);
+			runRec = runRec * (phase < bufFr);
+			SendReply.ar(HPZ1.ar(runRec).abs, '/recordState', runRec);
+
+			newSig = LinXFade2.ar(oldBufData, input[0], pan: mix.madd(2, -1));
+
+			BufWr.ar(Select.ar(runRec, [oldBufData, newSig]), bufnum, phase, loop: 0);
 			Out.ar(outBus0, [K2A.ar(bufnum), phase]);
 		}).add;
 	}
@@ -187,5 +240,5 @@ HrBuffer : HadronPlugin {
 	defName { ^"HrBuffer" }
 
 	updateBusConnections { synthInstance.set(*this.synthArgs) }
-	cleanUp { buffer.free }
+	cleanUp { buffer.free; recordResp.remove; }
 }
