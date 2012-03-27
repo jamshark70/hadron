@@ -136,7 +136,7 @@ HrBuffer : HadronPlugin {
 		modMapSets = (
 			record: { |argg| defer { recordButton.value = argg.sign } },
 			loop: { |argg| defer { loopButton.value = argg.sign } },
-			mix: { |argg| defer { mixSl.value = argg } },
+			mix: { |argg| defer { mixSl.value = argg } }
 		);
 		modSets = (
 			record: { |argg| synthInstance.set(\record, argg); defer { recordButton.value = argg.sign } },
