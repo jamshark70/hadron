@@ -1,0 +1,20 @@
+?Hadron 1
+?StartPlugs
+HrBufferunnamed1042582336nilPoint( 138, 184 )Rect(1025, 382, 300, 210)Rect(323.75369906425, 134.66745376587, 300, 210)false
+HrADCunnamed1608298051nilPoint( 138, 107 )Rect(846, 599, 350, 120)Rect(488.44353866577, 70.126699924469, 350, 120)false
+HrDIYSynthunnamed584805950nilPoint( 146, 240 )Rect(1, 303, 450, 440)Rect(732, 77, 450, 440)true
+HrDACunnamed1334383911nilPoint( 172, 312 )Rect(1058, 141, 250, 160)Rect(80.23415851593, 213.60331583023, 250, 160)false
+?EndPlugs
+?StartConnections
+1042582336[ [ 1608298051, 0 ], [ nil, nil ] ][ [ 584805950, 0 ], [ 584805950, 1 ] ]
+1608298051[  ][ [ 1042582336, 0 ], [ nil, nil ] ]
+584805950[ [ 1042582336, 0 ], [ 1042582336, 1 ] ][ [ 1334383911, 0 ], [ 1334383911, 1 ] ]
+1334383911[ [ 584805950, 0 ], [ 584805950, 1 ] ][  ]
+?EndConnections
+?StartPlugParams
+104258233688200.000000"/home/dlm/test.wav"false1.000000false
+1608298051100.584270trueinfnilList[  ]
+584805950"{ arg input; BufRd.ar(1, input[0], input[1] - 22050, loop: 1) }"
+13343839110.792135nil0
+?EndPlugParams
+?EndSave

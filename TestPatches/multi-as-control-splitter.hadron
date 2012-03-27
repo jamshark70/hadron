@@ -1,0 +1,20 @@
+?Hadron 1
+?StartPlugs
+HrDACunnamed1102065105nilPoint( 256, 385 )Rect(38, 78, 250, 160)Rect(315, 394, 250, 160)false
+HrFMOscilunnamed454501020nilPoint( 252, 313 )Rect(810, 449, 554, 270)Rect(638, 199, 554, 270)false
+HrRangeMapunnamed152920457nilPoint( 229, 69 )Rect(940, 29, 410, 315)Rect(31, 44, 410, 315)false
+HrMultiCtlModunnamed276769288nilPoint( 237, 129 )Rect(686, 61, 450, 375)Rect(686, 61, 450, 375)false
+?EndPlugs
+?StartConnections
+1102065105[ [ 454501020, 0 ], [ 454501020, 1 ] ][  ]
+454501020[  ][ [ 1102065105, 0 ], [ 1102065105, 1 ] ]
+152920457[ [ nil, nil ] ][ [ 276769288, 0 ] ]
+276769288[ [ 152920457, 0 ] ][ [ nil, nil ], [ nil, nil ] ]
+?EndConnections
+?StartPlugParams
+11020651050.101064nil0
+454501020[ 200.0, 9.2198610305786, 0, 0.1, 1 ][ [ 1, 0, 12.0, 1, 0 ], [ 1, 0, 1, 1, 0 ] ][ [ 1, 0, 0, 0, 0, 0, 0, 0, 0, 0 ], [ 1, 0, 0, 0, 0, 0, 0, 0, 0, 0 ], [ 1, 0, 0, 0, 0, 0, 0, 0, 0, 0 ] ]Env([ 0, 1, 1, 0 ], [ 0.05, 0.9, 0.05 ], 0, 2)
+152920457"[ HrControlSpec(0.0, 1.0, 'linear', 0.0, 0.0, \"\"), HrControlSpec(0.0, 1.0, 'linear', 0.0, 0.0, \"\") ]"0[ 0, 0 ]0.000000
+276769288"{ |sig| [sig.linexp(0, 1, 200, 800), sig.linexp(0, 1, 12, 1)] }"[ [ 2, 3 ], [ 2, 7 ] ]14
+?EndPlugParams
+?EndSave

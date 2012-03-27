@@ -1,0 +1,17 @@
+?Hadron 1
+?StartPlugs
+HrDACunnamed1518607405nilPoint( 345, 372 )Rect(1049, 559, 250, 160)Rect(1048.1252975464, 743.03735923767, 250, 160)false
+HrFlangerunnamed262424895nilPoint( 345, 301 )Rect(839, 248, 450, 240)Rect(592.77065467834, 398.46178340912, 450, 240)false
+HrDIYSynthunnamed981955115nilPoint( 345, 225 )Rect(1, 303, 450, 440)Rect(478, 57, 450, 440)true
+?EndPlugs
+?StartConnections
+1518607405[ [ 262424895, 0 ], [ 262424895, 1 ] ][  ]
+262424895[ [ 981955115, 0 ], [ 981955115, 1 ] ][ [ 1518607405, 0 ], [ 1518607405, 1 ] ]
+981955115[ [ nil, nil ], [ nil, nil ] ][ [ 262424895, 0 ], [ 262424895, 1 ] ]
+?EndConnections
+?StartPlugParams
+15186074050.106742nil0
+26242489530.0147720.0100000.00100000.2896660.9601331
+981955115"{ arg input; PinkNoise.ar }"
+?EndPlugParams
+?EndSave
