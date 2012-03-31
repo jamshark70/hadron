@@ -1,6 +1,7 @@
 HadronStateLoad
 {
 	var parentApp, loadStage;
+	var <action;  // on completion
 	
 	*new
 	{|argParentApp|
@@ -121,6 +122,8 @@ HadronStateLoad
 				parentApp.canvasObj.drawCables;
 				parentApp.isDirty = false;
 				parentApp.displayStatus("State loaded!", 1);
+
+				action.value(parentApp);
 			});
 			
 			
@@ -134,11 +137,14 @@ HadronStateLoad
 		
 		}.fork(AppClock);
 		
-		
-		
-		
 	}
 	
-	
+	addFunc { |function|
+		action = action.addFunc(function);
+	}
+
+	removeFunc { |function|
+		action = action.removeFunc(function);
+	}
 	
 }
