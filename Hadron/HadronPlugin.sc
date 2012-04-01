@@ -6,7 +6,7 @@ HadronPlugin
 	<>saveGets, <>saveSets, <extraArgs, <boundCanvasItem, <helpString,
 	<modSets, <modGets, <modMapSets, <mappedMods;
 
-	var <synthInstance, <polyMode = false;
+	var <synthInstance, polyphonicDrivers;
 
 	var badValueSynth, badValueResp;
 	var identView;
@@ -604,7 +604,7 @@ HadronPlugin
 				.action_({
 					registration.remove;
 					tempwin.close;
-					if(polyMode.not) { this.makeSynth };
+					if(this.polyMode.not) { this.makeSynth };
 				});
 			tempwin.front;
 		};
@@ -740,12 +740,17 @@ HadronPlugin
 	hasGate { ^false }
 	polySupport { ^false }
 
+	polyMode { ^polyphonicDrivers.size > 0 }
+
 	// you should 'try' this method -- the error is really just an exception
-	polyMode_ { |bool(false)|
-		polyMode = bool;
+	setPolyMode { |bool(false), caller|
 		if(bool) {
 			if(this.polySupport) {
-				this.releaseSynth;
+				if(polyphonicDrivers.isNil) { polyphonicDrivers = IdentitySet.new };
+				if(caller.notNil) { polyphonicDrivers.add(caller) };
+				if(caller.isNil or: { this.polyMode }) {
+					this.releaseSynth;
+				};
 			} {
 				Error(
 					"Plugin %% does not support polyphonic use".format(
@@ -753,7 +758,10 @@ HadronPlugin
 				).throw
 			}
 		} {
-			if(synthInstance.isNil) { this.makeSynth }
+			if(caller.notNil) { polyphonicDrivers.remove(caller) };
+			if(caller.isNil or: { this.polyMode.not }) {
+				if(synthInstance.isNil) { this.makeSynth };
+			};
 		};
 	}
 

@@ -193,10 +193,10 @@ HrPolyPattern : HadronPlugin {
 	targetPlugin_ { |plug|
 		if((plug.tryPerform(\polySupport) ? false) or: { plug.isNil }) {
 			targetPlugin.removeDependant(this);
-			targetPlugin.tryPerform(\polyMode_, false);
+			targetPlugin.tryPerform(\setPolyMode, false, this);
 			targetPlugin = plug;
 			if(plug.notNil) {
-				targetPlugin.polyMode = true;
+				targetPlugin.setPolyMode(true, this);
 				baseEvent.proto[\instrument] = plug.defName.asSymbol;
 				targetPlugin.addDependant(this);
 			};
@@ -361,7 +361,10 @@ HrPolyPattern : HadronPlugin {
 		HrPbindef.removeDependant(this);
 		HrPMod.removeDependant(this);
 		subpatEdit.removeDependant(this);
-		if(targetPlugin.notNil) { targetPlugin.removeDependant(this) };
+		if(targetPlugin.notNil) {
+			targetPlugin.removeDependant(this);
+			targetPlugin.setPolyMode(false, this);
+		};
 		playWatcher.remove;
 		player.stop;
 		iMadePdefs.do { |name| HrPbindef(name).remove };

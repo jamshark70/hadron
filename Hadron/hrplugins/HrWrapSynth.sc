@@ -184,7 +184,7 @@ HrWrapSynth : HadronPlugin
 
 	makeSynth {
 		this.releaseSynth;
-		if(polyMode.not) {
+		if(this.polyMode.not) {
 			synthInstance = Synth(sName, this.synthArgs, target: group);
 		};
 	}
