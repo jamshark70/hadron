@@ -17,8 +17,8 @@ HrBuffer : HadronPlugin {
 
 		infoLine = StaticText(flow, Rect(0, 0, 290, 20));
 
-		if(extraArgs.size >= 1) {
-			sec = extraArgs[0];
+		if(extraArgs.postcs.size >= 1) {
+			sec = extraArgs[0].asFloat;
 		} {
 			sec = 2;
 		};
