@@ -194,8 +194,8 @@ HrBuffer : HadronPlugin {
 	makeBuffer { |sec = 2|
 		var newBuffer;
 		if(buffer.isNil) {
+			bufferReady.test = false;
 			fork {
-				bufferReady.test = false;
 				numFrames = sec * Server.default.sampleRate;
 				buffer = Buffer.alloc(Server.default, numFrames, 1);
 				Server.default.sync;
@@ -207,9 +207,9 @@ HrBuffer : HadronPlugin {
 			};
 		} {
 			if(sec.round(0.001) != buffer.duration.round(0.001)) {
+				bufferReady.test = false;
 				{
-					bufferReady.test = false;
-					numFrames = sec * Server.default.sampleRate;
+					numFrames = (sec * Server.default.sampleRate).round;
 					newBuffer = Buffer.alloc(Server.default, numFrames, 1);
 					Server.default.sync;
 					buffer.copyData(newBuffer, 0, 0, -1);
@@ -244,6 +244,10 @@ HrBuffer : HadronPlugin {
 			sf = SoundFile.openRead(path);
 			if(sf.notNil) {
 				sf.close;
+				if(sf.numFrames != buffer.numFrames) {
+					this.makeBuffer(sf.numFrames / Server.default.sampleRate);
+					bufferReady.wait;
+				};
 				if(sf.numChannels == 1) {
 					buffer.read(path, fileStartFrame: 0, numFrames: buffer.numFrames, action: postLoad);
 				} {
