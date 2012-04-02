@@ -37,7 +37,7 @@ HadronStateLoad
 		contents = tempFile.readAllString().split($\n);
 		tempFile.close;
 		
-		
+		parentApp.path = argFile;
 		
 		
 		{//begin fork

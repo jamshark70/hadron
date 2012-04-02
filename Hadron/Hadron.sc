@@ -3,7 +3,7 @@ Hadron
 	classvar <>plugins, <>loadDelay = 2;
 	var <win, <alivePlugs, <blackholeBus, <aliveMenu, <idPlugDict, <canvasObj,
 	statusView, <statusStString, <>isDirty, <canvasButton, instWin;
-	
+	var <>path;
 	
 	*initClass
 	{

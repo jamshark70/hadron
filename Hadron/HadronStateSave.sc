@@ -28,6 +28,7 @@ HadronStateSave
 	{|argFile|
 		var outFile;
 		
+		parentApp.path = argFile;
 		parentApp.isDirty = false;
 		
 		outFile = File(argFile, "w");
