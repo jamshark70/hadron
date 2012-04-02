@@ -160,7 +160,10 @@ HrBuffer : HadronPlugin {
 		];
 		saveSets = [
 			{ |argg| this.makeBuffer(argg / Server.default.sampleRate) },
-			{ |argg| relativePath = argg },
+			{ |argg|
+				relativePath = argg;
+				defer { relButton.value = if(argg) { 1 } { 0 } };
+			},
 			{ |argg|
 				if(argg.notNil and: { argg != "" }) {
 					if(relativePath and: { parentApp.path.notNil }) {
