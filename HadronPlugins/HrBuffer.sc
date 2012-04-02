@@ -1,8 +1,8 @@
 HrBuffer : HadronPlugin {
 	var <buffer, <numFrames, bufferReady,
-	recording = false, loopRecord = true,
+	recording = false, loopRecord = true, relativePath = false,
 	recordResp,
-	infoLine, pathLine, loadButton, recordButton, loopButton, changeSizeView, mixSl;
+	infoLine, pathLine, loadButton, relButton, recordButton, loopButton, changeSizeView, mixSl;
 
 	*initClass { this.addHadronPlugin }
 
@@ -17,7 +17,7 @@ HrBuffer : HadronPlugin {
 
 		infoLine = StaticText(flow, Rect(0, 0, 290, 20));
 
-		if(extraArgs.postcs.size >= 1) {
+		if(extraArgs.size >= 1) {
 			sec = extraArgs[0].asFloat;
 		} {
 			sec = 2;
@@ -60,6 +60,18 @@ HrBuffer : HadronPlugin {
 					nil
 				});
 			});
+		});
+
+		relButton = Button(flow, Rect(0, 0, 94, 20))
+		.states_([["abs. path"], ["rel. path"]])
+		.action_({ |view|
+			var bool = view.value > 0;
+			if(bool and: { parentApp.path.isNil }) {
+				view.value = 0;
+				parentApp.displayStatus("Save the patch before using a relative path. Then resave.", -1);
+			} {
+				relativePath = bool;
+			};
 		});
 
 		flow.startRow;
@@ -115,14 +127,48 @@ HrBuffer : HadronPlugin {
 
 		saveGets = [
 			{ numFrames },
-			{ buffer.path },
+			{ relativePath },
+			{
+				var win;
+				if(relativePath and: { buffer.path.notNil }) {
+					if(parentApp.path.notNil) {
+						PathName(buffer.path).asRelativePath(parentApp.path.dirname)
+					} {
+						win = Window(
+							"Relative path error",
+							Rect.aboutPoint(Window.screenBounds.center, 200, 40)
+						);
+						StaticText(win, Rect(2, 2, 396, 20))
+						.align_(\center)
+						.string_("Hadron patch's path is empty!");
+						StaticText(win, Rect(2, 24, 396, 20))
+						.align_(\center)
+						.string_("Can't save % as a relative path".format(buffer.path.basename));
+						Button(win, Rect(150, 52, 100, 26))
+						.states_([["OK"]])
+						.action_({ win.close });
+						win.front;
+						buffer.path
+					}
+				} {
+					buffer.path
+				}
+			},
 			{ loopRecord },
 			{ mixSl.value },
 			{ recording }
 		];
 		saveSets = [
 			{ |argg| this.makeBuffer(argg / Server.default.sampleRate) },
-			{ |argg| if(argg.notNil and: { argg != "" }) { this.loadBuffer(argg) } },
+			{ |argg| relativePath = argg },
+			{ |argg|
+				if(argg.notNil and: { argg != "" }) {
+					if(relativePath and: { parentApp.path.notNil }) {
+						argg = parentApp.path.dirname +/+ argg;
+					};
+					this.loadBuffer(argg)
+				}
+			},
 			{ |argg| loopButton.valueAction = argg.binaryValue },
 			{ |argg| mixSl.valueAction = argg },
 			{ |argg| recordButton.valueAction = argg.binaryValue }
