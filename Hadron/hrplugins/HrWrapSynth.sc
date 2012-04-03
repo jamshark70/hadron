@@ -87,7 +87,7 @@ HrWrapSynth : HadronPlugin
 		
 		window.background_(Color(0.9, 1, 0.9));
 		
-		specs = synthDesc.metadata.at(\specs);
+		specs = synthDesc.metadata.at(\specs).collect(_.asSpec);
 		
 		//keeping relevant args
 		sdControls = ctlNameStrings.reject
