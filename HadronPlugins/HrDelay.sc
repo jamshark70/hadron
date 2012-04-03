@@ -291,4 +291,9 @@ HrDelay : HadronPlugin {
 			node.map(modIndex, ctlBus);
 		};
 	}
+
+	handleBadValue { |badchannels|
+		super.handleBadValue(badchannels);
+		buffers.do({ |buf| buf.zero });  // be sure bad stuff is out of the buffer
+	}
 }
