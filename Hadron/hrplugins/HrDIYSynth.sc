@@ -9,13 +9,21 @@ HrDIYSynth : HadronPlugin
 		var numOuts = 2;
 		var bounds = Rect((Window.screenBounds.width - 450).rand, (Window.screenBounds.height - 400).rand, 450, 400);
 		var name = "HrDIYSynth";
+
+		if(argExtraArgs.size >= 2) {
+			numOuts = argExtraArgs[1].asInteger;
+		};
+		if(argExtraArgs.size >= 1) {
+			numIns = argExtraArgs[0].asInteger;
+		};
+
 		^super.new(argParentApp, name, argIdent, argUniqueID, argExtraArgs, bounds, numIns, numOuts, argCanvasXY).init;
 	}
 
 	init
 	{
 		window.background_(Color.gray(0.8));
-		helpString = "In1/In2 audio inputs, given as args to function. You must return 2 channels of audio inside function.";
+		helpString = "'M' audio inputs, given as args to function. Return 'N' channels of audio M and N are creation args.";
 
 		{
 			codeView = TextView(window, Rect(10, 10, 430, 350))
@@ -77,8 +85,8 @@ HrDIYSynth : HadronPlugin
 			sDef =
 			SynthDef("hrDIYSynth"++uniqueID,
 				{
-					arg inBus0, inBus1, outBus0, outBus1, masterGate = 1;
-					var inputs = [InFeedback.ar(inBus0), InFeedback.ar(inBus1)];
+					arg inBus0, /*inBus1,*/ outBus0, /*outBus1,*/ masterGate = 1;
+					var inputs = InFeedback.ar(inBus0, inBusses.size).asArray;
 
 					var sound;
 
@@ -86,11 +94,13 @@ HrDIYSynth : HadronPlugin
 					* EnvGen.kr(Env.asr(0.02, 1, 0.02), masterGate, doneAction: 2);
 
 					if(sound.isSequenceableCollection.not) {
-						sound = sound.dup(2);
+						sound = [sound];
+					};
+					if(sound.size < outBusses.size) {
+						sound = sound.wrapExtend(outBusses.size);
 					};
 
-					Out.ar(outBus0, sound[0]);
-					Out.ar(outBus1, sound[1]);
+					Out.ar(outBus0, sound);
 				});
 		} { |err|
 			if(err.isKindOf(Exception)) {
@@ -111,9 +121,9 @@ HrDIYSynth : HadronPlugin
 				Synth(sDef.name,
 					[
 						\inBus0, inBusses[0],
-						\inBus1, inBusses[1],
+						// \inBus1, inBusses[1],
 						\outBus0, outBusses[0],
-						\outBus1, outBusses[1]
+						// \outBus1, outBusses[1]
 					], target: group);
 			};
 		};
