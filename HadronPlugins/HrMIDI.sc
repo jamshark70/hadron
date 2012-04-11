@@ -4,7 +4,7 @@ HrMIDI : HadronPlugin {
 	midiType = \cc,  // for later
 	prOutbus;
 
-	var initButton, deviceMenu, channelMenu, midiAName, midiAEdit, specEdit, valueDisplay,
+	var initButton, deviceBG, deviceMenu, channelMenu, midiAName, midiAEdit, specEdit, valueDisplay,
 	modControl;
 
 	*initClass {
@@ -58,6 +58,7 @@ HrMIDI : HadronPlugin {
 			};
 		};
 
+		deviceBG = StaticText(window, Rect(2, 27, 256, 26));
 		deviceMenu = PopUpMenu(window, Rect(5, 30, 250, 20))
 		.enabled_(false)
 		.action_({ |view|
@@ -148,6 +149,11 @@ HrMIDI : HadronPlugin {
 						deviceIndex = deviceIndex + 1;
 						deviceMenu.value = deviceIndex;
 						this.updateResponder;
+					} {
+						defer {
+							deviceBG.background = Color.red;
+							deviceMenu.focus(true);
+						};
 					};
 				}.fork(AppClock);
 			},
@@ -156,6 +162,7 @@ HrMIDI : HadronPlugin {
 	}
 
 	updateResponder {
+		defer { deviceBG.background = Color.clear };
 		if(deviceIndex == 0 or: { channelIndex == 0 }) {
 			responder.remove;
 			responder = nil;
