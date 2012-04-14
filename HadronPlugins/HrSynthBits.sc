@@ -529,7 +529,7 @@ HrLFO : HrFilter {
 	}
 
 	cleanUp {
-		modControl.removeDependant(this).remove;
+		modControl.unmap.removeDependant(this).remove;
 		watcher.remove;
 		prOutBus.free;
 	}

@@ -263,6 +263,7 @@ HrRangeMap : HadronPlugin {
 	}
 
 	cleanUp {
+		modControl.unmap.removeDependant(this).remove;
 		prOutBus.free;
 		watcher.remove;
 	}
