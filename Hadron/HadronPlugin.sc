@@ -490,6 +490,7 @@ HadronPlugin
 		parentApp.idPlugDict.removeAt(uniqueID);
 		boundCanvasItem.removeFromCanvas;
 		outerWindow.close;
+		outerWindow = nil;
 
 		NotificationCenter.notify(this, \selfDestructed);
 	}
@@ -712,7 +713,8 @@ HadronPlugin
 					};
 				};
 			};
-			if(shouldPlay) {
+			// outerWindow is nil if the plug has been killed
+			if(shouldPlay and: { outerWindow.notNil }) {
 				Server.default.sync;
 				this.releaseSynth;
 				synthInstance = Synth(this.defName, this.synthArgs, group);
@@ -722,7 +724,7 @@ HadronPlugin
 			doIt.value
 		} {
 			doIt.fork
-		}
+		};
 	}
 
 	// IF you use makeSynth above, override this
