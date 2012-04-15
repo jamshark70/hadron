@@ -1,6 +1,6 @@
 HrPolyPattern : HadronPlugin {
-	var <key, <targetPlugin, iMadePdefs;
-	var pdefMenu, newText, targetMenu, modsMenu, startButton;
+	var <key, <targetPlugin, iMadePdefs, streamCtl;
+	var pdefMenu, newText, targetMenu, modsMenu, startButton, indepCheck, resetCheck;
 	var subpatEdit;
 	var plugList;
 	var baseEvent, player, playWatcher, playError;
@@ -33,13 +33,31 @@ HrPolyPattern : HadronPlugin {
 	}
 
 	init {
-		var width = (window.bounds.width - 20) * 0.2,
+		var width = (window.bounds.width - 16) * 0.25,
 		boundFunc = { |i|
 			Rect(2 + (i * (4 + width)), 2, width, 20)
+		},
+		makeCheckFunc = { |key|
+			var black = Color.black;
+			{ |view|
+				var width = view.bounds.width, height = view.bounds.height;
+				Pen.color_(black)
+				.addRect(Rect(0, 0, width-1, height-1))
+				.stroke;
+				if(streamCtl[key] ? false) {
+					Pen.width_(2)
+					.moveTo(Point(0.25 * width, 0.25 * height))
+					.lineTo(Point(0.75 * width, 0.75 * height))
+					.moveTo(Point(0.75 * width, 0.25 * height))
+					.lineTo(Point(0.25 * width, 0.75 * height))
+					.stroke;
+				}
+			}
 		};
 
 		HrPMod.addDependant(this);  // track +/- mod targets
 		baseEvent = Event(proto: (group: group));  // will use proto for play parameters
+		streamCtl = (independent: true, reset: false);
 
 		if(extraArgs.size >= 1) {
 			key = extraArgs[0].asSymbol;
@@ -49,24 +67,15 @@ HrPolyPattern : HadronPlugin {
 			}
 		};
 
-		startButton = Button(window, Rect(2, 2, width, 20))
-		.states_([
-			["stopped", Color.black, Color(1.0, 0.8, 0.8)],
-			["running", Color.black, Color(0.8, 1.0, 0.8)]
-		])
-		.action_({ |view|
-			this.run(view.value > 0);
-		});
-
 		HrPbindef.addDependant(this);  // track add/remove of HrPbindefs
-		pdefMenu = PopUpMenu(window, boundFunc.(1))
+		pdefMenu = PopUpMenu(window, boundFunc.(0))
 		.items_(["empty"] ++ HrPbindef.keys.asArray.sort)
 		.value_(0)
 		.action_({ |view|
 			this.key = view.item.asSymbol;
 		});
 
-		newText = TextField(window, boundFunc.(2))
+		newText = TextField(window, boundFunc.(1))
 		.string_("(name new)")
 		.action_({ |view|
 			var new = view.string.asSymbol;
@@ -78,17 +87,48 @@ HrPolyPattern : HadronPlugin {
 		});
 
 		this.setPlugList;
-		targetMenu = PopUpMenu(window, boundFunc.(3))
+		targetMenu = PopUpMenu(window, boundFunc.(2))
 		.items_(["None"] ++ plugList.collect { |plug| plug.boundCanvasItem.string })
 		.value_(0);
 
-		modsMenu = PopUpMenu(window, boundFunc.(4))
+		modsMenu = PopUpMenu(window, boundFunc.(3))
 		.items_(["None"]);
 
 		this.initAction;
 
-		subpatEdit = HrPbindefEditor(window, Rect(2, 24,
-			window.bounds.width - 4, window.bounds.height - 26));
+		startButton = Button(window, Rect(2, 24, width, 20))
+		.states_([
+			["stopped", Color.black, Color(1.0, 0.8, 0.8)],
+			["running", Color.black, Color(0.8, 1.0, 0.8)]
+		])
+		.action_({ |view|
+			this.run(view.value > 0);
+		});
+
+		indepCheck = UserView(window, Rect(startButton.bounds.right + 2, 24, 20, 20))
+		.drawFunc_(makeCheckFunc.value(\independent))
+		.mouseUpAction_({ |view, x, y|
+			if(view.bounds.moveTo(0, 0).containsPoint(Point(x, y))) {
+				streamCtl[\independent] = streamCtl[\independent].not;
+				view.refresh;
+			};
+		});
+		StaticText(window, Rect(indepCheck.bounds.right + 2, 24, 120, 20))
+		.string_("independent");
+
+		resetCheck = UserView(window, Rect(targetMenu.bounds.left, 24, 20, 20))
+		.drawFunc_(makeCheckFunc.value(\reset))
+		.mouseUpAction_({ |view, x, y|
+			if(view.bounds.moveTo(0, 0).containsPoint(Point(x, y))) {
+				streamCtl[\reset] = streamCtl[\reset].not;
+				view.refresh;
+			};
+		});
+		StaticText(window, Rect(resetCheck.bounds.right + 2, 24, 120, 20))
+		.string_("reset");
+
+		subpatEdit = HrPbindefEditor(window, Rect(2, 46,
+			window.bounds.width - 4, window.bounds.height - 48));
 		subpatEdit.addDependant(this);
 		if(key.notNil) {
 			this.key = key
