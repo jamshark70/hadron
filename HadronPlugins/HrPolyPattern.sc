@@ -3,7 +3,7 @@ HrPolyPattern : HadronPlugin {
 	var pdefMenu, newText, targetMenu, modsMenu, startButton, indepCheck, resetCheck;
 	var subpatEdit;
 	var plugList;
-	var baseEvent, player, playWatcher, playError;
+	var baseEvent, player, playWatcher, playError, stream, trigResp, trigID;
 
 	*initClass {
 		this.addHadronPlugin;
@@ -21,7 +21,12 @@ HrPolyPattern : HadronPlugin {
 			Library.put(this, \parentKeys, keys);
 
 			ServerBoot.add {
-				SynthDef('HrPolyPattern', { |t_trig, outBus0|
+				// t_trig is the outgoing trig: used when this pattern runs under its own power
+				// inBus0 can supply a trig, to run this pattern by an external trigger
+				SynthDef('HrPolyPattern', { |t_trig, inBus0, outBus0, trigID|
+					var inTrig = InFeedback.ar(inBus0, 1),
+					time = Timer.ar(inTrig);
+					SendReply.ar(inTrig, '/HrPatternTrig', time, trigID);
 					Out.ar(outBus0, K2A.ar(t_trig) ! 2);
 				}).add;
 			};
@@ -29,7 +34,7 @@ HrPolyPattern : HadronPlugin {
 	}
 
 	*new { |argParentApp, argIdent, argUniqueID, argExtraArgs, argCanvasXY|
-		^super.new(argParentApp, this.name.asString, argIdent, argUniqueID, argExtraArgs, Rect((Window.screenBounds.width - 600).rand, (Window.screenBounds.width - 450).rand, 600, 450), 0, 2, argCanvasXY).init
+		^super.new(argParentApp, this.name.asString, argIdent, argUniqueID, argExtraArgs, Rect((Window.screenBounds.width - 600).rand, (Window.screenBounds.width - 450).rand, 600, 450), 1, 2, argCanvasXY).init
 	}
 
 	init {
@@ -58,6 +63,15 @@ HrPolyPattern : HadronPlugin {
 		HrPMod.addDependant(this);  // track +/- mod targets
 		baseEvent = Event(proto: (group: group));  // will use proto for play parameters
 		streamCtl = (independent: true, reset: false);
+		trigID = UniqueID.next;
+		trigResp = OSCresponderNode(Server.default.addr, '/HrPatternTrig', { |time, resp, msg|
+			if(msg[2] == trigID) {
+				if(stream.isNil) {
+					stream = this.asPattern.asStream;
+				};
+				stream.next(baseEvent).play;
+			};
+		}).add;
 
 		if(extraArgs.size >= 1) {
 			key = extraArgs[0].asSymbol;
@@ -151,7 +165,8 @@ HrPolyPattern : HadronPlugin {
 			},
 			{
 				if(key.notNil) { HrPbindef(key).quant } { nil }
-			}
+			},
+			{ streamCtl }
 		];
 		saveSets = [
 			{ |argg| key = argg },   // do not try to change gui here!
@@ -171,13 +186,18 @@ HrPolyPattern : HadronPlugin {
 					plug.uniqueID == argg
 				}
 			},
-			{ |argg| startButton.valueAction = argg },
+			{ |argg| startButton.value = argg },
 			{ |argg|
 				// need to ensure all HrPMods exist
 				argg.do { |row| HrPMod(*row) }
 			},
 			{ |argg|
 				if(key.notNil and: { argg.notNil }) { HrPbindef(key).quant = argg };
+			},
+			{ |argg|
+				streamCtl = argg;
+				indepCheck.refresh; resetCheck.refresh;
+				startButton.doAction;
 			}
 		];
 
@@ -204,6 +224,8 @@ HrPolyPattern : HadronPlugin {
 		modGets.putAll(HrPMod.modGets);
 		modSets.putAll(HrPMod.modSets);
 		modMapSets.putAll(HrPMod.modMapSets);
+
+		this.makeSynth;
 	}
 
 	key_ { |newKey, savedTexts|
@@ -351,14 +373,14 @@ HrPolyPattern : HadronPlugin {
 				playWatcher = SimpleController(player).put(\stopped, {
 					playWatcher.remove;
 					player = nil;
-					this.releaseSynth;
+					// this.releaseSynth;
 					defer { startButton.value = 0 };
 				});
-				this.makeSynth;
+				// this.makeSynth;
 			} {
 				player.stop;
 				player = nil;
-				this.releaseSynth;
+				// this.releaseSynth;
 				defer { startButton.value = 0 };
 			};
 		};
@@ -390,7 +412,11 @@ HrPolyPattern : HadronPlugin {
 				};
 				ev
 			}),
-			HrPbindef(key).source
+			if(streamCtl[\independent]) {
+				HrPbindef(key).source
+			} {
+				HrPbindef(key).initStream(streamCtl[\reset]).stream
+			}
 		)
 	}
 
@@ -406,6 +432,7 @@ HrPolyPattern : HadronPlugin {
 			targetPlugin.setPolyMode(false, this);
 		};
 		playWatcher.remove;
+		trigResp.remove;
 		player.stop;
 		iMadePdefs.do { |name| HrPbindef(name).remove };
 	}
@@ -420,9 +447,7 @@ HrPolyPattern : HadronPlugin {
 	getMapModArgs { ^[] }
 
 	makeSynth {
-		if(player.notNil) {
-			synthInstance = Synth('HrPolyPattern', [outBus0: outBusses[0]], group);
-		}
+		synthInstance = Synth('HrPolyPattern', this.synthArgs, group);
 	}
 
 	releaseSynth {
@@ -430,6 +455,11 @@ HrPolyPattern : HadronPlugin {
 			super.releaseSynth;
 		});
 	}
+
+	synthArgs {
+		^[inBus0: inBusses[0], outBus0: outBusses[0], trigID: trigID]
+	}
+
 
 	/****** SUBCLASS SUPPORT ******/
 

@@ -4,11 +4,15 @@ With apologies to Julian Rohrhuber and the rest of the JITLib crew for lifting t
 
 I need dependent notifications for every change that these objects absorb, and I don't want to use method overrides to do it.
 
+2012-04-15: Added a "stream" variable, to allow direct 'next' calls on the proxy. This lets multiple HrPolyPatterns distribute events from one pattern to multiple output plugs.
+
 -hjh
 
 */
 
 HrPatternProxy : PatternProxy {
+	var <stream;
+
 	source_ { |item|
 		super.source = item;
 		this.changed(\source, item);
@@ -25,9 +29,19 @@ HrPatternProxy : PatternProxy {
 			Error("% does not have a collection of patterns".format(this.name)).throw;
 		};
 	}
+
+	initStream { |reset(false)|
+		if(reset or: { stream.isNil }) {
+			stream = this.asStream;
+		};
+	}
+
+	next { |inval| ^stream.next(inval) }
 }
 
 HrEventPatternProxy : EventPatternProxy {
+	var <stream;
+
 	source_ { |item|
 		super.source = item;
 		this.changed(\source, item);
@@ -50,6 +64,14 @@ HrEventPatternProxy : EventPatternProxy {
 		quant = val;
 		this.changed(\quant, val);
 	}
+
+	initStream { |reset(false)|
+		if(reset or: { stream.isNil }) {
+			stream = this.asStream;
+		};
+	}
+
+	next { |inval| ^stream.next(inval) }
 }
 
 HrPdef : HrEventPatternProxy {
