@@ -195,7 +195,7 @@ HrPolyPattern : HadronPlugin {
 				if(key.notNil and: { argg.notNil }) { HrPbindef(key).quant = argg };
 			},
 			{ |argg|
-				streamCtl = argg;
+				streamCtl = argg ?? { streamCtl };
 				indepCheck.refresh; resetCheck.refresh;
 				startButton.doAction;
 			}
