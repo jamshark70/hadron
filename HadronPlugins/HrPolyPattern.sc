@@ -128,7 +128,7 @@ HrPolyPattern : HadronPlugin {
 			};
 		});
 		StaticText(window, Rect(indepCheck.bounds.right + 2, 24, 120, 20))
-		.string_("independent");
+		.string_("separate stream");
 
 		resetCheck = UserView(window, Rect(targetMenu.bounds.left, 24, 20, 20))
 		.drawFunc_(makeCheckFunc.value(\reset))
