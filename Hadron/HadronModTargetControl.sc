@@ -120,7 +120,8 @@ HadronModTargetControl
 		 ^[
 			 1 + (parentApp.alivePlugs.indexOf(currentSelPlugin) ? -1),
 			 if(paramNames.size > 0) {
-				 1 + (paramNames.indexOf(currentSelParam) ? -1);
+				 currentSelParam
+				 // 1 + (paramNames.indexOf(currentSelParam) ? -1);
 			 } { 0 }
 		 ];
 	}
@@ -135,7 +136,11 @@ HadronModTargetControl
 	{
 		if(loadHolder.notNil) {
 			this.currentSelPlugin = parentApp.alivePlugs[loadHolder[0] - 1];
-			this.currentSelParam = paramNames[loadHolder[1] - 1];
+			if(loadHolder[1].isNumber) {
+				this.currentSelParam = paramNames[loadHolder[1] - 1];
+			} {
+				this.currentSelParam = loadHolder[1].asSymbol;
+			};
 			loadHolder = nil;
 		}
 	}
