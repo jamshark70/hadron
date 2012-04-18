@@ -376,6 +376,7 @@ HrPolyPattern : HadronPlugin {
 					// this.releaseSynth;
 					defer { startButton.value = 0 };
 				});
+				defer { startButton.value = 1 };
 				// this.makeSynth;
 			} {
 				player.stop;
