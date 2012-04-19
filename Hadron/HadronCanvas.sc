@@ -226,41 +226,41 @@ HadronCanvas
 	
 	drawCables
 	{
-		var sBound, tBound; //sourceview, targetview
+		var sItem, tItem, sBounds, tBounds;
 		var cablePointsBuilder;
 		cablePointsBucket = List.new;
 
 		cablePointsBuilder = {
-			parentApp.alivePlugs.do
-			({|item|
-				
-				sBound = item.boundCanvasItem;
-				item.outConnections.do
-				({|conItem, count|
-					if(conItem != [nil, nil] and: { sBound.outPortBlobs[count].notNil },
-						{
-							
-							tBound = conItem[0].boundCanvasItem;
-							cablePointsBucket.add
-							(
-								[
-									((sBound.objView.bounds.left + sBound.outPortBlobs[count].left+3))@
-									(sBound.objView.bounds.top+20),
-									((tBound.objView.bounds.left + tBound.inPortBlobs[conItem[1]].left+3))@
-									(tBound.objView.bounds.top)
-								]
-							);							
-						});	
-				})
+			parentApp.alivePlugs.do({ |item|
+				sItem = item.boundCanvasItem;
+				try { sBounds = sItem.bounds } { sBounds = nil };
+				if(sBounds.notNil) {
+					item.outConnections.do({ |conItem, count|
+						if(conItem != [nil, nil] and: { sItem.outPortBlobs[count].notNil }, {
+							tItem = conItem[0].boundCanvasItem;
+							try { tBounds = tItem.bounds } { tBounds = nil };
+							if(tBounds.notNil) {
+								cablePointsBucket.add([
+									((sItem.objView.bounds.left + sItem.outPortBlobs[count].left+3))@
+									(sItem.objView.bounds.top+20),
+									((tItem.objView.bounds.left + tItem.inPortBlobs[conItem[1]].left+3))@
+									(tItem.objView.bounds.top)
+								]);
+							};
+						});
+					});
+				};
 			});
 		};
-		if(this.canCallOS) {
-			cablePointsBuilder.value;
-			cView.refresh;
-		} {
-			defer {
+		if(cWin.isClosed.not) {
+			if(this.canCallOS) {
 				cablePointsBuilder.value;
-				cView.refresh
+				cView.refresh;
+			} {
+				defer {
+					cablePointsBuilder.value;
+					cView.refresh
+				};
 			};
 		};
 	}
