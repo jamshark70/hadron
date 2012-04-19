@@ -53,7 +53,7 @@ HadronStateLoad
 			{ 
 				//item.postln; 
 				item = item.split(31.asAscii);
-				parentApp.prAddPlugin(item[0].interpret, item[1], item[2].asInteger, item[3].interpret, item[4].interpret);
+				parentApp.prAddPlugin(item[0].interpret, item[1], item[2].asInteger, item[3].interpret, item[4].interpret, item[7].interpret);
 				
 				if(GUI.id != \swing) { 0.01.wait };
 				parentApp.idPlugDict.at(item[2].asInteger)
@@ -62,8 +62,8 @@ HadronStateLoad
 				parentApp.idPlugDict.at(item[2].asInteger)
 					.oldWinBounds = item[6].interpret;
 				
-				if(GUI.id != \swing) { 0.05.wait };
-				parentApp.idPlugDict.at(item[2].asInteger).isHidden = item[7].interpret;
+				// if(GUI.id != \swing) { 0.05.wait };
+				// parentApp.idPlugDict.at(item[2].asInteger).isHidden = item[7].interpret;
 			});
 			
 			if(loadStage == 4,

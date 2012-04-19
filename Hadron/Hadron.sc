@@ -220,12 +220,13 @@ Hadron
 	}
 	
 	prAddPlugin
-	{|argPlug, argIdent, argUniqueID, extraArgs, argCanvasXY|
+	{|argPlug, argIdent, argUniqueID, extraArgs, argCanvasXY, hidden(false)|
 		var tempHolder;
 
 		canvasObj.showWin;
 	
-		tempHolder = argPlug.new(this, argIdent, argUniqueID, extraArgs, argCanvasXY);
+		tempHolder = argPlug.new(this, argIdent, argUniqueID, extraArgs, argCanvasXY)
+		.isHidden_(hidden);
 		isDirty = true;
 		alivePlugs.add(tempHolder);
 		idPlugDict.put(tempHolder.uniqueID, tempHolder);

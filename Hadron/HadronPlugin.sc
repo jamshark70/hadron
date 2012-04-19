@@ -205,7 +205,12 @@ HadronPlugin
 		} {
 			window = CompositeView(outerWindow, Rect(0, 0, argBounds.width, oldWinBounds.height - 40 - (30 * binaryValue(argBounds.width < 430))));
 		};
-		outerWindow.front;
+
+		// no need to front the window at all if it's just going to be hidden
+		// Note, delay in HadronStateLoad, so we have to wait here
+		AppClock.sched(0.1, {
+			if(isHidden.not) { outerWindow.front };
+		});
 
 	}
 
