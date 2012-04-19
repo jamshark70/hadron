@@ -227,28 +227,36 @@ HadronCanvas
 	drawCables
 	{
 		var sItem, tItem, sBounds, tBounds;
-		var cablePointsBuilder;
+		var cablePointsBuilder, emptyConn = [nil, nil];
 		cablePointsBucket = List.new;
 
 		cablePointsBuilder = {
 			parentApp.alivePlugs.do({ |item|
-				sItem = item.boundCanvasItem;
-				try { sBounds = sItem.bounds } { sBounds = nil };
-				if(sBounds.notNil) {
-					item.outConnections.do({ |conItem, count|
-						if(conItem != [nil, nil] and: { sItem.outPortBlobs[count].notNil }, {
-							tItem = conItem[0].boundCanvasItem;
-							try { tBounds = tItem.bounds } { tBounds = nil };
-							if(tBounds.notNil) {
-								cablePointsBucket.add([
-									((sItem.objView.bounds.left + sItem.outPortBlobs[count].left+3))@
-									(sItem.objView.bounds.top+20),
-									((tItem.objView.bounds.left + tItem.inPortBlobs[conItem[1]].left+3))@
-									(tItem.objView.bounds.top)
-								]);
-							};
+				// too many things can break in here...
+				// set Library.put(HadronCanvas, \cableDebug, true) to see errors
+				try {
+					sItem = item.boundCanvasItem;
+					sBounds = sItem.objView.bounds;
+					if(sBounds.notNil) {
+						item.outConnections.do({ |conItem, count|
+							if(conItem != emptyConn and: { sItem.outPortBlobs[count].notNil }, {
+								tItem = conItem[0].boundCanvasItem;
+								tBounds = tItem.objView.bounds;
+								if(tBounds.notNil) {
+									cablePointsBucket.add([
+										((sBounds.left + sItem.outPortBlobs[count].left+3))@
+										(sBounds.top+20),
+										((tBounds.left + tItem.inPortBlobs[conItem[1]].left+3))@
+										(tBounds.top)
+									]);
+								};
+							});
 						});
-					});
+					};
+				} { |err|
+					if(Library.at(HadronCanvas, \cableDebug) == true) {
+						err.reportError  // but don't die
+					};
 				};
 			});
 		};
