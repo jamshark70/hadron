@@ -257,7 +257,7 @@ HrBuffer : HadronPlugin {
 					buffer.readChannel(path, channels: #[0], action: postLoad)
 				};
 			};
-			AppClock.sched(2.0, {
+			AppClock.sched(5.0, {
 				if(loadFailed) {
 					parentApp.displayStatus("'%' load failed".format(path.basename), -1)
 				};
