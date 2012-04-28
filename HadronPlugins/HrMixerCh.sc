@@ -12,13 +12,11 @@ HrMixerCh : HadronPlugin {
 			StartUp.add {
 				ServerBoot.add {
 					[{ |in| in.sum }, { |in| in }].do { |func, i|
-						SynthDef("HrMixerCh-in" ++ (i+1), { |inBus0, outBus0, mixerOut,
-							level, gate = 1|
+						SynthDef("HrMixerCh-in" ++ (i+1), { |inBus0, outBus0, level, gate = 1|
 							var sig = func.value(InFeedback.ar(inBus0, 2)),
 							eg = EnvGen.kr(Env.asr(0.1, 1, 0.1), gate, doneAction: 2);
 							level = level.lag(0.08);
-							Out.ar(mixerOut, sig * level * eg);
-							Out.ar(outBus0, InFeedback.ar(mixerOut, 2) * eg);
+							Out.ar(outBus0, sig * level * eg);
 						}).add;
 					};
 				};
@@ -27,7 +25,7 @@ HrMixerCh : HadronPlugin {
 	}
 
 	*new { |argParentApp, argIdent, argUniqueID, argExtraArgs, argCanvasXY|
-		^super.new(argParentApp, this.name, argIdent, argUniqueID, argExtraArgs, Rect((Window.screenBounds.width - 366).rand, (Window.screenBounds.height - 100).rand, 366, 100), 2, 2, argCanvasXY).init
+		^super.new(argParentApp, this.name, argIdent, argUniqueID, argExtraArgs, Rect((Window.screenBounds.width - 366).rand, (Window.screenBounds.height - 100).rand, 366, 100), 2, 0, argCanvasXY).init
 	}
 
 	init {
@@ -123,8 +121,7 @@ HrMixerCh : HadronPlugin {
 		if(mixer.notNil) {
 			mixer.doWhenReady {
 				synthInstance = Synth("HrMixerCh-in" ++ mixer.inChannels,
-					[inBus0: inBusses[0], outBus0: outBusses[0], mixerOut: mixer.inbus,
-						level: levelModSl.value],
+					[inBus0: inBusses[0], outBus0: mixer.inbus, level: levelModSl.value],
 					mixer.synthgroup, \addToTail
 				);
 			};
@@ -134,7 +131,7 @@ HrMixerCh : HadronPlugin {
 	hasGate { ^true }
 
 	updateBusConnections {
-		synthInstance.set(\inBus0, inBusses[0], \outBus0, outBusses[0]);
+		synthInstance.set(\inBus0, inBusses[0]);
 	}
 
 	cleanUp {
