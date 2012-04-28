@@ -68,6 +68,20 @@ HrMixerCh : HadronPlugin {
 				this.mcgui = extraArgs[1].asInteger;
 			};
 		};
+
+		saveGets = [
+			{ [mixerName.asSymbol, mcgui] },
+			{ levelModSl.value }
+		];
+
+		saveSets = [
+			{ |argg| defer { this.mixerName_(argg[0]).mcgui_(argg[1]) } },
+			{ |argg| levelModSl.valueAction_(argg) }
+		];
+
+		modGets.put(\level, { levelModSl.value });
+		modMapSets.put(\level, { |argg| defer { levelModSl.value = argg } });
+		modSets.put(\level, { |argg| defer { levelModSl.valueAction = argg } });
 	}
 
 	mixerName_ { |name|
