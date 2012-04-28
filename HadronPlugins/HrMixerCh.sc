@@ -16,7 +16,7 @@ HrMixerCh : HadronPlugin {
 							var sig = func.value(InFeedback.ar(inBus0, 2)),
 							eg = EnvGen.kr(Env.asr(0.1, 1, 0.1), gate, doneAction: 2);
 							level = level.lag(0.08);
-							Out.ar(outBus0, sig * level);
+							Out.ar(outBus0, sig * level * eg);
 						}).add;
 					};
 				};
