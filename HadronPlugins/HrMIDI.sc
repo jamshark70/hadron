@@ -113,7 +113,7 @@ HrMIDI : HadronPlugin {
 			{ midiType },
 			{ midiA },
 			{ channelIndex },
-			{ MIDIClient.sources[deviceIndex - 1].tryPerform(\name) },
+			{ MIDIClient.sources.tryPerform(\at, (deviceIndex ? 0) - 1).tryPerform(\name) },
 			{ modControl.getSaveValues }
 		];
 
