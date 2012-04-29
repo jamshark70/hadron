@@ -1,7 +1,7 @@
 HrMixerCh : HadronPlugin {
 	// mcgui is index into ddwChucklib MCG collection
 	var <mixerName, <mixer, <mcgui, levelModSl;
-	var iMadeMixer = false;
+	var iMadeMixer = false, initLevelIfIMakeMixer = 0.75;
 
 	var mixerNameMenu, mixerNameField, mcgMenu;
 
@@ -63,6 +63,9 @@ HrMixerCh : HadronPlugin {
 		this.refreshMenu;
 
 		if(extraArgs.size > 0) {
+			if(extraArgs[2].notNil) {
+				initLevelIfIMakeMixer = extraArgs[2].asFloat;
+			};
 			this.mixerName = extraArgs[0];
 			if(extraArgs[1].notNil) {
 				this.mcgui = extraArgs[1].asInteger;
@@ -96,7 +99,7 @@ HrMixerCh : HadronPlugin {
 				mixer = existing;
 				iMadeMixer = false;
 			} {
-				mixer = MixerChannel(name, Server.default, 2, 2);
+				mixer = MixerChannel(name, Server.default, 2, 2, level: initLevelIfIMakeMixer);
 				iMadeMixer = true;
 			};
 			mixerName = name;
