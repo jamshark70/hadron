@@ -88,9 +88,9 @@ HrMixerCh : HadronPlugin {
 		var existing;
 		name = name.asSymbol;
 		if(name != mixerName) {
-			existing = MixerChannel.servers[Server.default].detect { |mixer|
+			existing = MixerChannel.servers[Server.default].tryPerform(\detect, { |mixer|
 				mixer.name.asSymbol === name
-			};
+			});
 			if(iMadeMixer) { mixer.free };
 			if(existing.notNil) {
 				mixer = existing;
@@ -116,9 +116,13 @@ HrMixerCh : HadronPlugin {
 	}
 
 	refreshMenu {
-		var names = ['None'] ++ MixerChannel.servers[Server.default].values
-		.collect({ |mc| mc.name.asSymbol })
-		.sort;
+		var names = ['None'];
+
+		if(MixerChannel.servers[Server.default].notNil) {
+			names = names ++ MixerChannel.servers[Server.default].values
+			.collect({ |mc| mc.name.asSymbol })
+			.sort;
+		};
 
 		mixerNameMenu.items_(names)
 		.value_(names.indexOfEqual(mixerName) ? 0);
