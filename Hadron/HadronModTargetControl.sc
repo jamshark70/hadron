@@ -118,7 +118,11 @@ HadronModTargetControl
 	getSaveValues
 	{
 		 ^[
-			 1 + (parentApp.alivePlugs.indexOf(currentSelPlugin) ? -1),
+			 // assumes you will never delete a plugin after mapping a modulator
+			 // give me a break! Obviously you would want to use the unique ID here!
+			 // COME ON....... *think* before coding...
+			 // 1 + (parentApp.alivePlugs.indexOf(currentSelPlugin) ? -1),
+			 currentSelPlugin.tryPerform(\uniqueID),
 			 if(paramNames.size > 0) {
 				 currentSelParam
 				 // 1 + (paramNames.indexOf(currentSelParam) ? -1);
@@ -135,7 +139,14 @@ HadronModTargetControl
 	doWakeFromLoad
 	{
 		if(loadHolder.notNil) {
-			this.currentSelPlugin = parentApp.alivePlugs[loadHolder[0] - 1];
+			this.currentSelPlugin = if(loadHolder[0].notNil) {
+				// backward compatibility: try to use plug index if a low number
+				if(loadHolder[0].abs <= parentApp.alivePlugs.size) {
+					parentApp.alivePlugs[loadHolder[0] - 1]
+				} {
+					parentApp.pluginFromID(loadHolder[0])
+				}
+			} { nil };
 			if(loadHolder[1].isNumber) {
 				this.currentSelParam = paramNames[loadHolder[1] - 1];
 			} {
