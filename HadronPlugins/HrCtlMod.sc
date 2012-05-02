@@ -95,7 +95,7 @@ HrCtlMod : HrSimpleModulator {
 
 		saveGets =
 			[
-				{ postOpText.string; },
+				{ postOpText.string.replace("\n", 30.asAscii); },
 				{ modControl.getSaveValues; },
 				{ startButton.value; },
 				{ pollRate }
@@ -104,6 +104,7 @@ HrCtlMod : HrSimpleModulator {
 		saveSets =
 			[
 				{ |argg|
+					argg = argg.replace(30.asAscii, "\n");
 					postOpText.string_(argg);
 					// previously called "evalButton.doAction"
 					// but in swing, can't rely on gui synchronous-icity

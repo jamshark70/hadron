@@ -79,7 +79,7 @@ HrMultiCtlMod : HrCtlMod {
 
 		saveGets =
 			[
-				{ postOpText.string; },
+				{ postOpText.string.replace("\n", 30.asAscii); },
 				{ modControl.collect(_.getSaveValues); },
 				{ startButton.value; },
 				{ pollRate }
@@ -88,6 +88,7 @@ HrMultiCtlMod : HrCtlMod {
 		saveSets =
 			[
 				{ |argg|
+					argg = argg.replace(30.asAscii, "\n");
 					postOpText.string_(argg);
 					// previously called "evalButton.doAction"
 					// but in swing, can't rely on gui synchronous-icity
