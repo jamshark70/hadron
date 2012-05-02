@@ -374,7 +374,7 @@ HadronPlugin
 			//redirect my bus to blackhole.
 			mainOutBusses[argMyBusNo] = parentApp.blackholeBus;
 			this.prUpdateBusConnections;
-			parentApp.canvasObj.drawCables;
+			defer { parentApp.canvasObj.drawCables };
 			//no need to call .prUpdateBusConnections on (old) outConnections[argMyBusNo][0]
 			//no further action needed, return.
 			^this;
@@ -424,7 +424,7 @@ HadronPlugin
 
 		argTargetPlugin.prUpdateBusConnections;
 		this.prUpdateBusConnections;
-		parentApp.canvasObj.drawCables;
+		defer { parentApp.canvasObj.drawCables };
 	}
 
 	// subclasses may overwrite for custom behavior; see HrLFO
