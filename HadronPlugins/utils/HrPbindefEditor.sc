@@ -191,9 +191,8 @@ Use an interactive code window to edit this pattern.
 	}
 
 	rebuildModel { |rebuildPairs(true)|
-		var pairs, oldPairs;
+		var pairs;
 		if(rebuildPairs) {
-			oldPairs = model.source.pairs;
 			pairs = Array(subpats.size * 2);
 			subpats.do { |subpat|
 				if(subpat.text != "") {
@@ -201,7 +200,6 @@ Use an interactive code window to edit this pattern.
 				};
 			};
 			model.source.pairs = pairs;
-			model.changed(\pairs, oldPairs);
 		};
 		// this is not a joke
 		model.source.source.source = Pbind(*model.source.pairs);
@@ -310,7 +308,7 @@ Use an interactive code window to edit this pattern.
 			{ \viewDidClose } {
 				obj.removeDependant(this);
 			};
-		};
+		}
 	}
 
 	at { |i| ^subpats[i] }
