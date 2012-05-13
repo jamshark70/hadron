@@ -129,7 +129,7 @@ HrMixerCh : HadronPlugin {
 
 		mixerNameMenu.items_(names)
 		.value_(names.indexOfEqual(mixerName) ? 0);
-		mixerNameField.string = mixerName;
+		mixerNameField.string = mixerName.asString;
 
 		mcgMenu.items_(names = ["None"] ++ MCG.keys.collect(_.asString))
 		.value_(names.indexOfEqual(mcgui.asString) ? 0);
