@@ -119,12 +119,12 @@ HrMixerCh : HadronPlugin {
 	}
 
 	refreshMenu {
-		var names = ['None'];
+		var names = ["None"];
 
 		if(MixerChannel.servers[Server.default].notNil) {
-			names = names ++ MixerChannel.servers[Server.default].values
-			.collect({ |mc| mc.name.asSymbol })
-			.sort;
+			names = names ++ (MixerChannel.servers[Server.default].values
+			.collect({ |mc| mc.name.asString })
+			.sort);
 		};
 
 		mixerNameMenu.items_(names)
