@@ -165,8 +165,12 @@ HadronModTargetControl
 		var plug = currentSelPlugin;
 		// we might need to do this during loading as part of a saveSets[] item
 		// currentSelPlugin isn't populated at that time! but loadHolder is
-		if(plug.isNil and: { loadHolder.notNil }) {
-			plug = parentApp.alivePlugs[loadHolder[0] - 1];
+		if(plug.isNil and: { loadHolder.notNil and: { loadHolder[0].notNil } }) {
+			if(loadHolder[0].abs <= parentApp.alivePlugs.size) {
+				plug = parentApp.alivePlugs[loadHolder[0] - 1]
+			} {
+				plug = parentApp.pluginFromID(loadHolder[0])
+			}
 		};
 		plug.tryPerform(\pollRate_, rate)
 	}
