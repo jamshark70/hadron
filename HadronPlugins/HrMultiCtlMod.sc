@@ -1,6 +1,6 @@
 HrMultiCtlMod : HrCtlMod {
 	var modCtlsScroll, inChannels;
-	var loadSemaphore;
+	var loadConditions; //, loadState = -1;
 
 	*initClass
 	{
@@ -10,7 +10,9 @@ HrMultiCtlMod : HrCtlMod {
 
 	init
 	{
-		loadSemaphore = Semaphore(1);
+		loadConditions = Array.fill(5, { |i|
+			Condition(false)
+		});
 		window.background_(Color.gray(0.7));
 		if(extraArgs.size >= 1) {
 			numChannels = max(1, extraArgs[0].asInteger);
@@ -94,35 +96,34 @@ HrMultiCtlMod : HrCtlMod {
 					// but in swing, can't rely on gui synchronous-icity
 					postOpFunc = argg.interpret;
 					{
-						loadSemaphore.wait; // block others
 						this.makeSynth;
-						loadSemaphore.signal; // unblock others
+						loadConditions[1].test_(true).signal; // unblock others
 					}.fork(AppClock);
 				},
 				{ |argg|
 					{
-						loadSemaphore.wait;
+						loadConditions[1].wait;
 						modControl.do { |ctl, i|
 							ctl.putSaveValues(argg[i]).doWakeFromLoad
 						};
-						loadSemaphore.signal;
+						loadConditions[2].test_(true).signal; // unblock others
 					}.fork(AppClock);
 				},
 				{ |argg|
 					{
-						loadSemaphore.wait;
+						loadConditions[2].wait;
 						startButton.valueAction_(argg);
-						loadSemaphore.signal;
+						loadConditions[3].test_(true).signal; // unblock others
 					}.fork(AppClock);
 				},
 				{ |argg|
 					{
-						loadSemaphore.wait;
+						loadConditions[3].wait;
 						if(argg.notNil) {
 							pollRate = argg;
 							pollRateView.tryPerform(\valueAction_, argg);
 						};
-						loadSemaphore.signal;
+						loadConditions[4].test_(true).signal; // unblock others
 					}.fork(AppClock);
 				}
 			];
@@ -348,12 +349,11 @@ HrMultiCtlMod : HrCtlMod {
 		// like, if HadronStateLoad ever becomes threaded
 		fork {
 			fork {
-				loadSemaphore.wait;
+				loadConditions[4].wait;
 				outConnections = saveOutConnections;
 				super.wakeConnections;
 				this.prUpdateBusConnections;
 				defer { parentApp.canvasObj.drawCables };
-				loadSemaphore.signal;
 			}
 		}
 	}
