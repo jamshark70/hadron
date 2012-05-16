@@ -100,11 +100,21 @@ HrRangeMap : HadronPlugin {
 		saveSets =
 			[
 				{ |argg|
-					#inSpec, outSpec = argg.interpret;
+					var newInSpec, newOutSpec, warpChanged;
+					#newInSpec, newOutSpec = argg.interpret;
+					warpChanged = (inSpec.warp != newInSpec.warp) or: {
+						outSpec.warp != newOutSpec.warp
+					};
+					inSpec = newInSpec;
+					outSpec = newOutSpec;
 					inSpecView.value = inSpec;
 					outSpecView.value = outSpec;
 					modSlider.spec = inSpec;
-					synthInstance.set(*this.synthArgs);
+					if(warpChanged) {
+						this.makeSynth;
+					} {
+						synthInstance.set(*this.synthArgs);
+					};
 				},
 				{ |argg|
 					inMod = argg;
