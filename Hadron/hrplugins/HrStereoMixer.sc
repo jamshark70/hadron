@@ -90,12 +90,12 @@ HrStereoMixer : HadronPlugin
 				synthInstance[cnt].set(\mul, argg); 
 				currentSlValues[cnt] = argg;
 				
-				{ volSliders[cnt].value_(argg) }.defer;
+				{ volSliders[cnt].value_(argg); volNums[cnt].value_(argg) }.defer;
 			});
 			modMapSets.put(("level"++cnt).asSymbol, 
 			{|argg| 
 				currentSlValues[cnt] = argg;
-				{ volSliders[cnt].value_(argg) }.defer;
+				{ volSliders[cnt].value_(argg); volNums[cnt].value_(argg) }.defer;
 			});
 		});
 	}
