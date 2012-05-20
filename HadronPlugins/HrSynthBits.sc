@@ -365,7 +365,7 @@ HrLFO : HrFilter {
 			sl
 		});
 
-		spec = nil.asSpec;
+		spec = HrControlSpec(0, 1, \lin);
 		specEditor = HrSpecEditor(window, Rect(5, 135, 340, 50), 5@5, "range", 65)
 		.value_(spec)
 		.action_({ |view, paramName|
