@@ -123,8 +123,7 @@ HrRangeMap : HadronPlugin {
 					synthInstance.set(\useAudioIn, inMod);
 				},
 				{ |argg|
-					// must call doWakeFromLoad before map
-					modControl.putSaveValues(argg).doWakeFromLoad;
+					modControl.putSaveValues(argg);
 					if(inMod == 0) {
 						isMapped = modControl.map(prOutBus)
 					} {
@@ -133,10 +132,10 @@ HrRangeMap : HadronPlugin {
 				},
 				{ |argg|
 					modSlider.value = argg;
-					if(isMapped.not) {
+					if(mappedMods[\modValue].isNil) {
 						synthInstance.set(\modValue, argg)
 					} {
-						prOutBus.set(argg)
+						mappedMods[\modValue].asBus(\control, 1, Server.default).set(argg)
 					};
 				}
 			];
