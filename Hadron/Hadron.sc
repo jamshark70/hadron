@@ -19,11 +19,13 @@ Hadron
 		]; //default plugins
 		StartUp.add {
 			if(ServerOptions.findRespondingMethodFor(\numPrivateAudioBusChannels_).notNil) {
-				Server.default.options.numPrivateAudioBusChannels = 992
+				Server.default.options.numPrivateAudioBusChannels = 1024
+				- Server.default.options.numOutputBusChannels
+				- Server.default.options.numInputBusChannels;
 			} {
 				Server.default.options.numAudioBusChannels = 1024
 			};
-			"Hadron: Increased default server's audio bus count to 1024 total (992 private).".postln;
+			"Hadron: Increased default server's audio bus count to 1024 total.".postln;
 			ServerBoot.add(HadronPlugin, \default);
 
 			Library.put(Hadron, \visibleCanvases, Array.new);
