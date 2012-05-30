@@ -109,12 +109,14 @@ HrMixerCh : HadronPlugin {
 	}
 
 	mcgui_ { |index|
-		index = index.asInteger;
-		if(mcgui != index and: { MCG.tryPerform(\exists, index ? -1) }) {
-			if(MCG.tryPerform(\exists, mcgui ? -1)) { MCG(mcgui).v.mixer = nil };
-			mixer => MCG(index);
-			mcgui = index;
-			defer { this.refreshMenu };
+		if(index.notNil) {
+			index = index.asInteger;
+			if(mcgui != index and: { MCG.tryPerform(\exists, index ? -1) }) {
+				if(MCG.tryPerform(\exists, mcgui ? -1)) { MCG(mcgui).v.mixer = nil };
+				mixer => MCG(index);
+				mcgui = index;
+				defer { this.refreshMenu };
+			};
 		};
 	}
 
