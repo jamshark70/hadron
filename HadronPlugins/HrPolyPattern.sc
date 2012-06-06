@@ -396,7 +396,11 @@ HrPolyPattern : HadronPlugin {
 			// BUT the pattern might provide, e.g., \degree
 			// and this should override \freq in the plugin.
 			Pfunc({ |ev|
-				(type: \set, id: synthInstance.nodeID, t_trig: 1, args: #[t_trig]).play;
+				if(ev[\isRest] != true and: {
+					ev.use { ~detunedFreqs.value.isRest.not }
+				}) {
+					(type: \set, id: synthInstance.nodeID, t_trig: 1, args: #[t_trig]).play;
+				};
 				targetPlugin.synthArgs.pairsDo { |key, value|
 					if((keylist = keycheck[key]).notNil) {
 						// this will also check 'key' itself

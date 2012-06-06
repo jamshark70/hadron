@@ -128,7 +128,11 @@ HrMonoPattern : HrPolyPattern {
 	asPattern {
 		^Pchain(
 			Pfunc({ |ev|
-				(type: \set, id: synthInstance.nodeID, t_trig: 1, args: #[t_trig]).play;
+				if(ev[\isRest] != true and: {
+					ev.use { ~detunedFreqs.value.isRest.not }
+				}) {
+					(type: \set, id: synthInstance.nodeID, t_trig: 1, args: #[t_trig]).play;
+				};
 				ev
 			}),
 			HrPbindef(key).source
@@ -173,7 +177,7 @@ HrMonoPattern : HrPolyPattern {
 				freqs = ~freq = ~detunedFreq.value;
 				~sustain = ~sustain.value;
 
-				if(freqs.isRest.not) {
+				if(~isRest != true and: { freqs.isRest.not }) {
 					~server = server;
 					freqs = ~freq;
 					~amp = ~amp.value;
