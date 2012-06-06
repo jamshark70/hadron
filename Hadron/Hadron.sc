@@ -53,7 +53,7 @@ Hadron
 			canvasObj = HadronCanvas.new(this);
 			
 			blackholeBus = Bus.audio(Server.default, maxOutputs);
-			win = Window("Hadron", Rect(300, 40, 675, 70), resizable: false).userCanClose_(false);
+			win = Window("Hadron", Rect((Window.screenBounds.width - 675) div: 2, 40, 675, 70), resizable: false).userCanClose_(false);
 			
 			Button(win, Rect(10, 15, 85, 20))
 			.states_
